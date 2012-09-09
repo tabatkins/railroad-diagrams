@@ -31,7 +31,7 @@ The containers:
 * Optional(child) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`
 * Repeat(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
 
-For convenience, each component can be called with or without `new`.  
+For convenience, each component can be called with or without `new`.
 If called without `new`, 
 the container components become n-ary;
 that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
