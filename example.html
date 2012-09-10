@@ -101,9 +101,15 @@ Diagram(
 <script>
 Diagram(
 	Choice(1, Terminal('+'), Skip(), Terminal('-')),
-	ZeroOrMore(NonTerminal('digit')),
-	Optional(
-		Sequence(Terminal('.'), OneOrMore(NonTerminal('digit')))),
+	Choice(0,
+		Sequence(
+			OneOrMore(NonTerminal('digit')),
+			Terminal('.'),
+			OneOrMore(NonTerminal('digit'))),
+		OneOrMore(NonTerminal('digit')),
+		Sequence(
+			Terminal('.'),
+			OneOrMore(NonTerminal('digit')))),
 	Choice(0,
 		Skip(),
 		Sequence(
