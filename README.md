@@ -11,6 +11,7 @@ I think (though I haven't given it a lot of thought yet) that if it's easy to wr
 the corresponding railroad diagram will be easy as well.
 
 There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted.
+[Here's an example of how they look!](http://www.xanthir.com/etc/railroad-diagrams/example.html)
 
 Details
 -------
