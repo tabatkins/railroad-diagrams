@@ -37,9 +37,8 @@ h1 {
 Diagram(
 	Choice(0, Skip(), Terminal('-')),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
-	Optional(
-		Repeat(
-			Choice(0, NonTerminal('name char'), NonTerminal('escape'))))).addTo();
+	ZeroOrMore(
+		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
 </script>
 <h1 id='function'>FUNCTION</h1>
 <script>
@@ -59,19 +58,17 @@ Diagram(
 	Choice(0,
 		Sequence(
 			Terminal('"'),
-			Optional(
-				Repeat(
-					Choice(0,
-						NonTerminal('not " or \\'),
-						NonTerminal('escape')))),
+			ZeroOrMore(
+				Choice(0,
+					NonTerminal('not " or \\'),
+					NonTerminal('escape'))),
 			Terminal('"')),
 		Sequence(
 			Terminal("'"),
-			Optional(
-				Repeat(
-					Choice(0,
-						NonTerminal("not ' or \\"),
-						NonTerminal('escape')))),
+			ZeroOrMore(
+				Choice(0,
+					NonTerminal("not ' or \\"),
+					NonTerminal('escape'))),
 			Terminal("'")))).addTo();
 </script>
 <h1 id='url'>URL</h1>
@@ -89,7 +86,7 @@ Diagram(
 			Optional(NonTerminal('WS'))),
 		Sequence(
 			Optional(NonTerminal('WS')),
-			Repeat(
+			OneOrMore(
 				Choice(0,
 					NonTerminal('not " \' ( ) WS or NPC'),
 					NonTerminal('escape'))),
@@ -100,15 +97,15 @@ Diagram(
 <script>
 Diagram(
 	Choice(1, Terminal('+'), Skip(), Terminal('-')),
-	Optional(Repeat(NonTerminal('digit'))),
+	ZeroOrMore(NonTerminal('digit')),
 	Optional(
-		Sequence(Terminal('.'), Repeat(NonTerminal('digit')))),
+		Sequence(Terminal('.'), OneOrMore(NonTerminal('digit')))),
 	Choice(0,
 		Skip(),
 		Sequence(
 			Choice(0, Terminal('e'), Terminal('E')),
 			Choice(1, Terminal('+'), Skip(), Terminal('-')),
-			Repeat(NonTerminal('digit'))))).addTo();
+			OneOrMore(NonTerminal('digit'))))).addTo();
 </script>
 <h1>DIMENSION</h1>
 <script>
@@ -127,22 +124,21 @@ Diagram(
 	Terminal('+'),
 	Choice(0,
 		Sequence(
-			Repeat(NonTerminal('hex digit'), Comment('0-6 times')),
-			Repeat(Terminal('?'), Comment('6 - digits'))),
+			ZeroOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
+			OneOrMore(Terminal('?'), Comment('6 - digits'))),
 		Sequence(
-			Repeat(NonTerminal('hex digit'), Comment('1-6 times')),
+			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
 			Terminal('-'),
-			Repeat(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo();
+			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo();
 </script>
 <h1>COMMENT</h1>
 <script>
 Diagram(
 	Terminal('/*'),
-	Optional(
-		Repeat(
-			Choice(0,
-				NonTerminal('not *'),
-				Sequence(Terminal('*'), NonTerminal('not /'))))),
+	ZeroOrMore(
+		Choice(0,
+			NonTerminal('not *'),
+			Sequence(Terminal('*'), NonTerminal('not /')))),
 	Terminal('*/')).addTo();
 </script>
 <h1>CDO</h1>

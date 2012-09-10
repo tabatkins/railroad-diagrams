@@ -195,8 +195,8 @@ function Optional(child) {
 	return Choice(1, Skip(), child);
 }
 
-function Repeat(child, rep) {
-	if(!(this instanceof Repeat)) return new Repeat(child, rep);
+function OneOrMore(child, rep) {
+	if(!(this instanceof OneOrMore)) return new OneOrMore(child, rep);
 	rep = rep || (new Skip);
 	this.child = child;
 	this.rep = rep;
@@ -204,8 +204,8 @@ function Repeat(child, rep) {
 	this.up = child.up;
 	this.down = Math.max(ARC_RADIUS*2, child.down + VERTICAL_SEPARATION + rep.up + rep.down);
 }
-Repeat.prototype.needsSpace = true;
-Repeat.prototype.toSVG = function(x,y,width) {
+OneOrMore.prototype.needsSpace = true;
+OneOrMore.prototype.toSVG = function(x,y,width) {
 	var g = SVG('g');
 
 	// Hook up the two sides if this is narrower than its stated width.
@@ -227,6 +227,11 @@ Repeat.prototype.toSVG = function(x,y,width) {
 
 	return g;
 }
+
+function ZeroOrMore(child, rep) {
+	return Optional(OneOrMore(child, rep));
+}
+ZeroOrMore.prototype = Object.create(OneOrMore.prototype);
 
 
 function Start() {
