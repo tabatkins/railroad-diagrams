@@ -97,6 +97,7 @@ Diagram.prototype.toSVG = function(paddingt, paddingr, paddingb, paddingl) {
 		}
 	}
 	var svg = SVG('svg',{width:this.width+paddingl+paddingr, height:this.up+this.down+paddingt+paddingb, class:'diagram'});
+	svg.appendChild(SVG('style', {}, ":root{background-color:hsl(30,20%,95%);} path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);} text{font:bold 14px monospace;text-anchor:middle;} text.label{text-anchor:start;} text.comment{font:italic 12px monospace;} rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}"));
 	svg.appendChild(g);
 	return svg;
 }

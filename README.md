@@ -40,8 +40,6 @@ that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
 After constructing a Diagram, call `.toSVG(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).  The return value is an `<svg>` element (not text), which can immediately be inserted into your document.  As a convenience, Diagram also has an `.addTo(element)` method, which immediately appends it to the referenced element with default paddings.
 
-You *will* need to specify your own CSS to make the diagrams appear correctly.  Check out the example.html file for a good default setup.
-
 Options
 -------
 
@@ -50,6 +48,9 @@ There are currently two options you can tweak, at the top of the file.  Just twe
 * VERTICAL_SEPARATION - sets the minimum amount of vertical separation between two items.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width.
 * ARC_RADIUS - the radius of the arcs used in Choice and Repeat.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for.
 
+You can also tweak the overall CSS for the file.  Each diagrams's CSS is inserted as a `<style>` block at the end of `Diagram.toSVG` - feel free to tweak to your heart's content.
+(Note that, due to rasterization artifacts, odd pixel lengths for 'stroke' look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to remove the 'transform' attribute from the `<g>` element used in `Diagram.toSVG`.)
+
 Caveats
 -------
 
@@ -57,4 +58,3 @@ At this early stage, the generator is feature-complete and works as intended, bu
 
 * The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
 * I'd like to allow plain strings as children, and automatically upgrade them into Terminal objects.
-* Either build the styling into the objects, or do something else to make the diagram be at least *usable* without the default CSS.
