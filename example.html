@@ -127,9 +127,10 @@ Diagram(
 		Terminal('u')),
 	Terminal('+'),
 	Choice(0,
+		Sequence(OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))),
 		Sequence(
-			ZeroOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
-			OneOrMore(Terminal('?'), Comment('6 - digits'))),
+			ZeroOrMore(NonTerminal('hex digit'), Comment('1-5 times')),
+			OneOrMore(Terminal('?'), Comment('1 to (6 - digits) times'))),
 		Sequence(
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
 			Terminal('-'),
