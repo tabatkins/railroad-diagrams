@@ -30,7 +30,8 @@ The containers:
 * Sequence(children) - like simple concatenation in a regex
 * Choice(index, children) - like | in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 * Optional(child) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`
-* Repeat(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
+* OneOrMore(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
+* ZeroOrMore(child, repeat) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`
 
 For convenience, each component can be called with or without `new`.
 If called without `new`, 
