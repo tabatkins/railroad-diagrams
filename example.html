@@ -140,9 +140,7 @@ Diagram(
 Diagram(
 	Terminal('/*'),
 	ZeroOrMore(
-		Choice(0,
-			NonTerminal('not *'),
-			Sequence(Terminal('*'), NonTerminal('not /')))),
+		NonTerminal("anything but * followed by /")),
 	Terminal('*/')).addTo();
 </script>
 <h1>CDO</h1>
