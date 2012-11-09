@@ -1,0 +1,24 @@
+<!doctype html>
+<script src="railroad-diagrams.js"></script>
+<form class='input'>
+	<textarea>Diagram(
+	Choice(0, Skip(), Terminal('-')),
+	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
+	ZeroOrMore(
+		Choice(0, NonTerminal('name char'), NonTerminal('escape'))))</textarea>
+	<button>Generate</button>
+</form>
+<div class='output'>
+	<div></div>
+	<textarea></textarea>
+</div>
+<script>
+window.find = document.querySelector.bind(document);
+find('.input > button').addEventListener('click', function(e) {
+	e.preventDefault();
+	var input = find('.input > textarea').value;
+	var result = eval(input);
+	result.addTo(find('.output > div'));
+	find('.output > textarea').textContent = result.innerHTML;
+}, false);
+</script>
