@@ -148,7 +148,6 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 	}
 	this.attrs.width = this.width + paddingl + paddingr;
 	this.attrs.height = this.up + this.down + paddingt + paddingb;
-	FakeSVG('style', {}, "svg.diagram{background-color:hsl(30,20%,95%);} svg.diagram path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);} svg.diagram text{font:bold 14px monospace;text-anchor:middle;} svg.diagram text.label{text-anchor:start;} svg.diagram text.comment{font:italic 12px monospace;} svg.diagram rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}").addTo(this);
 	g.addTo(this);
 	return this;
 }
