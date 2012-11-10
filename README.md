@@ -34,7 +34,7 @@ The containers:
 * ZeroOrMore(child, repeat) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`
 
 For convenience, each component can be called with or without `new`.
-If called without `new`, 
+If called without `new`,
 the container components become n-ary;
 that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
@@ -45,10 +45,12 @@ The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an 
 Options
 -------
 
-There are currently two options you can tweak, at the top of the file.  Just tweak either until the diagram looks like what you want.
+There are a few options you can tweak, at the top of the file.  Just tweak either until the diagram looks like what you want.
 
 * VERTICAL_SEPARATION - sets the minimum amount of vertical separation between two items.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width.
 * ARC_RADIUS - the radius of the arcs used in Choice and Repeat.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for.
+* DIAGRAM_CLASS - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet.
+* TRANSLATE_HALF_PIXEL - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `false`.
 
 You can also tweak the overall CSS for the file.  Each diagrams's CSS is inserted as a `<style>` block at the end of `Diagram.toSVG` - feel free to tweak to your heart's content.
 (Note that, due to rasterization artifacts, odd pixel lengths for 'stroke' look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to remove the 'transform' attribute from the `<g>` element used in `Diagram.toSVG`.)

@@ -1,6 +1,8 @@
 // Display constants
 var VERTICAL_SEPARATION = 8;
 var ARC_RADIUS = 10;
+var DIAGRAM_CLASS = 'railroad-diagram';
+var TRANSLATE_HALF_PIXEL = true;
 
 
 function SVG(name, attrs, text) {
@@ -113,7 +115,7 @@ function unnull(/* children */) {
 
 function Diagram(items) {
 	if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
-	FakeSVG.call(this, 'svg', {class:'diagram'});
+	FakeSVG.call(this, 'svg', {class: DIAGRAM_CLASS});
 	this.items = items;
 	this.items.unshift(new Start);
 	this.items.push(new End);
@@ -130,7 +132,7 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 	var x = paddingl;
 	var y = paddingt;
 	y += this.up;
-	var g = FakeSVG('g',{transform:'translate(.5 .5)'});
+	var g = FakeSVG('g', TRANSLATE_HALF_PIXEL ? {transform:'translate(.5 .5)'} : {});
 	for(var i = 0; i < this.items.length; i++) {
 		var item = this.items[i];
 		if(item.needsSpace) {
@@ -214,7 +216,7 @@ Choice.prototype.format = function(x,y,width) {
 	// Do the elements that curve above
 	for(var i = this.normal - 1; i >= 0; i--) {
 		var item = this.items[i];
-		if( i == this.normal - 1 ) { 
+		if( i == this.normal - 1 ) {
 			var distanceFromY = Math.max(ARC_RADIUS*2, this.items[i+1].up + VERTICAL_SEPARATION + item.down);
 		}
 		Path(x,y).arc('se').up(distanceFromY - ARC_RADIUS*2).arc('wn').addTo(this);
@@ -239,7 +241,7 @@ Choice.prototype.format = function(x,y,width) {
 		Path(x+ARC_RADIUS*2+innerWidth, y+distanceFromY).arc('se').up(distanceFromY - ARC_RADIUS*2).arc('wn').addTo(this);
 		distanceFromY += Math.max(ARC_RADIUS, item.down + VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
 	}
-	
+
 	return this;
 }
 
