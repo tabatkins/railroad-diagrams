@@ -18,7 +18,8 @@ find('.input > button').addEventListener('click', function(e) {
 	e.preventDefault();
 	var input = find('.input > textarea').value;
 	var result = eval(input);
+	console.log(result);
 	result.addTo(find('.output > div'));
-	find('.output > textarea').textContent = result.innerHTML;
+	find('.output > textarea').textContent = result;
 }, false);
 </script>
