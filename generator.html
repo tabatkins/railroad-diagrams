@@ -7,7 +7,7 @@
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
 		Choice(0, NonTerminal('name char'), NonTerminal('escape'))))</textarea>
-	<button>Generate</button>
+	<button>⇒</button>
 </form>
 <div class='output'>
 	<div></div>
@@ -23,3 +23,34 @@ find('.input > button').addEventListener('click', function(e) {
 	find('.output > textarea').textContent = result;
 }, false);
 </script>
+<style>
+* { box-sizing: border-box; }
+.input textarea {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 48%;
+	height: 50%;
+}
+.input button {
+	position: absolute;
+	top: 0;
+	left: 48%;
+	width: 4%;
+	height: 50%;
+}
+.output textarea {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 48%;
+	height: 50%;
+}
+.output div {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	height: 50%;
+}
+</style>
