@@ -380,7 +380,7 @@ Comment.prototype.format = function(x, y, width) {
 	var diff = width - this.width;
 	Path(x,y).right(diff/2).addTo(this);
 	Path(x+diff/2+this.width,y).right(diff/2).addTo(this)
-	FakeSVG('text', {x:x+width/2, y:y+5, class:'comment'}, this.text);
+	FakeSVG('text', {x:x+width/2, y:y+5, class:'comment'}, this.text).addTo(this);
 	return this;
 }
 
