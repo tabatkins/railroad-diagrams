@@ -1,6 +1,7 @@
 <!doctype html>
 <title>Railroad Diagram Generator</title>
 <script src="railroad-diagrams.js"></script>
+<link href="railroad-diagrams.css" rel=stylesheet>
 <form class='input'>
 	<textarea>Diagram(
 	Choice(0, Skip(), Terminal('-')),
@@ -19,6 +20,7 @@ find('.input > button').addEventListener('click', function(e) {
 	e.preventDefault();
 	var input = find('.input > textarea').value;
 	var result = eval(input).format();
+	find('.output > div').innerHTML = '';
 	result.addTo(find('.output > div'));
 	find('.output > textarea').textContent = result;
 }, false);
