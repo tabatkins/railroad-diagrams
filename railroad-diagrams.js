@@ -266,8 +266,13 @@ Choice.prototype.format = function(x,y,width) {
 	return this;
 }
 
-function Optional(item) {
-	return Choice(1, Skip(), item);
+function Optional(item, skip) {
+	if( skip === undefined )
+		return Choice(1, Skip(), item);
+	else if ( skip === "skip" )
+		return Choice(0, Skip(), item);
+	else
+		throw "Unknown value for Optional()'s 'skip' argument.";
 }
 
 function OneOrMore(item, rep) {
