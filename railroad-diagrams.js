@@ -120,6 +120,7 @@ function Diagram(items) {
 	this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
 	this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 	this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
+	this.formatted = false;
 }
 Diagram.prototype = Object.create(FakeSVG.prototype);
 Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
@@ -148,11 +149,24 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 	this.attrs.height = this.up + this.down + paddingt + paddingb;
 	FakeSVG('style', {}, "svg.diagram{background-color:hsl(30,20%,95%);} svg.diagram path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);} svg.diagram text{font:bold 14px monospace;text-anchor:middle;} svg.diagram text.label{text-anchor:start;} svg.diagram text.comment{font:italic 12px monospace;} svg.diagram rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}").addTo(this);
 	g.addTo(this);
+	this.formatted = true;
 	return this;
 }
 Diagram.prototype.addTo = function(parent) {
 	parent = parent || document.body;
 	FakeSVG.prototype.addTo.call(this, parent);
+}
+Diagram.prototype.toSVG = function() {
+	if (!this.formatted) {
+		this.format();
+	}
+	return FakeSVG.prototype.toSVG.call(this);
+}
+Diagram.prototype.toString = function() {
+	if (!this.formatted) {
+		this.format();
+	}
+	FakeSVG.prototype.toString.call(this);
 }
 
 function Sequence(items) {
