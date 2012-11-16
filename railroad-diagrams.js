@@ -4,6 +4,15 @@ var ARC_RADIUS = 10;
 var DIAGRAM_CLASS = 'railroad-diagram';
 var TRANSLATE_HALF_PIXEL = true;
 
+function subclassOf(baseClass, superClass) {
+	baseClass.prototype = Object.create(superClass.prototype);
+	baseClass.prototype.$super = superClass.prototype;
+}
+
+function unnull(/* children */) {
+	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
+}
+
 
 function SVG(name, attrs, text) {
 	attrs = attrs || {};
@@ -70,7 +79,7 @@ function Path(x,y) {
 	FakeSVG.call(this, 'path');
 	this.attrs.d = "M"+x+' '+y;
 }
-Path.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Path, FakeSVG);
 Path.prototype.m = function(x,y) {
 	this.attrs.d += 'm'+x+' '+y;
 	return this;
@@ -109,10 +118,6 @@ Path.prototype.format = function() {
 	return this;
 }
 
-function unnull(/* children */) {
-	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
-}
-
 function wrapString(value) {
     return ((typeof value) == 'string') ? new Terminal(value) : value;
 }
@@ -128,7 +133,7 @@ function Diagram(items) {
 	this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
 	this.formatted = false;
 }
-Diagram.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Diagram, FakeSVG);
 Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 	paddingt = unnull(paddingt, 20);
 	paddingr = unnull(paddingt, 20);
@@ -159,19 +164,19 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 }
 Diagram.prototype.addTo = function(parent) {
 	parent = parent || document.body;
-	FakeSVG.prototype.addTo.call(this, parent);
+	this.$super.addTo.call(this, parent);
 }
 Diagram.prototype.toSVG = function() {
 	if (!this.formatted) {
 		this.format();
 	}
-	return FakeSVG.prototype.toSVG.call(this);
+	return this.$super.toSVG.call(this);
 }
 Diagram.prototype.toString = function() {
 	if (!this.formatted) {
 		this.format();
 	}
-	FakeSVG.prototype.toString.call(this);
+	this.$super.toString.call(this);
 }
 
 function Sequence(items) {
@@ -182,7 +187,7 @@ function Sequence(items) {
 	this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 	this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
 }
-Sequence.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Sequence, FakeSVG);
 Sequence.prototype.format = function(x,y,width) {
 	var diff = width - this.width;
 	Path(x,y).h(diff/2).addTo(this);
@@ -218,7 +223,7 @@ function Choice(normal, items) {
 		if(i > normal) { this.down += Math.max(ARC_RADIUS,VERTICAL_SEPARATION + item.up + item.down); }
 	}
 }
-Choice.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Choice, FakeSVG);
 Choice.prototype.format = function(x,y,width) {
 	var last = this.items.length -1;
 	var innerWidth = this.width - ARC_RADIUS*4;
@@ -275,7 +280,7 @@ function OneOrMore(item, rep) {
 	this.up = this.item.up;
 	this.down = Math.max(ARC_RADIUS*2, this.item.down + VERTICAL_SEPARATION + this.rep.up + this.rep.down);
 }
-OneOrMore.prototype = Object.create(FakeSVG.prototype);
+subclassOf(OneOrMore, FakeSVG);
 OneOrMore.prototype.needsSpace = true;
 OneOrMore.prototype.format = function(x,y,width) {
 	// Hook up the two sides if this is narrower than its stated width.
@@ -301,8 +306,6 @@ OneOrMore.prototype.format = function(x,y,width) {
 function ZeroOrMore(item, rep) {
 	return Optional(OneOrMore(item, rep));
 }
-ZeroOrMore.prototype = Object.create(OneOrMore.prototype);
-
 
 function Start() {
 	if(!(this instanceof Start)) return new Start();
@@ -311,7 +314,7 @@ function Start() {
 	this.up = 10;
 	this.down = 10;
 }
-Start.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Start, FakeSVG);
 Start.prototype.format = function(x,y) {
 	this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
 	return this;
@@ -324,7 +327,7 @@ function End() {
 	this.up = 10;
 	this.down = 10;
 }
-End.prototype = Object.create(FakeSVG.prototype);
+subclassOf(End, FakeSVG);
 End.prototype.format = function(x,y) {
 	this.attrs.d = 'M '+x+' '+y+' h 20 m -10 -10 v 20 m 10 -20 v 20';
 	return this;
@@ -338,7 +341,7 @@ function Terminal(text) {
 	this.up = 11;
 	this.down = 11;
 }
-Terminal.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Terminal, FakeSVG);
 Terminal.prototype.needsSpace = true;
 Terminal.prototype.format = function(x, y, width) {
 	var diff = width - this.width;
@@ -356,7 +359,7 @@ function NonTerminal(text) {
 	this.up = 11;
 	this.down = 11;
 }
-NonTerminal.prototype = Object.create(FakeSVG.prototype);
+subclassOf(NonTerminal, FakeSVG);
 NonTerminal.prototype.needsSpace = true;
 NonTerminal.prototype.format = function(x, y, width) {
 	var diff = width - this.width;
@@ -374,7 +377,7 @@ function Comment(text) {
 	this.up = 11;
 	this.down = 11;
 }
-Comment.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Comment, FakeSVG);
 Comment.prototype.needsSpace = true;
 Comment.prototype.format = function(x, y, width) {
 	var diff = width - this.width;
@@ -391,7 +394,7 @@ function Skip() {
 	this.up = 0;
 	this.down = 0;
 }
-Skip.prototype = Object.create(FakeSVG.prototype);
+subclassOf(Skip, FakeSVG);
 Skip.prototype.format = function(x, y, width) {
 	Path(x,y).right(width).addTo(this);
 	return this;
