@@ -12,6 +12,7 @@ the corresponding railroad diagram will be easy as well.
 
 There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted.
 [Here's an example of how they look!](http://www.xanthir.com/etc/railroad-diagrams/example.html)
+And [here's an online generator for you to play with and get SVG code from!](http://www.xanthir.com/etc/railroad-diagrams/generator.html)
 
 Details
 -------
@@ -47,6 +48,8 @@ Options
 
 There are a few options you can tweak, at the top of the file.  Just tweak either until the diagram looks like what you want.
 You can also change the CSS file - feel free to tweak to your heart's content.
+Note, though, that if you change the text sizes in the CSS, 
+you'll have to go adjust the metrics for the leaf nodes as well.
 
 * VERTICAL_SEPARATION - sets the minimum amount of vertical separation between two items.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width.
 * ARC_RADIUS - the radius of the arcs used in Choice and Repeat.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for.
