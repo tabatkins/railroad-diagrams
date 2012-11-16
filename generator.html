@@ -4,10 +4,14 @@
 <link href="railroad-diagrams.css" rel=stylesheet>
 <form class='input'>
 	<textarea>Diagram(
-	Choice(0, Skip(), Terminal('-')),
-	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
-	ZeroOrMore(
-		Choice(0, NonTerminal('name char'), NonTerminal('escape'))))</textarea>
+  Choice(0, Skip(), '+'),
+  Choice(0, 
+    NonTerminal('name-start char'), 
+    NonTerminal('escape')),
+    ZeroOrMore(
+      Choice(0, 
+        NonTerminal('name char'), 
+        NonTerminal('escape'))))</textarea>
 	<button>⇒</button>
 </form>
 <div class='output'>
