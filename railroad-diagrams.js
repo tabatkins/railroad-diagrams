@@ -170,7 +170,6 @@ function Sequence(items) {
 Sequence.prototype = Object.create(FakeSVG.prototype);
 Sequence.prototype.format = function(x,y,width) {
 	var diff = width - this.width;
-	var g = SVG('g');
 	Path(x,y).h(diff/2).addTo(this);
 	x += diff/2;
 	for(var i = 0; i < this.items.length; i++) {
@@ -187,7 +186,7 @@ Sequence.prototype.format = function(x,y,width) {
 		}
 	}
 	Path(x,y).h(diff/2).addTo(this);
-	return g;
+	return this;
 }
 
 function Choice(normal, items) {
