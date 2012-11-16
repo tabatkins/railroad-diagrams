@@ -14,68 +14,18 @@ function SVG(name, attrs, text) {
 	return el;
 }
 
-function Path(x,y) {
-	if(!(this instanceof Path)) return new Path(x,y);
-	FakeSVG.call(this, 'path');
-	this.str = "M"+x+' '+y;
-}
-Path.prototype = Object.create(FakeSVG.prototype);
-Path.prototype.m = function(x,y) {
-	this.str += 'm'+x+' '+y;
-	return this;
-}
-Path.prototype.h = function(val) {
-	this.str += 'h'+val;
-	return this;
-}
-Path.prototype.right = Path.prototype.h;
-Path.prototype.left = function(val) { return this.h(-val); }
-Path.prototype.v = function(val) {
-	this.str += 'v'+val;
-	return this;
-}
-Path.prototype.down = Path.prototype.v;
-Path.prototype.up = function(val) { return this.v(-val); }
-Path.prototype.arc = function(sweep){
-	var x = ARC_RADIUS;
-	var y = ARC_RADIUS;
-	if(sweep[0] == 'e' || sweep[1] == 'w') {
-		x *= -1;
-	}
-	if(sweep[0] == 's' || sweep[1] == 'n') {
-		y *= -1;
-	}
-	if(sweep == 'ne' || sweep == 'es' || sweep == 'sw' || sweep == 'wn') {
-		var cw = 1;
-	} else {
-		var cw = 0;
-	}
-	this.str += "a"+ARC_RADIUS+" "+ARC_RADIUS+" 0 0 "+cw+' '+x+' '+y;
-	return this;
-}
-Path.prototype.toSVG = function() {
-	return SVG('path', {d:this.str+'h.5'});
-}
-Path.prototype.addTo = function(container) {
-	container.appendChild(this.toSVG());
-	return container;
-}
-
-function unnull(/* children */) {
-	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
-}
-
 function FakeSVG(tagName, attrs, text){
+	if(!(this instanceof FakeSVG)) return new FakeSVG(tagName, attrs, text);
 	if(text) this.children = text;
 	else this.children = [];
 	this.tagName = tagName;
 	this.attrs = unnull(attrs, {});
+	return this;
 };
 FakeSVG.prototype.format = function(x, y, width) {
 	// Virtual
 };
 FakeSVG.prototype.addTo = function(parent) {
-	console.log(this, parent);
 	if(parent instanceof FakeSVG) {
 		parent.children.push(this);
 		return this;
@@ -113,6 +63,54 @@ FakeSVG.prototype.toString = function() {
 	return str;
 }
 
+function Path(x,y) {
+	if(!(this instanceof Path)) return new Path(x,y);
+	FakeSVG.call(this, 'path');
+	this.attrs.d = "M"+x+' '+y;
+}
+Path.prototype = Object.create(FakeSVG.prototype);
+Path.prototype.m = function(x,y) {
+	this.attrs.d += 'm'+x+' '+y;
+	return this;
+}
+Path.prototype.h = function(val) {
+	this.attrs.d += 'h'+val;
+	return this;
+}
+Path.prototype.right = Path.prototype.h;
+Path.prototype.left = function(val) { return this.h(-val); }
+Path.prototype.v = function(val) {
+	this.attrs.d += 'v'+val;
+	return this;
+}
+Path.prototype.down = Path.prototype.v;
+Path.prototype.up = function(val) { return this.v(-val); }
+Path.prototype.arc = function(sweep){
+	var x = ARC_RADIUS;
+	var y = ARC_RADIUS;
+	if(sweep[0] == 'e' || sweep[1] == 'w') {
+		x *= -1;
+	}
+	if(sweep[0] == 's' || sweep[1] == 'n') {
+		y *= -1;
+	}
+	if(sweep == 'ne' || sweep == 'es' || sweep == 'sw' || sweep == 'wn') {
+		var cw = 1;
+	} else {
+		var cw = 0;
+	}
+	this.attrs.d += "a"+ARC_RADIUS+" "+ARC_RADIUS+" 0 0 "+cw+' '+x+' '+y;
+	return this;
+}
+Path.prototype.format = function() {
+	this.attrs.d += 'h.5';
+	return this;
+}
+
+function unnull(/* children */) {
+	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
+}
+
 function Diagram(items) {
 	if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 	FakeSVG.call(this, 'svg', {class:'diagram'});
@@ -139,7 +137,7 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 			Path(x,y).h(10).addTo(g);
 			x += 10;
 		}
-		item.toSVG(x, y, item.width).addTo(g);
+		item.format(x, y, item.width).addTo(g);
 		x += item.width;
 		if(item.needsSpace) {
 			Path(x,y).h(10).addTo(g);
@@ -147,14 +145,14 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 		}
 	}
 	this.attrs.width = this.width + paddingl + paddingr;
-	this.attrs.height = this.height + paddingt + paddingb;
+	this.attrs.height = this.up + this.down + paddingt + paddingb;
 	FakeSVG('style', {}, "svg.diagram{background-color:hsl(30,20%,95%);} svg.diagram path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);} svg.diagram text{font:bold 14px monospace;text-anchor:middle;} svg.diagram text.label{text-anchor:start;} svg.diagram text.comment{font:italic 12px monospace;} svg.diagram rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}").addTo(this);
 	g.addTo(this);
 	return this;
 }
 Diagram.prototype.addTo = function(parent) {
 	parent = parent || document.body;
-	this.prototype.addTo.call(this, parent);
+	FakeSVG.prototype.addTo.call(this, parent);
 }
 
 function Sequence(items) {
@@ -242,7 +240,7 @@ Choice.prototype.format = function(x,y,width) {
 		distanceFromY += Math.max(ARC_RADIUS, item.down + VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
 	}
 	
-	return g;
+	return this;
 }
 
 function Optional(item) {

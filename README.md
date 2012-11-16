@@ -38,7 +38,9 @@ If called without `new`,
 the container components become n-ary;
 that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
-After constructing a Diagram, call `.toSVG(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).  The return value is an `<svg>` element (not text), which can immediately be inserted into your document.  As a convenience, Diagram also has an `.addTo(element)` method, which immediately appends it to the referenced element with default paddings. `element` defaults to `document.body`.
+After constructing a Diagram, call `.format(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).  
+
+The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an `<svg>` element, which can then be immediately inserted to the document.  As a convenience, Diagram also has an `.addTo(element)` method, which immediately converts it to SVG and appends it to the referenced element with default paddings. `element` defaults to `document.body`.
 
 Options
 -------
