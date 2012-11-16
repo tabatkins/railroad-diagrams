@@ -111,10 +111,14 @@ function unnull(/* children */) {
 	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
 }
 
+function wrapString(value) {
+    return ((typeof value) == 'string') ? new Terminal(value) : value;
+}
+
 function Diagram(items) {
 	if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 	FakeSVG.call(this, 'svg', {class:'diagram'});
-	this.items = items;
+	this.items = items.map(wrapString);
 	this.items.unshift(new Start);
 	this.items.push(new End);
 	this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
@@ -158,7 +162,7 @@ Diagram.prototype.addTo = function(parent) {
 function Sequence(items) {
 	if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
 	FakeSVG.call(this, 'g');
-	this.items = items;
+	this.items = items.map(wrapString);
 	this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0);
 	this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 	this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
@@ -190,11 +194,11 @@ function Choice(normal, items) {
 	if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
 	FakeSVG.call(this, 'g');
 	this.normal = normal;
-	this.items = items;
+	this.items = items.map(wrapString);
 	this.width = this.items.reduce(function(sofar, el){return Math.max(sofar, el.width)},0) + ARC_RADIUS*4;
 	this.up = this.down = 0;
-	for(var i = 0; i < items.length; i++) {
-		var item = items[i];
+	for(var i = 0; i < this.items.length; i++) {
+		var item = this.items[i];
 		if(i < normal) { this.up += Math.max(ARC_RADIUS,item.up + item.down + VERTICAL_SEPARATION); }
 		if(i == normal) { this.up += Math.max(ARC_RADIUS, item.up); this.down += Math.max(ARC_RADIUS, item.down); }
 		if(i > normal) { this.down += Math.max(ARC_RADIUS,VERTICAL_SEPARATION + item.up + item.down); }
@@ -251,11 +255,11 @@ function OneOrMore(item, rep) {
 	if(!(this instanceof OneOrMore)) return new OneOrMore(item, rep);
 	FakeSVG.call(this, 'g');
 	rep = rep || (new Skip);
-	this.item = item;
-	this.rep = rep;
-	this.width = Math.max(item.width, rep.width) + ARC_RADIUS*2;
-	this.up = item.up;
-	this.down = Math.max(ARC_RADIUS*2, item.down + VERTICAL_SEPARATION + rep.up + rep.down);
+	this.item = wrapString(item);
+	this.rep = wrapString(rep);
+	this.width = Math.max(this.item.width, this.rep.width) + ARC_RADIUS*2;
+	this.up = this.item.up;
+	this.down = Math.max(ARC_RADIUS*2, this.item.down + VERTICAL_SEPARATION + this.rep.up + this.rep.down);
 }
 OneOrMore.prototype = Object.create(FakeSVG.prototype);
 OneOrMore.prototype.needsSpace = true;
