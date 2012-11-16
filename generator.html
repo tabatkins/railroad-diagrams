@@ -16,14 +16,27 @@
 </div>
 <script>
 window.find = document.querySelector.bind(document);
+
 find('.input > button').addEventListener('click', function(e) {
 	e.preventDefault();
+	process();
+}, false);
+
+find('.input > textarea').addEventListener('input', process, false);
+
+window.addEventListener('load', process, false);
+
+function process() {
 	var input = find('.input > textarea').value;
-	var result = eval(input).format();
+	try {
+		var result = eval(input).format();
+	} catch (e) {
+		return;
+	}
 	find('.output > div').innerHTML = '';
 	result.addTo(find('.output > div'));
 	find('.output > textarea').textContent = result;
-}, false);
+}
 </script>
 <style>
 * { box-sizing: border-box; }
