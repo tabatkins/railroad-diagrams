@@ -115,18 +115,10 @@ function wrapString(value) {
     return ((typeof value) == 'string') ? new Terminal(value) : value;
 }
 
-function wrapStringArray(value) {
-    for (var i = 0; i < value.length; i++) {
-        if ((typeof value[i]) == 'string') {
-            value[i] = new Terminal(value[i]);
-        }
-    }
-    return value;
-}
 function Diagram(items) {
 	if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 	FakeSVG.call(this, 'svg', {class:'diagram'});
-	this.items = wrapStringArray(items);
+	this.items = items.map(wrapString);
 	this.items.unshift(new Start);
 	this.items.push(new End);
 	this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
@@ -170,7 +162,7 @@ Diagram.prototype.addTo = function(parent) {
 function Sequence(items) {
 	if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
 	FakeSVG.call(this, 'g');
-	this.items = wrapStringArray(items);
+	this.items = items.map(wrapString);
 	this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0);
 	this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 	this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
@@ -202,11 +194,11 @@ function Choice(normal, items) {
 	if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
 	FakeSVG.call(this, 'g');
 	this.normal = normal;
-	this.items = wrapStringArray(items);
+	this.items = items.map(wrapString);
 	this.width = this.items.reduce(function(sofar, el){return Math.max(sofar, el.width)},0) + ARC_RADIUS*4;
 	this.up = this.down = 0;
-	for(var i = 0; i < items.length; i++) {
-		var item = items[i];
+	for(var i = 0; i < this.items.length; i++) {
+		var item = this.items[i];
 		if(i < normal) { this.up += Math.max(ARC_RADIUS,item.up + item.down + VERTICAL_SEPARATION); }
 		if(i == normal) { this.up += Math.max(ARC_RADIUS, item.up); this.down += Math.max(ARC_RADIUS, item.down); }
 		if(i > normal) { this.down += Math.max(ARC_RADIUS,VERTICAL_SEPARATION + item.up + item.down); }
