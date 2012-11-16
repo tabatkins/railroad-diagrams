@@ -164,7 +164,7 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 }
 Diagram.prototype.addTo = function(parent) {
 	parent = parent || document.body;
-	this.$super.addTo.call(this, parent);
+	return this.$super.addTo.call(this, parent);
 }
 Diagram.prototype.toSVG = function() {
 	if (!this.formatted) {
@@ -176,7 +176,7 @@ Diagram.prototype.toString = function() {
 	if (!this.formatted) {
 		this.format();
 	}
-	this.$super.toString.call(this);
+	return this.$super.toString.call(this);
 }
 
 function Sequence(items) {
