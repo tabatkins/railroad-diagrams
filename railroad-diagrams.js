@@ -308,8 +308,8 @@ OneOrMore.prototype.format = function(x,y,width) {
 	return this;
 }
 
-function ZeroOrMore(item, rep) {
-	return Optional(OneOrMore(item, rep));
+function ZeroOrMore(item, rep, skip) {
+	return Optional(OneOrMore(item, rep), skip);
 }
 
 function Start() {
