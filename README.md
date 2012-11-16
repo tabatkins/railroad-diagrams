@@ -21,7 +21,7 @@ Its arguments are the components of the diagram (Diagram is a special form of Se
 Components are either leaves or containers.
 
 The leaves:
-* Terminal(text) - represents literal text
+* Terminal(text) or a bare string - represents literal text
 * NonTerminal(text) - represents an instruction or another production
 * Comment(text) - a comment
 * Skip() - an empty line
@@ -59,4 +59,3 @@ Caveats
 At this early stage, the generator is feature-complete and works as intended, but still has several TODOs:
 
 * The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
-* I'd like to allow plain strings as children, and automatically upgrade them into Terminal objects.

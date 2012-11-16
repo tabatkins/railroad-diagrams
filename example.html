@@ -14,49 +14,49 @@ h1 {
 <h1 id='ident'>IDENT</h1>
 <script>
 Diagram(
-	Choice(0, Skip(), Terminal('-')),
+	Choice(0, Skip(), '-'),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
 		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
 </script>
 <h1 id='function'>FUNCTION</h1>
 <script>
-Diagram(NonTerminal('IDENT'), Terminal('(')).addTo();
+Diagram(NonTerminal('IDENT'), '(').addTo();
 </script>
 <h1 id='at-keyword'>AT-KEYWORD</h1>
 <script>
-Diagram(Terminal('@'), NonTerminal('IDENT')).addTo();
+Diagram('@', NonTerminal('IDENT')).addTo();
 </script>
 <h1 id='hash'>HASH</h1>
 <script>
-Diagram(Terminal('#'), NonTerminal('IDENT')).addTo();
+Diagram('#', NonTerminal('IDENT')).addTo();
 </script>
 <h1 id='string'>STRING</h1>
 <script>
 Diagram(
 	Choice(0,
 		Sequence(
-			Terminal('"'),
+			'"',
 			ZeroOrMore(
 				Choice(0,
 					NonTerminal('not " or \\'),
 					NonTerminal('escape'))),
-			Terminal('"')),
+			'"'),
 		Sequence(
-			Terminal("'"),
+			"'",
 			ZeroOrMore(
 				Choice(0,
 					NonTerminal("not ' or \\"),
 					NonTerminal('escape'))),
-			Terminal("'")))).addTo();
+			"'"))).addTo();
 </script>
 <h1 id='url'>URL</h1>
 <script>
 Diagram(
-	Choice(0, Terminal('u'), Terminal('U')),
-	Choice(0, Terminal('r'), Terminal('R')),
-	Choice(0, Terminal('l'), Terminal('L')),
-	Terminal('('),
+	Choice(0, 'u', 'U'),
+	Choice(0, 'r', 'R'),
+	Choice(0, 'l', 'L'),
+	'(',
 	Choice(1,
 		Optional(NonTerminal('WS')),
 		Sequence(
@@ -70,26 +70,26 @@ Diagram(
 					NonTerminal('not " \' ( ) WS or NPC'),
 					NonTerminal('escape'))),
 			Optional(NonTerminal('WS')))),
-	Terminal(')')).addTo();
+	')').addTo();
 </script>
 <h1>NUMBER</h1>
 <script>
 Diagram(
-	Choice(1, Terminal('+'), Skip(), Terminal('-')),
+	Choice(1, '+', Skip(), '-'),
 	Choice(0,
 		Sequence(
 			OneOrMore(NonTerminal('digit')),
-			Terminal('.'),
+			'.',
 			OneOrMore(NonTerminal('digit'))),
 		OneOrMore(NonTerminal('digit')),
 		Sequence(
-			Terminal('.'),
+			'.',
 			OneOrMore(NonTerminal('digit')))),
 	Choice(0,
 		Skip(),
 		Sequence(
-			Choice(0, Terminal('e'), Terminal('E')),
-			Choice(1, Terminal('+'), Skip(), Terminal('-')),
+			Choice(0, 'e', 'E'),
+			Choice(1, '+', Skip(), '-'),
 			OneOrMore(NonTerminal('digit'))))).addTo();
 </script>
 <h1>DIMENSION</h1>
@@ -98,38 +98,38 @@ Diagram(NonTerminal('NUMBER'), NonTerminal('IDENT')).addTo();
 </script>
 <h1>PERCENTAGE</h1>
 <script>
-Diagram(NonTerminal('NUMBER'), Terminal('%')).addTo();
+Diagram(NonTerminal('NUMBER'), '%').addTo();
 </script>
 <h1>UNICODE-RANGE</h1>
 <script>
 Diagram(
 	Choice(0,
-		Terminal('U'),
-		Terminal('u')),
-	Terminal('+'),
+		'U',
+		'u'),
+	'+',
 	Choice(0,
 		Sequence(OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))),
 		Sequence(
 			ZeroOrMore(NonTerminal('hex digit'), Comment('1-5 times')),
-			OneOrMore(Terminal('?'), Comment('1 to (6 - digits) times'))),
+			OneOrMore('?', Comment('1 to (6 - digits) times'))),
 		Sequence(
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
-			Terminal('-'),
+			'-',
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo();
 </script>
 <h1>COMMENT</h1>
 <script>
 Diagram(
-	Terminal('/*'),
+	'/*',
 	ZeroOrMore(
 		NonTerminal("anything but * followed by /")),
-	Terminal('*/')).addTo();
+	'*/').addTo();
 </script>
 <h1>CDO</h1>
 <script>
-Diagram(Terminal("<" + "!--")).addTo();
+Diagram("<" + "!--").addTo();
 </script>
 <h1>CDC</h1>
 <script>
-Diagram(Terminal("-->")).addTo();
+Diagram("-->").addTo();
 </script>
