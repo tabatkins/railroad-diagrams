@@ -2,8 +2,7 @@
 <title>Railroad Diagram Generator</title>
 <script src="railroad-diagrams.js"></script>
 <link href="railroad-diagrams.css" rel=stylesheet>
-<form class='input'>
-	<textarea>Diagram(
+<textarea class='input'>Diagram(
   Optional('+', 'skip'),
   Choice(0, 
     NonTerminal('name-start char'), 
@@ -12,60 +11,45 @@
       Choice(0, 
         NonTerminal('name char'), 
         NonTerminal('escape'))))</textarea>
-	<button>⇒</button>
-</form>
-<div class='output'>
-	<div></div>
-	<textarea></textarea>
+<div class='output-image'></div>
+<textarea class='output-text' readonly></textarea>
 </div>
 <script>
 window.find = document.querySelector.bind(document);
 
-find('.input > button').addEventListener('click', function(e) {
-	e.preventDefault();
-	process();
-}, false);
-
-find('.input > textarea').addEventListener('input', process, false);
+find('.input').addEventListener('input', process, false);
 
 window.addEventListener('load', process, false);
 
 function process() {
-	var input = find('.input > textarea').value;
+	var input = find('.input').value;
 	try {
 		var result = eval(input).format();
 	} catch (e) {
 		return;
 	}
-	find('.output > div').innerHTML = '';
-	result.addTo(find('.output > div'));
-	find('.output > textarea').textContent = result;
+	find('.output-image').innerHTML = '';
+	result.addTo(find('.output-image'));
+	find('.output-text').textContent = result;
 }
 </script>
 <style>
 * { box-sizing: border-box; }
-.input textarea {
+.input {
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 48%;
+	width: 50%;
 	height: 50%;
 }
-.input button {
-	position: absolute;
-	top: 0;
-	left: 48%;
-	width: 4%;
-	height: 50%;
-}
-.output textarea {
+.output-text {
 	position: absolute;
 	top: 0;
 	right: 0;
-	width: 48%;
+	width: 50%;
 	height: 50%;
 }
-.output div {
+.output-image {
 	position: absolute;
 	top: 50%;
 	left: 0;
