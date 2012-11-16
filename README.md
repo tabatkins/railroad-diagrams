@@ -21,7 +21,7 @@ Its arguments are the components of the diagram (Diagram is a special form of Se
 Components are either leaves or containers.
 
 The leaves:
-* Terminal(text) - represents literal text
+* Terminal(text) or a bare string - represents literal text
 * NonTerminal(text) - represents an instruction or another production
 * Comment(text) - a comment
 * Skip() - an empty line
@@ -34,7 +34,7 @@ The containers:
 * ZeroOrMore(child, repeat) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`
 
 For convenience, each component can be called with or without `new`.
-If called without `new`, 
+If called without `new`,
 the container components become n-ary;
 that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
@@ -59,4 +59,3 @@ Caveats
 At this early stage, the generator is feature-complete and works as intended, but still has several TODOs:
 
 * The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
-* I'd like to allow plain strings as children, and automatically upgrade them into Terminal objects.
