@@ -30,9 +30,9 @@ The leaves:
 The containers:
 * Sequence(children) - like simple concatenation in a regex
 * Choice(index, children) - like | in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
-* Optional(child) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`
+* Optional(child, skip) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 * OneOrMore(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
-* ZeroOrMore(child, repeat) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`
+* ZeroOrMore(child, repeat, skip) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`.  The optional `skip` parameter is identical to Optional().
 
 For convenience, each component can be called with or without `new`.
 If called without `new`,
