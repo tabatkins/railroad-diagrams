@@ -114,6 +114,8 @@ Path.prototype.arc = function(sweep){
 	return this;
 }
 Path.prototype.format = function() {
+	// All paths in this library start/end horizontally.
+	// The extra .5 ensures a minor overlap, so there's no seams in bad rasterizers.
 	this.attrs.d += 'h.5';
 	return this;
 }
