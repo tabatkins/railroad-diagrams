@@ -75,7 +75,7 @@ FakeSVG.prototype.toString = function() {
 	}
 	str += '>';
 	if(typeof this.children == 'string') {
-		str += this.children;
+		str += this.children.replace('<', '&lt;');
 	} else {
 		this.children.forEach(function(e) {
 			str += e;
