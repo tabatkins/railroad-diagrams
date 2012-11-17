@@ -2,7 +2,7 @@
 var VERTICAL_SEPARATION = 8;
 var ARC_RADIUS = 10;
 var DIAGRAM_CLASS = 'railroad-diagram';
-var TRANSLATE_HALF_PIXEL = true;
+var STROKE_ODD_PIXEL_LENGTH = true;
 
 function subclassOf(baseClass, superClass) {
 	baseClass.prototype = Object.create(superClass.prototype);
@@ -144,7 +144,7 @@ Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 	var x = paddingl;
 	var y = paddingt;
 	y += this.up;
-	var g = FakeSVG('g', TRANSLATE_HALF_PIXEL ? {transform:'translate(.5 .5)'} : {});
+	var g = FakeSVG('g', STROKE_ODD_PIXEL_LENGTH ? {transform:'translate(.5 .5)'} : {});
 	for(var i = 0; i < this.items.length; i++) {
 		var item = this.items[i];
 		if(item.needsSpace) {
