@@ -46,7 +46,7 @@ The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an 
 Options
 -------
 
-There are a few options you can tweak, at the top of the file.  Just tweak either until the diagram looks like what you want.
+There are a few options you can tweak, at the bottom of the file.  Just tweak either until the diagram looks like what you want.
 You can also change the CSS file - feel free to tweak to your heart's content.
 Note, though, that if you change the text sizes in the CSS, 
 you'll have to go adjust the metrics for the leaf nodes as well.
