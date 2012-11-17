@@ -67,7 +67,7 @@ At this early stage, the generator is feature-complete and works as intended, bu
 License
 -------
 
-This document and all associated files in the github project are licensed under [CC0](http://creativecommons.org/publicdomain/zero/1.0/).
+This document and all associated files in the github project are licensed under [CC0](http://creativecommons.org/publicdomain/zero/1.0/) ![](http://i.creativecommons.org/p/zero/1.0/80x15.png).
 This means you can reuse, remix, or otherwise appropriate this project for your own use **without restriction**.
 (The actual legal meaning can be found at the above link.)
 Don't ask me for permission to use any part of this project, **just use it**.
