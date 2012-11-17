@@ -63,3 +63,12 @@ Caveats
 At this early stage, the generator is feature-complete and works as intended, but still has several TODOs:
 
 * The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
+
+License
+-------
+
+This document and all associated files in the github project are licensed under [CC0](http://creativecommons.org/publicdomain/zero/1.0/).
+This means you can reuse, remix, or otherwise appropriate this project for your own use **without restriction**.
+(The actual legal meaning can be found at the above link.)
+Don't ask me for permission to use any part of this project, **just use it**.
+I would appreciate attribution, but that is not required by the license.
