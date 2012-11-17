@@ -3,6 +3,7 @@ var VERTICAL_SEPARATION = 8;
 var ARC_RADIUS = 10;
 var DIAGRAM_CLASS = 'railroad-diagram';
 var STROKE_ODD_PIXEL_LENGTH = true;
+var INTERNAL_ALIGNMENT = 'center';
 
 function subclassOf(baseClass, superClass) {
 	baseClass.prototype = Object.create(superClass.prototype);
@@ -11,6 +12,16 @@ function subclassOf(baseClass, superClass) {
 
 function unnull(/* children */) {
 	return [].slice.call(arguments).reduce(function(sofar, x) { return sofar !== undefined ? sofar : x; });
+}
+
+function determineGaps(outer, inner) {
+	var diff = outer - inner;
+	switch(INTERNAL_ALIGNMENT) {
+		case 'left': return [0, diff]; break;
+		case 'right': return [diff, 0]; break;
+		case 'center': 
+		default: return [diff/2, diff/2]; break;
+	}
 }
 
 
@@ -191,9 +202,12 @@ function Sequence(items) {
 }
 subclassOf(Sequence, FakeSVG);
 Sequence.prototype.format = function(x,y,width) {
-	var diff = width - this.width;
-	Path(x,y).h(diff/2).addTo(this);
-	x += diff/2;
+	// Hook up the two sides if this is narrower than its stated width.
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
+
 	for(var i = 0; i < this.items.length; i++) {
 		var item = this.items[i];
 		if(item.needsSpace) {
@@ -207,7 +221,6 @@ Sequence.prototype.format = function(x,y,width) {
 			x += 10;
 		}
 	}
-	Path(x,y).h(diff/2).addTo(this);
 	return this;
 }
 
@@ -227,14 +240,14 @@ function Choice(normal, items) {
 }
 subclassOf(Choice, FakeSVG);
 Choice.prototype.format = function(x,y,width) {
+	// Hook up the two sides if this is narrower than its stated width.
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
+
 	var last = this.items.length -1;
 	var innerWidth = this.width - ARC_RADIUS*4;
-
-	// Hook up the two sides if this is narrower than its stated width.
-	var diff = width - this.width;
-	Path(x,y).h(diff/2).addTo(this);
-	Path(x+diff/2+this.width,y).h(diff/2).addTo(this);
-	x += diff/2;
 
 	// Do the elements that curve above
 	for(var i = this.normal - 1; i >= 0; i--) {
@@ -291,10 +304,10 @@ subclassOf(OneOrMore, FakeSVG);
 OneOrMore.prototype.needsSpace = true;
 OneOrMore.prototype.format = function(x,y,width) {
 	// Hook up the two sides if this is narrower than its stated width.
-	var diff = width - this.width;
-	Path(x,y).h(diff/2).addTo(this);
-	Path(x+diff/2+this.width,y).h(diff/2).addTo(this);
-	x += diff/2;
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
 
 	// Draw item
 	Path(x,y).right(ARC_RADIUS).addTo(this);
@@ -351,10 +364,14 @@ function Terminal(text) {
 subclassOf(Terminal, FakeSVG);
 Terminal.prototype.needsSpace = true;
 Terminal.prototype.format = function(x, y, width) {
-	var diff = width - this.width;
-	Path(x,y).right(width).addTo(this);
-	FakeSVG('rect', {x:x+diff/2, y:y-11, width:this.width, height:this.up+this.down, rx:10, ry:10}).addTo(this);
-	FakeSVG('text', {x:x+width/2, y:y+4}, this.text).addTo(this);
+	// Hook up the two sides if this is narrower than its stated width.
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
+
+	FakeSVG('rect', {x:x, y:y-11, width:this.width, height:this.up+this.down, rx:10, ry:10}).addTo(this);
+	FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text).addTo(this);
 	return this;
 }
 
@@ -369,10 +386,14 @@ function NonTerminal(text) {
 subclassOf(NonTerminal, FakeSVG);
 NonTerminal.prototype.needsSpace = true;
 NonTerminal.prototype.format = function(x, y, width) {
-	var diff = width - this.width;
-	Path(x,y).right(width).addTo(this);
-	FakeSVG('rect', {x:x+diff/2, y:y-11, width:this.width, height:this.up+this.down}).addTo(this);
-	FakeSVG('text', {x:x+width/2, y:y+4}, this.text).addTo(this);
+	// Hook up the two sides if this is narrower than its stated width.
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
+
+	FakeSVG('rect', {x:x, y:y-11, width:this.width, height:this.up+this.down}).addTo(this);
+	FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text).addTo(this);
 	return this;
 }
 
@@ -387,10 +408,13 @@ function Comment(text) {
 subclassOf(Comment, FakeSVG);
 Comment.prototype.needsSpace = true;
 Comment.prototype.format = function(x, y, width) {
-	var diff = width - this.width;
-	Path(x,y).right(diff/2).addTo(this);
-	Path(x+diff/2+this.width,y).right(diff/2).addTo(this)
-	FakeSVG('text', {x:x+width/2, y:y+5, class:'comment'}, this.text).addTo(this);
+	// Hook up the two sides if this is narrower than its stated width.
+	var gaps = determineGaps(width, this.width);
+	Path(x,y).h(gaps[0]).addTo(this);
+	Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+	x += gaps[0];
+
+	FakeSVG('text', {x:x+this.width/2, y:y+5, class:'comment'}, this.text).addTo(this);
 	return this;
 }
 
