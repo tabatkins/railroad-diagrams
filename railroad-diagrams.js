@@ -71,11 +71,11 @@ FakeSVG.prototype.toSVG = function() {
 FakeSVG.prototype.toString = function() {
 	var str = '<' + this.tagName + ' ';
 	for(var attr in this.attrs) {
-		str += attr + '="' + this.attrs[attr] + '" ';
+		str += attr + '="' + (this.attrs[attr]+'').replace('&', '&amp;').replace('"', '&quot;') + '" ';
 	}
 	str += '>';
 	if(typeof this.children == 'string') {
-		str += this.children.replace('<', '&lt;');
+		str += this.children.replace('&', '&amp;').replace('<', '&lt;');
 	} else {
 		this.children.forEach(function(e) {
 			str += e;
