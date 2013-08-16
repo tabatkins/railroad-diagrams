@@ -190,14 +190,18 @@ var temp = (function(options) {
 				x += 10;
 			}
 		}
-		this.attrs.width = this.width + paddingl + paddingr;
-		this.attrs.height = this.up + this.down + paddingt + paddingb;
+		var viewBoxWidth = this.width + paddingl + paddingr;
+        var viewBoxHeight = this.up + this.down + paddingt + paddingb;
+        this.attrs.viewBox = "0 0 "  + viewBoxWidth + " " + viewBoxHeight;
 		g.addTo(this);
 		this.formatted = true;
 		return this;
 	}
 	Diagram.prototype.addTo = function(parent) {
-		parent = parent || document.body;
+        var scriptTag = document.getElementsByTagName('script');
+        scriptTag = scriptTag[scriptTag.length - 1];
+        var parentTag = scriptTag.parentNode;
+		parent = parent || parentTag;
 		return this.$super.addTo.call(this, parent);
 	}
 	Diagram.prototype.toSVG = function() {
