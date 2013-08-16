@@ -12,13 +12,15 @@ h1 {
 <script src='railroad-diagrams.js'></script>
 <body>
 <h1 id='ident'>IDENT</h1>
-<script>
+<div style="width: 50%">
+<script >
 Diagram(
 	Choice(0, Skip(), '-'),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
 		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
 </script>
+</div>
 <h1 id='function'>FUNCTION</h1>
 <script>
 Diagram(NonTerminal('IDENT'), '(').addTo();
