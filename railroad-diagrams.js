@@ -43,7 +43,7 @@ var temp = (function(options) {
 	}
 
 	function wrapString(value) {
-	    return ((typeof value) == 'string') ? new Terminal(value) : value;
+		return ((typeof value) == 'string') ? new Terminal(value) : value;
 	}
 
 
@@ -190,17 +190,17 @@ var temp = (function(options) {
 				x += 10;
 			}
 		}
-		var viewBoxWidth = this.width + paddingl + paddingr;
-        var viewBoxHeight = this.up + this.down + paddingt + paddingb;
-        this.attrs.viewBox = "0 0 "  + viewBoxWidth + " " + viewBoxHeight;
+		this.attrs.width = this.width + paddingl + paddingr;
+		this.attrs.height = this.up + this.down + paddingt + paddingb;
+		this.attrs.viewBox = "0 0 "  + this.attrs.width + " " + this.attrs.height;
 		g.addTo(this);
 		this.formatted = true;
 		return this;
 	}
 	Diagram.prototype.addTo = function(parent) {
-        var scriptTag = document.getElementsByTagName('script');
-        scriptTag = scriptTag[scriptTag.length - 1];
-        var parentTag = scriptTag.parentNode;
+		var scriptTag = document.getElementsByTagName('script');
+		scriptTag = scriptTag[scriptTag.length - 1];
+		var parentTag = scriptTag.parentNode;
 		parent = parent || parentTag;
 		return this.$super.addTo.call(this, parent);
 	}
