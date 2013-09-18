@@ -1,6 +1,5 @@
 svg.railroad-diagram {
     background-color: hsl(30,20%,95%);
-    max-height: 100%     /*WebKit hack for https://bugs.webkit.org/show_bug.cgi?id=82489*/
 }
 svg.railroad-diagram path {
     stroke-width: 3;
