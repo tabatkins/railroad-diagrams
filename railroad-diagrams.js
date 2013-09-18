@@ -91,11 +91,11 @@ var temp = (function(options) {
 		return el;
 	};
 	FakeSVG.prototype.toString = function() {
-		var str = '<' + this.tagName + ' ';
+		var str = '<' + this.tagName;
 		for(var attr in this.attrs) {
-			str += attr + '="' + (this.attrs[attr]+'').replace('&', '&amp;').replace('"', '&quot;') + '" ';
+			str += ' ' + attr + '="' + (this.attrs[attr]+'').replace('&', '&amp;').replace('"', '&quot;') + '"';
 		}
-		str += '>';
+		str += '>\n';
 		if(typeof this.children == 'string') {
 			str += this.children.replace('&', '&amp;').replace('<', '&lt;');
 		} else {
@@ -103,7 +103,7 @@ var temp = (function(options) {
 				str += e;
 			});
 		}
-		str += '</' + this.tagName + '>';
+		str += '</' + this.tagName + '>\n';
 		return str;
 	}
 
