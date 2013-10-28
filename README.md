@@ -14,6 +14,8 @@ There are several railroad-diagram generators out there, but none of them had th
 [Here's an example of how they look!](http://www.xanthir.com/etc/railroad-diagrams/example.html)
 And [here's an online generator for you to play with and get SVG code from!](http://www.xanthir.com/etc/railroad-diagrams/generator.html)
 
+The library now exists in a Python port as well!  See the information further down.
+
 Details
 -------
 
@@ -39,7 +41,7 @@ If called without `new`,
 the container components become n-ary;
 that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
-After constructing a Diagram, call `.format(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).  
+After constructing a Diagram, call `.format(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).
 
 The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an `<svg>` element, which can then be immediately inserted to the document.  As a convenience, Diagram also has an `.addTo(element)` method, which immediately converts it to SVG and appends it to the referenced element with default paddings. `element` defaults to `document.body`.
 
@@ -48,7 +50,7 @@ Options
 
 There are a few options you can tweak, at the bottom of the file.  Just tweak either until the diagram looks like what you want.
 You can also change the CSS file - feel free to tweak to your heart's content.
-Note, though, that if you change the text sizes in the CSS, 
+Note, though, that if you change the text sizes in the CSS,
 you'll have to go adjust the metrics for the leaf nodes as well.
 
 * VERTICAL_SEPARATION - sets the minimum amount of vertical separation between two items.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width.
@@ -63,6 +65,15 @@ Caveats
 At this early stage, the generator is feature-complete and works as intended, but still has several TODOs:
 
 * The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
+
+Python Port
+-----------
+
+In addition to the canonical JS version, the library now exists as a Python library as well.
+
+Using it is basically identical.  The config variables are globals in the file, and so may be adjusted either manually or via tweaking from inside your program.
+
+The main difference from the JS port is how you extract the string from the Diagram.  You'll find a `writeSvg(writerFunc)` method on `Diagram`, which takes a callback of one argument and passes it the string form of the diagram.  For example, it can be used like `Diagram(...).writeSvg(sys.stdout.write)` to write to stdout.  **Note**: the callback will be called multiple times as it builds up the string, not just once with the whole thing.  If you need it all at once, consider something like a `StringIO` as an easy way to collect it into a single string.
 
 License
 -------
