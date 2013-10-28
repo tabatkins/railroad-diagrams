@@ -102,8 +102,8 @@ class Diagram(DiagramItem):
         self.items = [Start()] + [wrapString(item) for item in items] + [End()]
         self.width = 1 + sum(item.width + (20 if item.needsSpace else 0)
                              for item in self.items)
-        self.up = sum(item.up for item in self.items)
-        self.down = sum(item.down for item in self.items)
+        self.up = max(item.up for item in self.items)
+        self.down = max(item.down for item in self.items)
         self.formatted = False
 
     def format(self, paddingTop=20, paddingRight=None, paddingBottom=None, paddingLeft=None):
@@ -129,7 +129,7 @@ class Diagram(DiagramItem):
                 x += 10
         self.attrs['width'] = self.width + paddingLeft + paddingRight
         self.attrs['height'] = self.up + self.down + paddingTop + paddingBottom
-        self.attrs['viewBox'] = "0 0 {0} {1}".format(self.attrs['width'], self.attrs['height'])
+        self.attrs['viewBox'] = "0 0 {width} {height}".format(**self.attrs)
         g.addTo(self)
         self.formatted = True
         return self
