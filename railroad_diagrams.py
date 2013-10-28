@@ -9,7 +9,7 @@ INTERNAL_ALIGNMENT = 'center'
 CHARACTER_ADVANCE = 8
 
 def e(text):
-    return str(value).replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;')
+    return str(text).replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;')
 
 def determineGaps(outer, inner):
     diff = outer - inner
@@ -27,7 +27,7 @@ class DiagramItem(object):
         self.name = name
         self.attrs = attrs or {}
         self.children = [text] if text else []
-        self.needs_space = False
+        self.needsSpace = False
 
     def format(self, x, y, width):
         raise NotImplementedError  # Virtual
@@ -92,15 +92,15 @@ class Path(DiagramItem):
         return self
 
 
-def wrap_string(value):
+def wrapString(value):
     return value if isinstance(value, DiagramItem) else Terminal(value)
 
 
 class Diagram(DiagramItem):
     def __init__(self, *items):
         DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
-        self.items = [Start()] + [wrap_string(item) for item in items] + [End()]
-        self.width = 1 + sum(item.width + (20 if item.needs_space else 0)
+        self.items = [Start()] + [wrapString(item) for item in items] + [End()]
+        self.width = 1 + sum(item.width + (20 if item.needsSpace else 0)
                              for item in self.items)
         self.up = sum(item.up for item in self.items)
         self.down = sum(item.down for item in self.items)
@@ -119,12 +119,12 @@ class Diagram(DiagramItem):
         if TRANSLATE_HALF_PIXEL:
             g.attrs['transform'] = 'translate(.5 .5)'
         for item in self.items:
-            if item.needs_space:
+            if item.needsSpace:
                 Path(x, y).h(10).addTo(g)
                 x += 10
             item.format(x, y, item.width).addTo(g)
             x += item.width
-            if item.needs_space:
+            if item.needsSpace:
                 Path(x, y).h(10).addTo(g)
                 x += 10
         self.attrs['width'] = self.width + paddingLeft + paddingRight
@@ -144,8 +144,8 @@ class Diagram(DiagramItem):
 class Sequence(DiagramItem):
     def __init__(self, *items):
         DiagramItem.__init__(self, 'g')
-        self.items = [wrap_string(item) for item in items]
-        self.width = sum(item.width + (20 if item.needs_space else 0)
+        self.items = [wrapString(item) for item in items]
+        self.width = sum(item.width + (20 if item.needsSpace else 0)
                          for item in self.items)
         self.up = max(item.up for item in self.items)
         self.down = max(item.down for item in self.items)
@@ -153,15 +153,15 @@ class Sequence(DiagramItem):
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
         Path(x, y).h(leftGap).addTo(self)
-        Path(x+leftGap+self.width, y).h(rightGap).addTo(this)
+        Path(x+leftGap+self.width, y).h(rightGap).addTo(self)
         x += leftGap
         for item in self.items:
-            if item.needs_space:
+            if item.needsSpace:
                 Path(x, y).h(10).addTo(self)
                 x += 10
             item.format(x, y, item.width).addTo(self)
             x += item.width
-            if item.needs_space:
+            if item.needsSpace:
                 Path(x, y).h(10).addTo(self)
                 x += 10
         return self
@@ -172,7 +172,7 @@ class Choice(DiagramItem):
         DiagramItem.__init__(self, 'g')
         assert default < len(items)
         self.default = default
-        self.items = [wrap_string(item) for item in items]
+        self.items = [wrapString(item) for item in items]
         self.width = ARC_RADIUS * 4 + max(item.width for item in self.items)
         self.up = 0
         self.down = 0
@@ -187,7 +187,7 @@ class Choice(DiagramItem):
                 self.down += max(ARC_RADIUS, VERTICAL_SEPARATION + item.up + item.down)
 
     def format(self, x, y, width):
-        leftGap, rightGap = determineGaps(width, this.width)
+        leftGap, rightGap = determineGaps(width, self.width)
 
         # Hook up the two sides if self is narrower than its stated width.
         Path(x, y).h(leftGap).addTo(self)
@@ -195,44 +195,49 @@ class Choice(DiagramItem):
         x += leftGap
 
         last = len(self.items) - 1
-        inner_width = self.width - ARC_RADIUS * 4
+        innerWidth = self.width - ARC_RADIUS * 4
 
         # Do the elements that curve above
         above = self.items[:self.default]
         if above:
-            distance_from_y = max(
+            distanceFromY = max(
                 ARC_RADIUS * 2,
-                self.items[self.default].up + VERTICAL_SEPARATION
+                self.items[self.default].up
+                    + VERTICAL_SEPARATION
                     + self.items[self.default - 1].down)
         for i, item in list(enumerate(above))[::-1]:
-            Path(x, y).arc('se').up(distance_from_y - ARC_RADIUS * 2).arc('wn').addTo(self)
-            item.format(x + ARC_RADIUS * 2, y - distance_from_y, inner_width).addTo(self)
-            Path(x + ARC_RADIUS * 2 + inner_width, y - distance_from_y).arc('ne') \
-                .down(distance_from_y - ARC_RADIUS*2).arc('ws').addTo(self)
-            distance_from_y += max(
-                ARC_RADIUS, item.up + VERTICAL_SEPARATION + (
-                    self.items[i - 1].down if i > 0 else 0))
+            Path(x, y).arc('se').up(distanceFromY - ARC_RADIUS * 2).arc('wn').addTo(self)
+            item.format(x + ARC_RADIUS * 2, y - distanceFromY, innerWidth).addTo(self)
+            Path(x + ARC_RADIUS * 2 + innerWidth, y - distanceFromY).arc('ne') \
+                .down(distanceFromY - ARC_RADIUS*2).arc('ws').addTo(self)
+            distanceFromY += max(
+                ARC_RADIUS,
+                item.up
+                    + VERTICAL_SEPARATION
+                    + (self.items[i - 1].down if i > 0 else 0))
 
         # Do the straight-line path.
         Path(x, y).right(ARC_RADIUS * 2).addTo(self)
-        self.items[self.default].format(x + ARC_RADIUS * 2, y, inner_width).addTo(self)
-        Path(x + ARC_RADIUS * 2 + inner_width, y).right(ARC_RADIUS * 2).addTo(self)
+        self.items[self.default].format(x + ARC_RADIUS * 2, y, innerWidth).addTo(self)
+        Path(x + ARC_RADIUS * 2 + innerWidth, y).right(ARC_RADIUS * 2).addTo(self)
 
         # Do the elements that curve below
         below = self.items[self.default + 1:]
-        distance_from_y = max(
+        distanceFromY = max(
             ARC_RADIUS * 2,
-            self.items[self.default].down + VERTICAL_SEPARATION
+            self.items[self.default].down
+                + VERTICAL_SEPARATION
                 + self.items[self.default].up)
         for i, item in enumerate(below):
-            Path(x, y).arc('ne').down(distance_from_y - ARC_RADIUS * 2).arc('ws').addTo(self)
-            item.format(x + ARC_RADIUS * 2, y + distance_from_y, inner_width).addTo(self)
-            Path(x + ARC_RADIUS * 2 + inner_width, y + distance_from_y).arc('se') \
-                .up(distance_from_y - ARC_RADIUS * 2).arc('wn').addTo(self)
-            distance_from_y += max(
+            Path(x, y).arc('ne').down(distanceFromY - ARC_RADIUS * 2).arc('ws').addTo(self)
+            item.format(x + ARC_RADIUS * 2, y + distanceFromY, innerWidth).addTo(self)
+            Path(x + ARC_RADIUS * 2 + innerWidth, y + distanceFromY).arc('se') \
+                .up(distanceFromY - ARC_RADIUS * 2).arc('wn').addTo(self)
+            distanceFromY += max(
                 ARC_RADIUS,
-                item.down + VERTICAL_SEPARATION + (
-                    self.items[i + 1].up if i < len(self.items) else 0))
+                item.down
+                    + VERTICAL_SEPARATION
+                    + (self.items[i + 1].up if i < len(self.items) else 0))
         return self
 
 
@@ -244,21 +249,22 @@ class OneOrMore(DiagramItem):
     def __init__(self, item, repeat=None):
         DiagramItem.__init__(self, 'g')
         repeat = repeat or Skip()
-        self.item = wrap_string(item)
-        self.rep = wrap_string(repeat)
+        self.item = wrapString(item)
+        self.rep = wrapString(repeat)
         self.width = max(self.item.width, self.rep.width) + ARC_RADIUS * 2
         self.up = self.item.up
         self.down = max(
             ARC_RADIUS * 2,
             self.item.down + VERTICAL_SEPARATION + self.rep.up + self.rep.down)
-        self.needs_space = True
+        self.needsSpace = True
 
     def format(self, x, y, width):
+        leftGap, rightGap = determineGaps(width, self.width)
+
         # Hook up the two sides if self is narrower than its stated width.
-        diff = width - self.width
-        Path(x, y).h(diff / 2).addTo(self)
-        Path(x + diff / 2 + self.width, y).h(diff / 2).addTo(self)
-        x += diff / 2
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
+        x += leftGap
 
         # Draw item
         Path(x, y).right(ARC_RADIUS).addTo(self)
@@ -266,19 +272,18 @@ class OneOrMore(DiagramItem):
         Path(x + self.width - ARC_RADIUS, y).right(ARC_RADIUS).addTo(self)
 
         # Draw repeat arc
-        distance_from_y = max(ARC_RADIUS*2, self.item.down + VERTICAL_SEPARATION + self.rep.up)
-        Path(x + ARC_RADIUS, y).arc('nw').down(distance_from_y - ARC_RADIUS * 2) \
+        distanceFromY = max(ARC_RADIUS*2, self.item.down + VERTICAL_SEPARATION + self.rep.up)
+        Path(x + ARC_RADIUS, y).arc('nw').down(distanceFromY - ARC_RADIUS * 2) \
             .arc('ws').addTo(self)
-        self.rep.format(x + ARC_RADIUS, y + distance_from_y, self.width - ARC_RADIUS*2).addTo(self)
-        Path(x + self.width - ARC_RADIUS, y + distance_from_y).arc('se') \
-            .up(distance_from_y - ARC_RADIUS * 2).arc('en').addTo(self)
+        self.rep.format(x + ARC_RADIUS, y + distanceFromY, self.width - ARC_RADIUS*2).addTo(self)
+        Path(x + self.width - ARC_RADIUS, y + distanceFromY).arc('se') \
+            .up(distanceFromY - ARC_RADIUS * 2).arc('en').addTo(self)
 
         return self
 
 
 def ZeroOrMore(item, repeat=None):
     result = Optional(OneOrMore(item, repeat))
-    result.needsSpace = True  # XXX is this correct?
     return result
 
 
@@ -290,7 +295,7 @@ class Start(DiagramItem):
         self.down = 10
 
     def format(self, x, y, _width):
-        self.attrs['d'] = 'M %s %s v 20 m 10 -20 v 20 m -10 -10 h 20.5' % (x, y - 10)
+        self.attrs['d'] = 'M {0} {1} v 20 m 10 -20 v 20 m -10 -10 h 20.5'.format(x, y - 10)
         return self
 
 
@@ -302,7 +307,7 @@ class End(DiagramItem):
         self.down = 10
 
     def format(self, x, y, _width):
-        self.attrs['d'] = 'M %s %s h 20 m -10 -10 v 20 m 10 -20 v 20' % (x, y)
+        self.attrs['d'] = 'M {0} {1} h 20 m -10 -10 v 20 m 10 -20 v 20'.format(x, y)
         return self
 
 
@@ -313,12 +318,16 @@ class Terminal(DiagramItem):
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
         self.down = 11
-        self.needs_space = True
+        self.needsSpace = True
 
     def format(self, x, y, width):
-        diff = width - self.width
-        Path(x, y).right(width).addTo(self)
-        DiagramItem('rect', {'x': x + diff / 2, 'y': y - 11, 'width': self.width,
+        leftGap, rightGap = determineGaps(width, self.width)
+
+        # Hook up the two sides if self is narrower than its stated width.
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
+
+        DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
                              'height': self.up + self.down, 'rx': 10, 'ry': 10}).addTo(self)
         DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text).addTo(self)
         return self
@@ -331,12 +340,16 @@ class NonTerminal(DiagramItem):
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
         self.down = 11
-        self.needs_space = True
+        self.needsSpace = True
 
     def format(self, x, y, width):
-        diff = width - self.width
-        Path(x, y).right(width).addTo(self)
-        DiagramItem('rect', {'x': x + diff / 2, 'y': y - 11, 'width': self.width,
+        leftGap, rightGap = determineGaps(width, self.width)
+
+        # Hook up the two sides if self is narrower than its stated width.
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
+
+        DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
                              'height': self.up + self.down}).addTo(self)
         DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text).addTo(self)
         return self
@@ -349,12 +362,15 @@ class Comment(DiagramItem):
         self.width = len(text) * 7 + 10
         self.up = 11
         self.down = 11
-        self.needs_space = True
+        self.needsSpace = True
 
     def format(self, x, y, width):
-        diff = width - self.width
-        Path(x, y).right(diff / 2).addTo(self)
-        Path(x + diff / 2 + self.width, y).right(diff / 2).addTo(self)
+        leftGap, rightGap = determineGaps(width, self.width)
+
+        # Hook up the two sides if self is narrower than its stated width.
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
+
         DiagramItem('text', {'x': x + width / 2, 'y': y + 5, 'class': 'comment'}, self.text).addTo(self)
         return self
 
@@ -373,9 +389,10 @@ class Skip(DiagramItem):
 
 if __name__ == '__main__':
     def add(name, diagram):
-        sys.stdout.write('%s\n' % name)
+        sys.stdout.write('<h1>{0}</h1>\n'.format(e(name)))
         diagram.writeSvg(sys.stdout.write)
         sys.stdout.write('\n')
 
     import sys
+    sys.stdout.write("<!doctype html><title>Test</title><link href='railroad-diagrams.css' rel=stylesheet>")
     exec(open('css-example.py-js').read())
