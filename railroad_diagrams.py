@@ -38,7 +38,7 @@ class DiagramItem(object):
 
     def writeSvg(self, write):
         write('<{0}'.format(self.name))
-        for name, value in self.attrs.items():
+        for name, value in sorted(self.attrs.items()):
             write(' {0}="{1}"'.format(name, e(value)))
         write('>\n')
         for child in self.children:
