@@ -1,4 +1,4 @@
-/* 
+/*
 Railroad Diagrams
 by Tab Atkins Jr. (and others)
 http://xanthir.com
@@ -12,7 +12,7 @@ Don't ask me for permission to use any part of this project, JUST USE IT.
 I would appreciate attribution, but that is not required by the license.
 */
 
-/* 
+/*
 This file uses a module pattern to avoid leaking names into the global scope.
 The only accidental leakage is the name "temp".
 The exported names can be found at the bottom of this file;
@@ -37,7 +37,7 @@ var temp = (function(options) {
 		switch(Diagram.INTERNAL_ALIGNMENT) {
 			case 'left': return [0, diff]; break;
 			case 'right': return [diff, 0]; break;
-			case 'center': 
+			case 'center':
 			default: return [diff/2, diff/2]; break;
 		}
 	}
@@ -160,8 +160,8 @@ var temp = (function(options) {
 		this.items.unshift(new Start);
 		this.items.push(new End);
 		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
-		this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
-		this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
+		this.up = Math.max.apply(this.items.map(function(x){return x.up}));
+		this.down = Math.max.apply(this.items.map(function(x){return x.down}));
 		this.formatted = false;
 	}
 	subclassOf(Diagram, FakeSVG);
@@ -467,7 +467,7 @@ return [Diagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, No
 	}
 );
 
-/* 
+/*
 These are the names that the internal classes are exported as.
 If you would like different names, adjust them here.
 */
