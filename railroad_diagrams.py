@@ -4,6 +4,7 @@ ARC_RADIUS = 10
 DIAGRAM_CLASS = 'railroad-diagram'
 TRANSLATE_HALF_PIXEL = True
 INTERNAL_ALIGNMENT = 'center'
+DEBUG=False
 
 # Assume a monospace font with each char .5em wide, and the em is 16px
 CHARACTER_ADVANCE = 8
@@ -149,6 +150,9 @@ class Sequence(DiagramItem):
                          for item in self.items)
         self.up = max(item.up for item in self.items)
         self.down = max(item.down for item in self.items)
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "sequence"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -185,6 +189,9 @@ class Choice(DiagramItem):
             else:
                 assert i > default
                 self.down += max(ARC_RADIUS, VERTICAL_SEPARATION + item.up + item.down)
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "choice"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -223,12 +230,13 @@ class Choice(DiagramItem):
 
         # Do the elements that curve below
         below = self.items[self.default + 1:]
-        distanceFromY = max(
-            ARC_RADIUS * 2,
-            self.items[self.default].down
-                + VERTICAL_SEPARATION
-                + self.items[self.default].up)
         for i, item in enumerate(below):
+            if i == 0:
+                distanceFromY = max(
+                    ARC_RADIUS * 2,
+                    self.items[self.default].down
+                        + VERTICAL_SEPARATION
+                        + item.up)
             Path(x, y).arc('ne').down(distanceFromY - ARC_RADIUS * 2).arc('ws').addTo(self)
             item.format(x + ARC_RADIUS * 2, y + distanceFromY, innerWidth).addTo(self)
             Path(x + ARC_RADIUS * 2 + innerWidth, y + distanceFromY).arc('se') \
@@ -257,6 +265,9 @@ class OneOrMore(DiagramItem):
             ARC_RADIUS * 2,
             self.item.down + VERTICAL_SEPARATION + self.rep.up + self.rep.down)
         self.needsSpace = True
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "oneormore"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -293,6 +304,9 @@ class Start(DiagramItem):
         self.width = 20
         self.up = 10
         self.down = 10
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "start"
 
     def format(self, x, y, _width):
         self.attrs['d'] = 'M {0} {1} v 20 m 10 -20 v 20 m -10 -10 h 20.5'.format(x, y - 10)
@@ -305,6 +319,9 @@ class End(DiagramItem):
         self.width = 20
         self.up = 10
         self.down = 10
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "end"
 
     def format(self, x, y, _width):
         self.attrs['d'] = 'M {0} {1} h 20 m -10 -10 v 20 m 10 -20 v 20'.format(x, y)
@@ -319,6 +336,9 @@ class Terminal(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "terminal"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -341,6 +361,9 @@ class NonTerminal(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "non-terminal"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -363,6 +386,9 @@ class Comment(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "comment"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -381,6 +407,9 @@ class Skip(DiagramItem):
         self.width = 0
         self.up = 0
         self.down = 0
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-type'] = "skip"
 
     def format(self, x, y, width):
         Path(x, y).right(width).addTo(self)
