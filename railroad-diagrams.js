@@ -160,8 +160,8 @@ var temp = (function(options) {
 		this.items.unshift(new Start);
 		this.items.push(new End);
 		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
-		this.up = Math.max.apply(this.items.map(function(x){return x.up}));
-		this.down = Math.max.apply(this.items.map(function(x){return x.down}));
+		this.up = Math.max.apply(null, this.items.map(function (x) { return x.up; }));
+		this.down = Math.max.apply(null, this.items.map(function (x) { return x.down; }));
 		this.formatted = false;
 	}
 	subclassOf(Diagram, FakeSVG);
