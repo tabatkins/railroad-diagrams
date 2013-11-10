@@ -170,9 +170,9 @@ var temp = (function(options) {
 	}
 	Diagram.prototype.format = function(paddingt, paddingr, paddingb, paddingl) {
 		paddingt = unnull(paddingt, 20);
-		paddingr = unnull(paddingt, 20);
-		paddingb = unnull(paddingt, 20);
-		paddingl = unnull(paddingr, 20);
+		paddingr = unnull(paddingr, paddingt, 20);
+		paddingb = unnull(paddingb, paddingt, 20);
+		paddingl = unnull(paddingl, paddingr, 20);
 		var x = paddingl;
 		var y = paddingt;
 		y += this.up;
