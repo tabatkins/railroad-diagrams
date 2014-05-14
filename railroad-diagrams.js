@@ -252,7 +252,13 @@ var temp = (function(options) {
 	function Choice(normal, items) {
 		if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
 		FakeSVG.call(this, 'g');
-		this.normal = normal;
+		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
+			throw new TypeError("The first argument of Choice() must be an integer.");
+		} else if(normal < 0 || normal >= items.length) {
+			throw new RangeError("The first argument of Choice() must be an index for one of the items.");
+		} else {
+			this.normal = normal;
+		}
 		this.items = items.map(wrapString);
 		this.width = this.items.reduce(function(sofar, el){return Math.max(sofar, el.width)},0) + Diagram.ARC_RADIUS*4;
 		this.up = this.down = 0;
