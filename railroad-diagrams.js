@@ -92,10 +92,12 @@ var temp = (function(options) {
 	};
 	FakeSVG.prototype.toString = function() {
 		var str = '<' + this.tagName;
+		var group = this.tagName == "g" || this.tagName == "svg";
 		for(var attr in this.attrs) {
 			str += ' ' + attr + '="' + (this.attrs[attr]+'').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"';
 		}
-		str += '>\n';
+		str += '>';
+		if(group) str += "\n";
 		if(typeof this.children == 'string') {
 			str += this.children.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 		} else {
