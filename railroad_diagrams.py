@@ -245,7 +245,7 @@ class Choice(DiagramItem):
                 ARC_RADIUS,
                 item.down
                     + VERTICAL_SEPARATION
-                    + (self.items[i + 1].up if i < len(self.items) else 0))
+                    + (below[i + 1].up if i+1 < len(below) else 0))
         return self
 
 
