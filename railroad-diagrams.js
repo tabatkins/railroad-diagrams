@@ -79,10 +79,16 @@ var temp = (function(options) {
 			return svg;
 		}
 	};
+	FakeSVG.prototype.escapeString = function(string) {
+                // Escape markdown and HTML special characters
+		return string.replace(/[*_\`\[\]<&]/g, function(charString) {
+			return '&#' + charString.charCodeAt(0) + ';';
+		});
+	};
 	FakeSVG.prototype.toSVG = function() {
 		var el = SVG(this.tagName, this.attrs);
 		if(typeof this.children == 'string') {
-			el.textContent = this.children;
+			el.innerHTML = FakeSVG.prototype.escapeString(this.children);
 		} else {
 			this.children.forEach(function(e) {
 				el.appendChild(e.toSVG());
@@ -99,7 +105,7 @@ var temp = (function(options) {
 		str += '>';
 		if(group) str += "\n";
 		if(typeof this.children == 'string') {
-			str += this.children.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+			str += FakeSVG.prototype.escapeString(this.children);
 		} else {
 			this.children.forEach(function(e) {
 				str += e;
