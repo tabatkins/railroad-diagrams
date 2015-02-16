@@ -21,6 +21,7 @@ Details
 
 To use the library, just include the js and css files, and then call the Diagram() function.
 Its arguments are the components of the diagram (Diagram is a special form of Sequence).
+An alternative to Diagram() is ComplexDiagram() which is used to describe a complex type diagram.
 Components are either leaves or containers.
 
 The leaves:
