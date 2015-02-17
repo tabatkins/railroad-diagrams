@@ -225,6 +225,17 @@ var temp = (function(options) {
 		return this.$super.toString.call(this);
 	}
 
+	function ComplexDiagram() {
+		var diagram = new Diagram([].slice.call(arguments));
+                var items = diagram.items;
+		items.shift();
+		items.pop();
+		items.unshift(new Start(false));
+		items.push(new End(false));
+		diagram.items = items;
+		return diagram;
+        }
+
 	function Sequence(items) {
 		if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
@@ -366,29 +377,39 @@ var temp = (function(options) {
 		return Optional(OneOrMore(item, rep), skip);
 	}
 
-	function Start() {
+	function Start(simpleType) {
 		if(!(this instanceof Start)) return new Start();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
 		this.up = 10;
 		this.down = 10;
+		this.simpleType = simpleType;
 	}
 	subclassOf(Start, FakeSVG);
 	Start.prototype.format = function(x,y) {
-		this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
+		if (this.simpleType === false) {
+			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 0 -10 h 20.5';
+		} else {
+			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
+		}
 		return this;
 	}
 
-	function End() {
+	function End(simpleType) {
 		if(!(this instanceof End)) return new End();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
 		this.up = 10;
 		this.down = 10;
+		this.simpleType = simpleType;
 	}
 	subclassOf(End, FakeSVG);
 	End.prototype.format = function(x,y) {
-		this.attrs.d = 'M '+x+' '+y+' h 20 m -10 -10 v 20 m 10 -20 v 20';
+		if (this.simpleType === false) {
+			this.attrs.d = 'M '+x+' '+y+' h 20 m 0 -10 v 20';
+		} else {
+			this.attrs.d = 'M '+x+' '+y+' h 20 m -10 -10 v 20 m 10 -20 v 20';
+		}
 		return this;
 	}
 
@@ -470,7 +491,7 @@ var temp = (function(options) {
 		return this;
 	}
 
-return [Diagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip]
+return [Diagram, ComplexDiagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip]
 })(
 	{
 	VERTICAL_SEPARATION: 8,
@@ -485,5 +506,5 @@ return [Diagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, No
 These are the names that the internal classes are exported as.
 If you would like different names, adjust them here.
 */
-['Diagram', 'Sequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+['Diagram', 'ComplexDiagram', 'Sequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 	.forEach(function(e,i) { window[e] = temp[i]; });
