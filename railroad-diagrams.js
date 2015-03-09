@@ -22,7 +22,7 @@ As well, several configuration constants are passed into the module function at 
 At runtime, these constants can be found on the Diagram class.
 */
 
-var temp = (function(options) {
+(function(options) {
 	function subclassOf(baseClass, superClass) {
 		baseClass.prototype = Object.create(superClass.prototype);
 		baseClass.prototype.$super = superClass.prototype;
@@ -490,9 +490,30 @@ var temp = (function(options) {
 		Path(x,y).right(width).addTo(this);
 		return this;
 	}
+	
+	var root;
+	if (typeof define === 'function' && define.amd) {
+		// AMD. Register as an anonymous module.
+		root = {};
+		define([], function() {
+			return root;
+		});
+	} else if (typeof exports === 'object') {
+		// CommonJS for node
+		root = exports;
+	} else {
+		// Browser globals (root is window)
+		root = this;
+	}
 
-return [Diagram, ComplexDiagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip]
-})(
+	var temp = [Diagram, ComplexDiagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	/*
+	These are the names that the internal classes are exported as.
+	If you would like different names, adjust them here.
+	*/
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+		.forEach(function(e,i) { root[e] = temp[i]; });
+}).call(this,
 	{
 	VERTICAL_SEPARATION: 8,
 	ARC_RADIUS: 10,
@@ -501,10 +522,3 @@ return [Diagram, ComplexDiagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMo
 	INTERNAL_ALIGNMENT: 'center',
 	}
 );
-
-/*
-These are the names that the internal classes are exported as.
-If you would like different names, adjust them here.
-*/
-['Diagram', 'ComplexDiagram', 'Sequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
-	.forEach(function(e,i) { window[e] = temp[i]; });
