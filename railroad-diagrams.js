@@ -88,7 +88,7 @@ At runtime, these constants can be found on the Diagram class.
 	FakeSVG.prototype.toSVG = function() {
 		var el = SVG(this.tagName, this.attrs);
 		if(typeof this.children == 'string') {
-			el.innerHTML = FakeSVG.prototype.escapeString(this.children);
+			el.textContent = this.children;
 		} else {
 			this.children.forEach(function(e) {
 				el.appendChild(e.toSVG());
