@@ -46,6 +46,17 @@ At runtime, these constants can be found on the Diagram class.
 		return ((typeof value) == 'string') ? new Terminal(value) : value;
 	}
 
+	function stackAtIllegalPosition(items){
+		/* The height of the last line of the Stack is determined by the last child and 
+			therefore any element outside the Stack could overlap with other elements.
+			If the Stack is the last element no overlap can occur. */
+		for(var i = 0; i < items.length; i++) {
+			if(items[i] instanceof Stack && i !== items.length-1){
+				return true;
+			}
+		}
+		return false;
+	}
 
 	function SVG(name, attrs, text) {
 		attrs = attrs || {};
@@ -164,10 +175,14 @@ At runtime, these constants can be found on the Diagram class.
 	function Diagram(items) {
 		if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 		FakeSVG.call(this, 'svg', {class: Diagram.DIAGRAM_CLASS});
+		if(stackAtIllegalPosition(items)){
+			throw new RangeError("Stack() must only occur at the very last position of Diagram().");
+		}
 		this.items = items.map(wrapString);
 		this.items.unshift(new Start);
 		this.items.push(new End);
 		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
+		this.height = this.items.reduce(function(sofar, el) { return sofar + el.height }, 0);
 		this.up = Math.max.apply(null, this.items.map(function (x) { return x.up; }));
 		this.down = Math.max.apply(null, this.items.map(function (x) { return x.down; }));
 		this.formatted = false;
@@ -191,15 +206,16 @@ At runtime, these constants can be found on the Diagram class.
 				Path(x,y).h(10).addTo(g);
 				x += 10;
 			}
-			item.format(x, y, item.width).addTo(g);
-			x += item.width;
+			item.format(x, y, item.width+item.offsetX).addTo(g);
+			x += item.width + item.offsetX;
+			y += item.height;
 			if(item.needsSpace) {
 				Path(x,y).h(10).addTo(g);
 				x += 10;
 			}
 		}
 		this.attrs.width = this.width + paddingl + paddingr;
-		this.attrs.height = this.up + this.down + paddingt + paddingb;
+		this.attrs.height = this.up + this.height + this.down + paddingt + paddingb;
 		this.attrs.viewBox = "0 0 "  + this.attrs.width + " " + this.attrs.height;
 		g.addTo(this);
 		this.formatted = true;
@@ -239,8 +255,13 @@ At runtime, these constants can be found on the Diagram class.
 	function Sequence(items) {
 		if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
+		if(stackAtIllegalPosition(items)){
+			throw new RangeError("Stack() must only occur at the very last position of Sequence().");
+		}
 		this.items = items.map(wrapString);
 		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0);
+		this.offsetX = 0;
+		this.height = this.items.reduce(function(sofar, el) { return sofar + el.height }, 0);
 		this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 		this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
 	}
@@ -249,7 +270,7 @@ At runtime, these constants can be found on the Diagram class.
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
-		Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
 		for(var i = 0; i < this.items.length; i++) {
@@ -260,11 +281,81 @@ At runtime, these constants can be found on the Diagram class.
 			}
 			item.format(x, y, item.width).addTo(this);
 			x += item.width;
+			y += item.height;
 			if(item.needsSpace) {
 				Path(x,y).h(10).addTo(this);
 				x += 10;
 			}
 		}
+		return this;
+	}
+	
+	function Stack(items) {
+		if(!(this instanceof Stack)) return new Stack([].slice.call(arguments));
+		FakeSVG.call(this, 'g');
+		if(stackAtIllegalPosition(items)){
+			throw new RangeError("Stack() must only occur at the very last position of Stack().");
+		}
+		if( items.length === 0 ) {
+			throw new RangeError("Stack() must have at least one child.");
+		}
+		this.items = items.map(wrapString);
+		this.width = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.width + (el.needsSpace?20:0))}, 0);
+		if(this.items.length > 1){
+			this.width += Diagram.ARC_RADIUS*2;
+		}
+		
+		this.up = this.items[0].up;
+		this.down = this.items[this.items.length-1].down;
+		
+		this.height = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			this.height += this.items[i].height;
+			if(i !== this.items.length-1) {
+				this.height += Math.max(this.items[i].down, Diagram.VERTICAL_SEPARATION) + Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION) + Diagram.ARC_RADIUS*4;
+			}
+		}
+		
+		if(this.items.length === 0){
+			this.offsetX = 0;
+		}
+		else{
+			// the value is usually negative because the linebreak resets the x value for the next element
+			this.offsetX = -(this.width - this.items[this.items.length-1].width - this.items[this.items.length-1].offsetX - (this.items[this.items.length-1].needsSpace?20:0));
+			if(this.items.length > 1){
+				this.offsetX += Diagram.ARC_RADIUS*2;
+			}
+		}
+	}
+	subclassOf(Stack, FakeSVG);
+	Stack.prototype.format = function(x,y,width) {
+		var xIntitial = x;
+		
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			if(item.needsSpace) {
+				Path(x,y).h(10).addTo(this);
+				x += 10;
+			}
+			item.format(x, y, Math.max(item.width+item.offsetX, Diagram.ARC_RADIUS*2)).addTo(this);
+			x += Math.max(item.width+item.offsetX, Diagram.ARC_RADIUS*2);
+			y += item.height;
+			if(item.needsSpace) {
+				Path(x,y).h(10).addTo(this);
+				x += 10;
+			}
+			
+			if(i !== this.items.length-1) {
+				Path(x, y).arc('ne').down(Math.max(item.down, Diagram.VERTICAL_SEPARATION)).arc('es').left(x-xIntitial-Diagram.ARC_RADIUS*2).arc('nw').down(Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION)).arc('ws').addTo(this);
+				
+				y += Math.max(item.down, Diagram.VERTICAL_SEPARATION) + Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION) + Diagram.ARC_RADIUS*4;
+				x = xIntitial+Diagram.ARC_RADIUS*2;
+			}
+			
+		}
+		
+		Path(x,y).h(width-(this.width+this.offsetX)).addTo(this);
+		
 		return this;
 	}
 
@@ -280,12 +371,14 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		this.items = items.map(wrapString);
 		this.width = this.items.reduce(function(sofar, el){return Math.max(sofar, el.width)},0) + Diagram.ARC_RADIUS*4;
+		this.offsetX = 0;
+		this.height = this.items[normal].height;
 		this.up = this.down = 0;
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
-			if(i < normal) { this.up += Math.max(Diagram.ARC_RADIUS,item.up + item.down + Diagram.VERTICAL_SEPARATION); }
+			if(i < normal) { this.up += Math.max(Diagram.ARC_RADIUS,item.up + item.height + item.down + Diagram.VERTICAL_SEPARATION); }
 			if(i == normal) { this.up += Math.max(Diagram.ARC_RADIUS, item.up); this.down += Math.max(Diagram.ARC_RADIUS, item.down); }
-			if(i > normal) { this.down += Math.max(Diagram.ARC_RADIUS,Diagram.VERTICAL_SEPARATION + item.up + item.down); }
+			if(i > normal) { this.down += Math.max(Diagram.ARC_RADIUS,Diagram.VERTICAL_SEPARATION + item.up + item.down + item.height); }
 		}
 	}
 	subclassOf(Choice, FakeSVG);
@@ -293,7 +386,7 @@ At runtime, these constants can be found on the Diagram class.
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
-		Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
 		var last = this.items.length -1;
@@ -303,29 +396,29 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = this.normal - 1; i >= 0; i--) {
 			var item = this.items[i];
 			if( i == this.normal - 1 ) {
-				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i+1].up + Diagram.VERTICAL_SEPARATION + item.down);
+				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i+1].up + Diagram.VERTICAL_SEPARATION + item.height + item.down);
 			}
 			Path(x,y).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2).arc('wn').addTo(this);
 			item.format(x+Diagram.ARC_RADIUS*2,y - distanceFromY,innerWidth).addTo(this);
-			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y-distanceFromY).arc('ne').down(distanceFromY - Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
-			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.up + Diagram.VERTICAL_SEPARATION + (i == 0 ? 0 : this.items[i-1].down));
+			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y-distanceFromY+item.height).arc('ne').down(distanceFromY - item.height + this.items[this.normal].height - Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
+			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.up + Diagram.VERTICAL_SEPARATION + (i == 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
 		}
 
 		// Do the straight-line path.
 		Path(x,y).right(Diagram.ARC_RADIUS*2).addTo(this);
 		this.items[this.normal].format(x+Diagram.ARC_RADIUS*2, y, innerWidth).addTo(this);
-		Path(x+Diagram.ARC_RADIUS*2+innerWidth, y).right(Diagram.ARC_RADIUS*2).addTo(this);
+		Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+this.height).right(Diagram.ARC_RADIUS*2).addTo(this);
 
 		// Do the elements that curve below
 		for(var i = this.normal+1; i <= last; i++) {
 			var item = this.items[i];
 			if( i == this.normal + 1 ) {
-				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i-1].down + Diagram.VERTICAL_SEPARATION + item.up);
+				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i-1].height + this.items[i-1].down + Diagram.VERTICAL_SEPARATION + item.up);
 			}
 			Path(x,y).arc('ne').down(distanceFromY - Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
 			item.format(x+Diagram.ARC_RADIUS*2, y+distanceFromY, innerWidth).addTo(this);
-			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+distanceFromY).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2).arc('wn').addTo(this);
-			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.down + Diagram.VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
+			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+distanceFromY+item.height).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2 + item.height - this.items[this.normal].height).arc('wn').addTo(this);
+			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.height + item.down + Diagram.VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
 		}
 
 		return this;
@@ -347,8 +440,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.item = wrapString(item);
 		this.rep = wrapString(rep);
 		this.width = Math.max(this.item.width, this.rep.width) + Diagram.ARC_RADIUS*2;
+		this.offsetX = 0;
+		this.height = this.item.height;
 		this.up = this.item.up;
-		this.down = Math.max(Diagram.ARC_RADIUS*2, this.item.down + Diagram.VERTICAL_SEPARATION + this.rep.up + this.rep.down);
+		this.down = Math.max(Diagram.ARC_RADIUS*2, this.item.down + Diagram.VERTICAL_SEPARATION + this.rep.up + this.rep.height + this.rep.down);
 	}
 	subclassOf(OneOrMore, FakeSVG);
 	OneOrMore.prototype.needsSpace = true;
@@ -356,19 +451,19 @@ At runtime, these constants can be found on the Diagram class.
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
-		Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
 		// Draw item
 		Path(x,y).right(Diagram.ARC_RADIUS).addTo(this);
 		this.item.format(x+Diagram.ARC_RADIUS,y,this.width-Diagram.ARC_RADIUS*2).addTo(this);
-		Path(x+this.width-Diagram.ARC_RADIUS,y).right(Diagram.ARC_RADIUS).addTo(this);
+		Path(x+this.width-Diagram.ARC_RADIUS,y+this.height).right(Diagram.ARC_RADIUS).addTo(this);
 
 		// Draw repeat arc
-		var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.item.down+Diagram.VERTICAL_SEPARATION+this.rep.up);
+		var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.item.height+this.item.down+Diagram.VERTICAL_SEPARATION+this.rep.up);
 		Path(x+Diagram.ARC_RADIUS,y).arc('nw').down(distanceFromY-Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
 		this.rep.format(x+Diagram.ARC_RADIUS, y+distanceFromY, this.width - Diagram.ARC_RADIUS*2).addTo(this);
-		Path(x+this.width-Diagram.ARC_RADIUS, y+distanceFromY).arc('se').up(distanceFromY-Diagram.ARC_RADIUS*2).arc('en').addTo(this);
+		Path(x+this.width-Diagram.ARC_RADIUS, y+distanceFromY+this.rep.height).arc('se').up(distanceFromY-Diagram.ARC_RADIUS*2+this.rep.height-this.item.height).arc('en').addTo(this);
 
 		return this;
 	}
@@ -381,6 +476,8 @@ At runtime, these constants can be found on the Diagram class.
 		if(!(this instanceof Start)) return new Start();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 10;
 		this.down = 10;
 		this.simpleType = simpleType;
@@ -399,6 +496,8 @@ At runtime, these constants can be found on the Diagram class.
 		if(!(this instanceof End)) return new End();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 10;
 		this.down = 10;
 		this.simpleType = simpleType;
@@ -418,6 +517,8 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
 		this.width = text.length * 8 + 20; /* Assume that each char is .5em, and that the em is 16px */
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 11;
 		this.down = 11;
 	}
@@ -440,6 +541,8 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
 		this.width = text.length * 8 + 20;
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 11;
 		this.down = 11;
 	}
@@ -462,6 +565,8 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g');
 		this.text = text;
 		this.width = text.length * 7 + 10;
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 11;
 		this.down = 11;
 	}
@@ -471,7 +576,7 @@ At runtime, these constants can be found on the Diagram class.
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
-		Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
 		FakeSVG('text', {x:x+this.width/2, y:y+5, class:'comment'}, this.text).addTo(this);
@@ -482,6 +587,8 @@ At runtime, these constants can be found on the Diagram class.
 		if(!(this instanceof Skip)) return new Skip();
 		FakeSVG.call(this, 'g');
 		this.width = 0;
+		this.height = 0;
+		this.offsetX = 0;
 		this.up = 0;
 		this.down = 0;
 	}
@@ -506,12 +613,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
