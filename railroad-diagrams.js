@@ -415,7 +415,7 @@ At runtime, these constants can be found on the Diagram class.
 
 	function Terminal(text) {
 		if(!(this instanceof Terminal)) return new Terminal(text);
-		FakeSVG.call(this, 'g');
+		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
 		this.width = text.length * 8 + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.up = 11;
@@ -437,7 +437,7 @@ At runtime, these constants can be found on the Diagram class.
 
 	function NonTerminal(text) {
 		if(!(this instanceof NonTerminal)) return new NonTerminal(text);
-		FakeSVG.call(this, 'g');
+		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
 		this.width = text.length * 8 + 20;
 		this.up = 11;
