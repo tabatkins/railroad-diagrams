@@ -330,7 +330,7 @@ class End(DiagramItem):
 
 class Terminal(DiagramItem):
     def __init__(self, text):
-        DiagramItem.__init__(self, 'g')
+        DiagramItem.__init__(self, 'g', {'class': 'terminal'})
         self.text = text
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
@@ -355,7 +355,7 @@ class Terminal(DiagramItem):
 
 class NonTerminal(DiagramItem):
     def __init__(self, text):
-        DiagramItem.__init__(self, 'g')
+        DiagramItem.__init__(self, 'g', {'class': 'non-terminal'})
         self.text = text
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
