@@ -25,8 +25,8 @@ An alternative to Diagram() is ComplexDiagram() which is used to describe a comp
 Components are either leaves or containers.
 
 The leaves:
-* Terminal(text) or a bare string - represents literal text
-* NonTerminal(text) - represents an instruction or another production
+* Terminal(text, href) or a bare string - represents literal text. The 'href' attribute is optional, and creates a hyperlink with the given destination.
+* NonTerminal(text, href) - represents an instruction or another production. The 'href' attribute is optional, and creates a hyperlink with the given destination.
 * Comment(text) - a comment
 * Skip() - an empty line
 

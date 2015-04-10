@@ -67,7 +67,7 @@ Diagram(
 		Optional(NonTerminal('WS')),
 		Sequence(
 			Optional(NonTerminal('WS')),
-			NonTerminal('STRING'),
+			NonTerminal('STRING', '#string'),
 			Optional(NonTerminal('WS'))),
 		Sequence(
 			Optional(NonTerminal('WS')),
@@ -78,7 +78,7 @@ Diagram(
 			Optional(NonTerminal('WS')))),
 	')').addTo();
 </script>
-<h1>NUMBER</h1>
+<h1 id="number">NUMBER</h1>
 <script>
 Diagram(
 	Choice(1, '+', Skip(), '-'),
@@ -100,11 +100,11 @@ Diagram(
 </script>
 <h1>DIMENSION</h1>
 <script>
-Diagram(NonTerminal('NUMBER'), NonTerminal('IDENT')).addTo();
+Diagram(NonTerminal('NUMBER', '#number'), NonTerminal('IDENT')).addTo();
 </script>
 <h1>PERCENTAGE</h1>
 <script>
-Diagram(NonTerminal('NUMBER'), '%').addTo();
+Diagram(NonTerminal('NUMBER', '#number'), '%').addTo();
 </script>
 <h1>UNICODE-RANGE</h1>
 <script>
