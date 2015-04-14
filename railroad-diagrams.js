@@ -63,7 +63,10 @@ At runtime, these constants can be found on the Diagram class.
 		text = text || '';
 		var el = document.createElementNS("http://www.w3.org/2000/svg",name);
 		for(var attr in attrs) {
-			el.setAttribute(attr, attrs[attr]);
+			if(attr === 'xlink:href')
+				el.setAttributeNS("http://www.w3.org/1999/xlink", 'href', attrs[attr]);
+			else
+				el.setAttribute(attr, attrs[attr]);
 		}
 		el.textContent = text;
 		return el;
@@ -512,10 +515,11 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Terminal(text) {
-		if(!(this instanceof Terminal)) return new Terminal(text);
+	function Terminal(text, href) {
+		if(!(this instanceof Terminal)) return new Terminal(text, href);
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
+		this.href = href;
 		this.width = text.length * 8 + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.height = 0;
 		this.offsetX = 0;
@@ -532,14 +536,19 @@ At runtime, these constants can be found on the Diagram class.
 		x += gaps[0];
 
 		FakeSVG('rect', {x:x, y:y-11, width:this.width, height:this.up+this.down, rx:10, ry:10}).addTo(this);
-		FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text).addTo(this);
+		var text = FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text);
+		if(this.href)
+			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
+		else
+			text.addTo(this);
 		return this;
 	}
 
-	function NonTerminal(text) {
-		if(!(this instanceof NonTerminal)) return new NonTerminal(text);
+	function NonTerminal(text, href) {
+		if(!(this instanceof NonTerminal)) return new NonTerminal(text, href);
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
+		this.href = href;
 		this.width = text.length * 8 + 20;
 		this.height = 0;
 		this.offsetX = 0;
@@ -556,7 +565,11 @@ At runtime, these constants can be found on the Diagram class.
 		x += gaps[0];
 
 		FakeSVG('rect', {x:x, y:y-11, width:this.width, height:this.up+this.down}).addTo(this);
-		FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text).addTo(this);
+		var text = FakeSVG('text', {x:x+this.width/2, y:y+4}, this.text);
+		if(this.href)
+			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
+		else
+			text.addTo(this);
 		return this;
 	}
 
