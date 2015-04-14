@@ -36,6 +36,7 @@ The containers:
 * Optional(child, skip) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 * OneOrMore(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
 * ZeroOrMore(child, repeat, skip) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`.  The optional `skip` parameter is identical to Optional().
+* Stack(Children) - vertical concatenation where every item starts with a new line. A Stack must be the last child when used within a Sequence, Diagram or another Stack.
 
 For convenience, each component can be called with or without `new`.
 If called without `new`,
@@ -73,6 +74,8 @@ Python Port
 In addition to the canonical JS version, the library now exists as a Python library as well.
 
 Using it is basically identical.  The config variables are globals in the file, and so may be adjusted either manually or via tweaking from inside your program.
+
+The methods `Stack` and `ComplexDiagram` are not available.
 
 The main difference from the JS port is how you extract the string from the Diagram.  You'll find a `writeSvg(writerFunc)` method on `Diagram`, which takes a callback of one argument and passes it the string form of the diagram.  For example, it can be used like `Diagram(...).writeSvg(sys.stdout.write)` to write to stdout.  **Note**: the callback will be called multiple times as it builds up the string, not just once with the whole thing.  If you need it all at once, consider something like a `StringIO` as an easy way to collect it into a single string.
 
