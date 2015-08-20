@@ -262,8 +262,12 @@ At runtime, these constants can be found on the Diagram class.
 			throw new RangeError("Stack() must only occur at the very last position of Sequence().");
 		}
 		this.items = items.map(wrapString);
-		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0);
+		var numberOfItems = this.items.length;
+		this.width = this.items.reduce(function(sofar, el, i) {
+			return sofar + el.width + (el.needsSpace && i > 0 ? 10 : 0) + (el.needsSpace && i < numberOfItems-1 ? 10 : 0);
+		}, 0);
 		this.offsetX = 0;
+		this.needsSpace = true;
 		this.height = this.items.reduce(function(sofar, el) { return sofar + el.height }, 0);
 		this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
 		this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
@@ -278,14 +282,14 @@ At runtime, these constants can be found on the Diagram class.
 
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
-			if(item.needsSpace) {
+			if(item.needsSpace && i > 0) {
 				Path(x,y).h(10).addTo(this);
 				x += 10;
 			}
 			item.format(x, y, item.width).addTo(this);
 			x += item.width;
 			y += item.height;
-			if(item.needsSpace) {
+			if(item.needsSpace && i < this.items.length-1) {
 				Path(x,y).h(10).addTo(this);
 				x += 10;
 			}
