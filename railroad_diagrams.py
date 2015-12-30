@@ -10,7 +10,7 @@ DEBUG=False
 CHARACTER_ADVANCE = 8
 
 def e(text):
-    return str(text).replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;')
+    return re.replace(r"[*_\`\[\]<&]", text, lambda c: "&#{0};".format(ord(c)))
 
 def determineGaps(outer, inner):
     diff = outer - inner
