@@ -100,9 +100,11 @@ def wrapString(value):
 
 
 class Diagram(DiagramItem):
-    def __init__(self, *items):
+    def __init__(self, *items, **kwargs):
+        # Accepts a type=[simple|complex] kwarg
         DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
-        self.items = [Start()] + [wrapString(item) for item in items] + [End()]
+        self.type = kwargs.get("type", "simple")
+        self.items = [Start(self.type)] + [wrapString(item) for item in items] + [End(self.type)]
         self.width = 1 + sum(item.width + (20 if item.needsSpace else 0)
                              for item in self.items)
         self.up = max(item.up for item in self.items)
@@ -301,37 +303,45 @@ def ZeroOrMore(item, repeat=None):
 
 
 class Start(DiagramItem):
-    def __init__(self):
+    def __init__(self, type="simple"):
         DiagramItem.__init__(self, 'path')
         self.width = 20
         self.up = 10
         self.down = 10
+        self.type = type
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
             self.attrs['data-type'] = "start"
 
     def format(self, x, y, _width):
-        self.attrs['d'] = 'M {0} {1} v 20 m 10 -20 v 20 m -10 -10 h 20.5'.format(x, y - 10)
+        if self.type == "simple":
+            self.attrs['d'] = 'M {0} {1} v 20 m 10 -20 v 20 m -10 -10 h 20.5'.format(x, y - 10)
+        elif self.type == "complex":
+            self.attrs['d'] = 'M {0} {1} v 20 m 0 -10 h 20.5'
         return self
 
 
 class End(DiagramItem):
-    def __init__(self):
+    def __init__(self, type="simple"):
         DiagramItem.__init__(self, 'path')
         self.width = 20
         self.up = 10
         self.down = 10
+        self.type = type
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
             self.attrs['data-type'] = "end"
 
     def format(self, x, y, _width):
-        self.attrs['d'] = 'M {0} {1} h 20 m -10 -10 v 20 m 10 -20 v 20'.format(x, y)
+        if self.type == "simple":
+            self.attrs['d'] = 'M {0} {1} h 20 m -10 -10 v 20 m 10 -20 v 20'.format(x, y)
+        elif self.type == "complex":
+            self.attrs['d'] = 'M {0} {1} h 20 m 0 -10 v 20'
         return self
 
 
 class Terminal(DiagramItem):
-    def __init__(self, text):
+    def __init__(self, text, href=None):
         DiagramItem.__init__(self, 'g', {'class': 'terminal'})
         self.text = text
         self.width = len(text) * CHARACTER_ADVANCE + 20
@@ -356,7 +366,7 @@ class Terminal(DiagramItem):
 
 
 class NonTerminal(DiagramItem):
-    def __init__(self, text):
+    def __init__(self, text, href=None):
         DiagramItem.__init__(self, 'g', {'class': 'non-terminal'})
         self.text = text
         self.width = len(text) * CHARACTER_ADVANCE + 20
