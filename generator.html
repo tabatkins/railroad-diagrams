@@ -4,12 +4,12 @@
 <link href="railroad-diagrams.css" rel=stylesheet>
 <textarea class='input'>Diagram(
   Optional('+', 'skip'),
-  Choice(0, 
-    NonTerminal('name-start char'), 
+  Choice(0,
+    NonTerminal('name-start char'),
     NonTerminal('escape')),
     ZeroOrMore(
-      Choice(0, 
-        NonTerminal('name char'), 
+      Choice(0,
+        NonTerminal('name char'),
         NonTerminal('escape'))))</textarea>
 <div class='output-image'></div>
 <textarea class='output-text' readonly></textarea>

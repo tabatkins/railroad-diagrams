@@ -146,10 +146,10 @@ Diagram(
 		Sequence(
 			'SELECT',
 			Optional('DISTINCT', 'skip'),
-			Choice(0, 
-				'*', 
+			Choice(0,
+				'*',
 				OneOrMore(
-					Sequence(NonTerminal('expression'), Optional(Sequence('AS', NonTerminal('output_name')))), 
+					Sequence(NonTerminal('expression'), Optional(Sequence('AS', NonTerminal('output_name')))),
 					','
 				)
 			),

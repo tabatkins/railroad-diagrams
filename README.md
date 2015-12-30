@@ -11,8 +11,8 @@ I think (though I haven't given it a lot of thought yet) that if it's easy to wr
 the corresponding railroad diagram will be easy as well.
 
 There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted.
-[Here's an example of how they look!](http://www.xanthir.com/etc/railroad-diagrams/example.html)
-And [here's an online generator for you to play with and get SVG code from!](http://www.xanthir.com/etc/railroad-diagrams/generator.html)
+[Here's an example of how they look!](https://tabatkins.github.io/railroad-diagrams/example.html)
+And [here's an online generator for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
 The library now exists in a Python port as well!  See the information further down.
 
