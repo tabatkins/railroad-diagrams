@@ -225,10 +225,11 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 	Diagram.prototype.addTo = function(parent) {
-		var scriptTag = document.getElementsByTagName('script');
-		scriptTag = scriptTag[scriptTag.length - 1];
-		var parentTag = scriptTag.parentNode;
-		parent = parent || parentTag;
+		if(!parent) {
+			var scriptTag = document.getElementsByTagName('script');
+			scriptTag = scriptTag[scriptTag.length - 1];
+			parent = scriptTag.parentNode;
+		}
 		return this.$super.addTo.call(this, parent);
 	}
 	Diagram.prototype.toSVG = function() {
