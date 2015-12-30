@@ -150,8 +150,13 @@ class Sequence(DiagramItem):
     def __init__(self, *items):
         DiagramItem.__init__(self, 'g')
         self.items = [wrapString(item) for item in items]
-        self.width = sum(item.width + (20 if item.needsSpace else 0)
-                         for item in self.items)
+        self.needsSpace = True
+        self.width = sum(item.width + (20 if item.needsSpace else 0) for item in self.items)
+        # If first/last needed space, remove it from width, as the Seq needs space already
+        if self.items[0].needsSpace:
+            self.width -= 10
+        if self.items[-1].needsSpace:
+            self.width -= 10
         self.up = max(item.up for item in self.items)
         self.down = max(item.down for item in self.items)
         if DEBUG:
@@ -163,13 +168,13 @@ class Sequence(DiagramItem):
         Path(x, y).h(leftGap).addTo(self)
         Path(x+leftGap+self.width, y).h(rightGap).addTo(self)
         x += leftGap
-        for item in self.items:
-            if item.needsSpace:
+        for i,item in enumerate(self.items):
+            if item.needsSpace and i > 0:
                 Path(x, y).h(10).addTo(self)
                 x += 10
             item.format(x, y, item.width).addTo(self)
             x += item.width
-            if item.needsSpace:
+            if item.needsSpace and i < len(self.items)-1:
                 Path(x, y).h(10).addTo(self)
                 x += 10
         return self
