@@ -344,6 +344,7 @@ class Terminal(DiagramItem):
     def __init__(self, text, href=None):
         DiagramItem.__init__(self, 'g', {'class': 'terminal'})
         self.text = text
+        self.href = href
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
         self.down = 11
@@ -361,7 +362,12 @@ class Terminal(DiagramItem):
 
         DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
                              'height': self.up + self.down, 'rx': 10, 'ry': 10}).addTo(self)
-        DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text).addTo(self)
+        text = DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text)
+        if self.href is not None:
+            a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
+            text.addTo(a)
+        else:
+            text.addTo(self)
         return self
 
 
@@ -369,6 +375,7 @@ class NonTerminal(DiagramItem):
     def __init__(self, text, href=None):
         DiagramItem.__init__(self, 'g', {'class': 'non-terminal'})
         self.text = text
+        self.href = href
         self.width = len(text) * CHARACTER_ADVANCE + 20
         self.up = 11
         self.down = 11
@@ -386,14 +393,20 @@ class NonTerminal(DiagramItem):
 
         DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
                              'height': self.up + self.down}).addTo(self)
-        DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text).addTo(self)
+        text = DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text)
+        if self.href is not None:
+            a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
+            text.addTo(a)
+        else:
+            text.addTo(self)
         return self
 
 
 class Comment(DiagramItem):
-    def __init__(self, text):
+    def __init__(self, text, href=None):
         DiagramItem.__init__(self, 'g')
         self.text = text
+        self.href = href
         self.width = len(text) * 7 + 10
         self.up = 11
         self.down = 11
@@ -409,7 +422,12 @@ class Comment(DiagramItem):
         Path(x, y).h(leftGap).addTo(self)
         Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
 
-        DiagramItem('text', {'x': x + width / 2, 'y': y + 5, 'class': 'comment'}, self.text).addTo(self)
+        text = DiagramItem('text', {'x': x + width / 2, 'y': y + 5, 'class': 'comment'}, self.text)
+        if self.href is not None:
+            a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
+            text.addTo(a)
+        else:
+            text.addTo(self)
         return self
 
 

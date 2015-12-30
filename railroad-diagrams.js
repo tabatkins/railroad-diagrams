@@ -577,10 +577,11 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Comment(text) {
-		if(!(this instanceof Comment)) return new Comment(text);
+	function Comment(text, href) {
+		if(!(this instanceof Comment)) return new Comment(text, href);
 		FakeSVG.call(this, 'g');
 		this.text = text;
+		this.href = href;
 		this.width = text.length * 7 + 10;
 		this.height = 0;
 		this.offsetX = 0;
@@ -596,7 +597,11 @@ At runtime, these constants can be found on the Diagram class.
 		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
-		FakeSVG('text', {x:x+this.width/2, y:y+5, class:'comment'}, this.text).addTo(this);
+		var text = FakeSVG('text', {x:x+this.width/2, y:y+5, class:'comment'}, this.text);
+		if(this.href)
+			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
+		else
+			text.addTo(this);
 		return this;
 	}
 
