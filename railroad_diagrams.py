@@ -41,7 +41,9 @@ class DiagramItem(object):
         write('<{0}'.format(self.name))
         for name, value in sorted(self.attrs.items()):
             write(' {0}="{1}"'.format(name, e(value)))
-        write('>\n')
+        write('>')
+        if this.name in ["g", "svg"]:
+            write('\n')
         for child in self.children:
             if isinstance(child, DiagramItem):
                 child.writeSvg(write)
