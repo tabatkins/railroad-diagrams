@@ -307,7 +307,7 @@ At runtime, these constants can be found on the Diagram class.
 			throw new RangeError("Stack() must have at least one child.");
 		}
 		this.items = items.map(wrapString);
-		this.width = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.width + (el.needsSpace?20:0))}, 0);
+		this.width = Math.max.apply(null, this.items.map(function(el){return el.width + (el.needsSpace?20:0)}));
 		if(this.items.length > 1){
 			this.width += Diagram.ARC_RADIUS*2;
 		}
