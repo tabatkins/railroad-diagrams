@@ -47,7 +47,7 @@ At runtime, these constants can be found on the Diagram class.
 	}
 
 	function stackAtIllegalPosition(items){
-		/* The height of the last line of the Stack is determined by the last child and 
+		/* The height of the last line of the Stack is determined by the last child and
 			therefore any element outside the Stack could overlap with other elements.
 			If the Stack is the last element no overlap can occur. */
 		for(var i = 0; i < items.length; i++) {
@@ -249,8 +249,8 @@ At runtime, these constants can be found on the Diagram class.
                 var items = diagram.items;
 		items.shift();
 		items.pop();
-		items.unshift(new Start(false));
-		items.push(new End(false));
+		items.unshift(new Start("complex"));
+		items.push(new End("complex"));
 		diagram.items = items;
 		return diagram;
         }
@@ -296,7 +296,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		return this;
 	}
-	
+
 	function Stack(items) {
 		if(!(this instanceof Stack)) return new Stack([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
@@ -311,10 +311,10 @@ At runtime, these constants can be found on the Diagram class.
 		if(this.items.length > 1){
 			this.width += Diagram.ARC_RADIUS*2;
 		}
-		
+
 		this.up = this.items[0].up;
 		this.down = this.items[this.items.length-1].down;
-		
+
 		this.height = 0;
 		for(var i = 0; i < this.items.length; i++) {
 			this.height += this.items[i].height;
@@ -322,7 +322,7 @@ At runtime, these constants can be found on the Diagram class.
 				this.height += Math.max(this.items[i].down, Diagram.VERTICAL_SEPARATION) + Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION) + Diagram.ARC_RADIUS*4;
 			}
 		}
-		
+
 		if(this.items.length === 0){
 			this.offsetX = 0;
 		}
@@ -337,7 +337,7 @@ At runtime, these constants can be found on the Diagram class.
 	subclassOf(Stack, FakeSVG);
 	Stack.prototype.format = function(x,y,width) {
 		var xIntitial = x;
-		
+
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
 			if(item.needsSpace) {
@@ -351,18 +351,18 @@ At runtime, these constants can be found on the Diagram class.
 				Path(x,y).h(10).addTo(this);
 				x += 10;
 			}
-			
+
 			if(i !== this.items.length-1) {
 				Path(x, y).arc('ne').down(Math.max(item.down, Diagram.VERTICAL_SEPARATION)).arc('es').left(x-xIntitial-Diagram.ARC_RADIUS*2).arc('nw').down(Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION)).arc('ws').addTo(this);
-				
+
 				y += Math.max(item.down, Diagram.VERTICAL_SEPARATION) + Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION) + Diagram.ARC_RADIUS*4;
 				x = xIntitial+Diagram.ARC_RADIUS*2;
 			}
-			
+
 		}
-		
+
 		Path(x,y).h(width-(this.width+this.offsetX)).addTo(this);
-		
+
 		return this;
 	}
 
@@ -479,7 +479,7 @@ At runtime, these constants can be found on the Diagram class.
 		return Optional(OneOrMore(item, rep), skip);
 	}
 
-	function Start(simpleType) {
+	function Start(type) {
 		if(!(this instanceof Start)) return new Start();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
@@ -487,11 +487,11 @@ At runtime, these constants can be found on the Diagram class.
 		this.offsetX = 0;
 		this.up = 10;
 		this.down = 10;
-		this.simpleType = simpleType;
+		this.type = type || "simple";
 	}
 	subclassOf(Start, FakeSVG);
 	Start.prototype.format = function(x,y) {
-		if (this.simpleType === false) {
+		if (this.type === "complex") {
 			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 0 -10 h 20.5';
 		} else {
 			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
@@ -499,7 +499,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function End(simpleType) {
+	function End(type) {
 		if(!(this instanceof End)) return new End();
 		FakeSVG.call(this, 'path');
 		this.width = 20;
@@ -507,11 +507,11 @@ At runtime, these constants can be found on the Diagram class.
 		this.offsetX = 0;
 		this.up = 10;
 		this.down = 10;
-		this.simpleType = simpleType;
+		this.type = type || "simple";
 	}
 	subclassOf(End, FakeSVG);
 	End.prototype.format = function(x,y) {
-		if (this.simpleType === false) {
+		if (this.type === "complex") {
 			this.attrs.d = 'M '+x+' '+y+' h 20 m 0 -10 v 20';
 		} else {
 			this.attrs.d = 'M '+x+' '+y+' h 20 m -10 -10 v 20 m 10 -20 v 20';
@@ -614,7 +614,7 @@ At runtime, these constants can be found on the Diagram class.
 		Path(x,y).right(width).addTo(this);
 		return this;
 	}
-	
+
 	var root;
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
