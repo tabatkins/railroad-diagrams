@@ -94,7 +94,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 	};
 	FakeSVG.prototype.escapeString = function(string) {
-                // Escape markdown and HTML special characters
+		// Escape markdown and HTML special characters
 		return string.replace(/[*_\`\[\]<&]/g, function(charString) {
 			return '&#' + charString.charCodeAt(0) + ';';
 		});
@@ -219,7 +219,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		this.attrs.width = this.width + paddingl + paddingr;
 		this.attrs.height = this.up + this.height + this.down + paddingt + paddingb;
-		this.attrs.viewBox = "0 0 "  + this.attrs.width + " " + this.attrs.height;
+		this.attrs.viewBox = "0 0 " + this.attrs.width + " " + this.attrs.height;
 		g.addTo(this);
 		this.formatted = true;
 		return this;
@@ -246,14 +246,14 @@ At runtime, these constants can be found on the Diagram class.
 
 	function ComplexDiagram() {
 		var diagram = new Diagram([].slice.call(arguments));
-                var items = diagram.items;
+		var items = diagram.items;
 		items.shift();
 		items.pop();
 		items.unshift(new Start("complex"));
 		items.push(new End("complex"));
 		diagram.items = items;
 		return diagram;
-        }
+	}
 
 	function Sequence(items) {
 		if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
