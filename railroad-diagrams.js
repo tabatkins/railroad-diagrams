@@ -250,9 +250,13 @@ At runtime, these constants can be found on the Diagram class.
 			return sofar + el.width + (el.needsSpace && i > 0 ? 10 : 0) + (el.needsSpace && i < numberOfItems-1 ? 10 : 0);
 		}, 0);
 		this.needsSpace = true;
-		this.height = this.items.reduce(function(sofar, el) { return sofar + el.height }, 0);
-		this.up = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.up)}, 0);
-		this.down = this.items.reduce(function(sofar,el) { return Math.max(sofar, el.down)}, 0);
+		this.up = this.down = this.height = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			this.up = Math.max(this.up, item.up - this.height);
+			this.height += item.height;
+			this.down = Math.max(this.down - item.height, item.down);
+		}
 	}
 	subclassOf(Sequence, FakeSVG);
 	Sequence.prototype.format = function(x,y,width) {
