@@ -329,7 +329,7 @@ At runtime, these constants can be found on the Diagram class.
 
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
-			var innerWidth = this.width - Diagram.ARC_RADIUS*2;
+			var innerWidth = this.width - (this.items.length>1 ? Diagram.ARC_RADIUS*2 : 0);
 			item.format(x, y, innerWidth).addTo(this);
 			x += innerWidth;
 			y += item.height;
