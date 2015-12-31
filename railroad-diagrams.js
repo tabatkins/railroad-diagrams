@@ -398,9 +398,15 @@ At runtime, these constants can be found on the Diagram class.
 			if( i == this.normal - 1 ) {
 				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[this.normal].up + Diagram.VERTICAL_SEPARATION + item.down + item.height);
 			}
-			Path(x,y).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2).arc('wn').addTo(this);
+			Path(x,y)
+				.arc('se')
+				.up(distanceFromY - Diagram.ARC_RADIUS*2)
+				.arc('wn').addTo(this);
 			item.format(x+Diagram.ARC_RADIUS*2,y - distanceFromY,innerWidth).addTo(this);
-			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y-distanceFromY+item.height).arc('ne').down(distanceFromY - item.height + this.items[this.normal].height - Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
+			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y-distanceFromY+item.height)
+				.arc('ne')
+				.down(distanceFromY - item.height + this.items[this.normal].height - Diagram.ARC_RADIUS*2)
+				.arc('ws').addTo(this);
 			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.up + Diagram.VERTICAL_SEPARATION + (i == 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
 		}
 
@@ -413,11 +419,17 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = this.normal+1; i <= last; i++) {
 			var item = this.items[i];
 			if( i == this.normal + 1 ) {
-				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i-1].height + this.items[i-1].down + Diagram.VERTICAL_SEPARATION + item.up);
+				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[this.normal].height + this.items[this.normal].down + Diagram.VERTICAL_SEPARATION + item.up);
 			}
-			Path(x,y).arc('ne').down(distanceFromY - Diagram.ARC_RADIUS*2).arc('ws').addTo(this);
+			Path(x,y)
+				.arc('ne')
+				.down(distanceFromY - Diagram.ARC_RADIUS*2)
+				.arc('ws').addTo(this);
 			item.format(x+Diagram.ARC_RADIUS*2, y+distanceFromY, innerWidth).addTo(this);
-			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+distanceFromY+item.height).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2 + item.height - this.items[this.normal].height).arc('wn').addTo(this);
+			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+distanceFromY+item.height)
+				.arc('se')
+				.up(distanceFromY - Diagram.ARC_RADIUS*2 + item.height - this.items[this.normal].height)
+				.arc('wn').addTo(this);
 			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.height + item.down + Diagram.VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
 		}
 
