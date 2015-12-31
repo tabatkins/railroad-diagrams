@@ -257,6 +257,10 @@ At runtime, these constants can be found on the Diagram class.
 			this.height += item.height;
 			this.down = Math.max(this.down - item.height, item.down);
 		}
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "sequence"
+		}
 	}
 	subclassOf(Sequence, FakeSVG);
 	Sequence.prototype.format = function(x,y,width) {
@@ -306,6 +310,10 @@ At runtime, these constants can be found on the Diagram class.
 			if(i !== this.items.length-1) {
 				this.height += Math.max(this.items[i].down, Diagram.VERTICAL_SEPARATION) + Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION) + Diagram.ARC_RADIUS*2;
 			}
+		}
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "stack"
 		}
 	}
 	subclassOf(Stack, FakeSVG);
@@ -367,6 +375,10 @@ At runtime, these constants can be found on the Diagram class.
 			if(i < normal) { this.up += Math.max(Diagram.ARC_RADIUS,item.up + item.height + item.down + Diagram.VERTICAL_SEPARATION); }
 			if(i == normal) { this.up += Math.max(Diagram.ARC_RADIUS, item.up); this.down += Math.max(Diagram.ARC_RADIUS, item.down); }
 			if(i > normal) { this.down += Math.max(Diagram.ARC_RADIUS,Diagram.VERTICAL_SEPARATION + item.up + item.down + item.height); }
+		}
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "choice"
 		}
 	}
 	subclassOf(Choice, FakeSVG);
@@ -431,6 +443,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.height = this.item.height;
 		this.up = this.item.up;
 		this.down = Math.max(Diagram.ARC_RADIUS*2, this.item.down + Diagram.VERTICAL_SEPARATION + this.rep.up + this.rep.height + this.rep.down);
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "oneormore"
+		}
 	}
 	subclassOf(OneOrMore, FakeSVG);
 	OneOrMore.prototype.needsSpace = true;
@@ -467,6 +483,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 10;
 		this.down = 10;
 		this.type = type || "simple";
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "start"
+		}
 	}
 	subclassOf(Start, FakeSVG);
 	Start.prototype.format = function(x,y) {
@@ -486,6 +506,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 10;
 		this.down = 10;
 		this.type = type || "simple";
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "end"
+		}
 	}
 	subclassOf(End, FakeSVG);
 	End.prototype.format = function(x,y) {
@@ -506,6 +530,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "terminal"
+		}
 	}
 	subclassOf(Terminal, FakeSVG);
 	Terminal.prototype.needsSpace = true;
@@ -534,6 +562,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "nonterminal"
+		}
 	}
 	subclassOf(NonTerminal, FakeSVG);
 	NonTerminal.prototype.needsSpace = true;
@@ -562,6 +594,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "comment"
+		}
 	}
 	subclassOf(Comment, FakeSVG);
 	Comment.prototype.needsSpace = true;
@@ -587,6 +623,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.height = 0;
 		this.up = 0;
 		this.down = 0;
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-type'] = "skip"
+		}
 	}
 	subclassOf(Skip, FakeSVG);
 	Skip.prototype.format = function(x, y, width) {
