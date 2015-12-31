@@ -308,7 +308,7 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = 0; i < this.items.length; i++) {
 			this.height += this.items[i].height;
 			if(i !== this.items.length-1) {
-				this.height += Math.max(Diagram.ARC_RADIUS*4, this.items[i].down + Diagram.VERTICAL_SEPARATION*2 + this.items[i+1].up);
+				this.height += Math.max(this.items[i].down + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2) + Math.max(this.items[i+1].up + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2);
 			}
 		}
 		if(Diagram.DEBUG) {
@@ -336,11 +336,12 @@ At runtime, these constants can be found on the Diagram class.
 
 			if(i !== this.items.length-1) {
 				Path(x, y)
-					.arc('ne').down(Math.max(0,Math.max(item.down, Diagram.VERTICAL_SEPARATION)-Diagram.ARC_RADIUS))
+					.arc('ne').down(Math.max(0, item.down + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
 					.arc('es').left(innerWidth)
-					.arc('nw').down(Math.max(0,Math.max(this.items[i+1].up, Diagram.VERTICAL_SEPARATION)-Diagram.ARC_RADIUS))
+					.arc('nw').down(Math.max(0, this.items[i+1].up + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
 					.arc('ws').addTo(this);
-				y += Math.max(Diagram.ARC_RADIUS*4, item.down + Diagram.VERTICAL_SEPARATION*2 + this.items[i+1].up)
+				y += Math.max(item.down + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2) + Math.max(this.items[i+1].up + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2);
+				//y += Math.max(Diagram.ARC_RADIUS*4, item.down + Diagram.VERTICAL_SEPARATION*2 + this.items[i+1].up)
 				x = xInitial+Diagram.ARC_RADIUS;
 			}
 
@@ -395,7 +396,7 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = this.normal - 1; i >= 0; i--) {
 			var item = this.items[i];
 			if( i == this.normal - 1 ) {
-				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[i+1].up + Diagram.VERTICAL_SEPARATION + item.height + item.down);
+				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[this.normal].up + Diagram.VERTICAL_SEPARATION + item.down + item.height);
 			}
 			Path(x,y).arc('se').up(distanceFromY - Diagram.ARC_RADIUS*2).arc('wn').addTo(this);
 			item.format(x+Diagram.ARC_RADIUS*2,y - distanceFromY,innerWidth).addTo(this);
