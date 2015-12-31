@@ -373,7 +373,7 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
 			if(i < normal) { this.up += Math.max(Diagram.ARC_RADIUS,item.up + item.height + item.down + Diagram.VERTICAL_SEPARATION); }
-			if(i == normal) { this.up += Math.max(Diagram.ARC_RADIUS, item.up); this.down += Math.max(Diagram.ARC_RADIUS, item.down); }
+			if(i == normal) { this.up += Math.max(Diagram.ARC_RADIUS-Diagram.VERTICAL_SEPARATION, item.up); this.down += Math.max(Diagram.ARC_RADIUS-Diagram.VERTICAL_SEPARATION, item.down); }
 			if(i > normal) { this.down += Math.max(Diagram.ARC_RADIUS,Diagram.VERTICAL_SEPARATION + item.up + item.down + item.height); }
 		}
 		if(Diagram.DEBUG) {
