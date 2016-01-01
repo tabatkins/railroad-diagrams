@@ -292,15 +292,15 @@ class Choice(DiagramItem):
         default = self.items[self.default]
 
         # Do the elements that curve above
-        above = self.items[:self.default]
+        above = self.items[:self.default][::-1]
         if above:
             distanceFromY = max(
                 ARC_RADIUS * 2,
-                self.items[self.default].up
+                default.up
                     + VERTICAL_SEPARATION
                     + above[0].down
                     + above[0].height)
-        for i, item in list(enumerate(above))[::-1]:
+        for i, item in enumerate(above):
             Path(x, y).arc('se').up(distanceFromY - ARC_RADIUS * 2).arc('wn').addTo(self)
             item.format(x + ARC_RADIUS * 2, y - distanceFromY, innerWidth).addTo(self)
             Path(x + ARC_RADIUS * 2 + innerWidth, y - distanceFromY + item.height).arc('ne') \
