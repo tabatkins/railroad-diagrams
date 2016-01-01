@@ -187,17 +187,20 @@ class Choice(DiagramItem):
         self.default = default
         self.items = [wrapString(item) for item in items]
         self.width = ARC_RADIUS * 4 + max(item.width for item in self.items)
-        self.up = 0
-        self.down = 0
+        last = len(items)-1;
+        self.up = items[0].up;
+        self.down = items[-1].down;
         for i, item in enumerate(self.items):
-            if i < default:
-                self.up += max(ARC_RADIUS, item.up + item.down + VERTICAL_SEPARATION)
-            elif i == default:
-                self.up += max(ARC_RADIUS, item.up)
-                self.down += max(ARC_RADIUS, item.down)
+            if i in [default-1, default+1]:
+                arcs = ARC_RADIUS*2
             else:
-                assert i > default
-                self.down += max(ARC_RADIUS, VERTICAL_SEPARATION + item.up + item.down)
+                arcs = ARC_RADIUS
+            if i < default:
+                self.up += max(arcs, item.down + VERTICAL_SEPARATION + self.items[i+1].up)
+            elif i == default:
+                continue
+            else:
+                self.down += max(arcs, item.up + VERTICAL_SEPARATION + self.items[i-1].down)
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
             self.attrs['data-type'] = "choice"

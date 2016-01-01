@@ -366,16 +366,24 @@ At runtime, these constants can be found on the Diagram class.
 		} else {
 			this.normal = normal;
 		}
+		var first = 0;
+		var last = items.length - 1;
 		this.items = items.map(wrapString);
-		this.width = this.items.reduce(function(sofar, el){return Math.max(sofar, el.width)},0) + Diagram.ARC_RADIUS*4;
+		this.width = Math.max.apply(null, this.items.map(function(el){return el.width})) + Diagram.ARC_RADIUS*4;
 		this.height = this.items[normal].height;
-		this.up = this.down = 0;
-		for(var i = 0; i < this.items.length; i++) {
-			var item = this.items[i];
-			if(i < normal) { this.up += Math.max(Diagram.ARC_RADIUS,item.up + item.height + item.down + Diagram.VERTICAL_SEPARATION); }
-			if(i == normal) { this.up += Math.max(Diagram.ARC_RADIUS-Diagram.VERTICAL_SEPARATION, item.up); this.down += Math.max(Diagram.ARC_RADIUS-Diagram.VERTICAL_SEPARATION, item.down); }
-			if(i > normal) { this.down += Math.max(Diagram.ARC_RADIUS,Diagram.VERTICAL_SEPARATION + item.up + item.down + item.height); }
+		this.up = this.items[first].up;
+		for(var i = first; i < normal; i++) {
+			if(i == normal-1) var arcs = Diagram.ARC_RADIUS*2;
+			else var arcs = Diagram.ARC_RADIUS;
+			this.up += Math.max(arcs, this.items[i].height + this.items[i].down + Diagram.VERTICAL_SEPARATION + this.items[i+1].up);
 		}
+		this.down = this.items[last].down;
+		for(var i = normal+1; i <= last; i++) {
+			if(i == normal+1) var arcs = Diagram.ARC_RADIUS*2;
+			else var arcs = Diagram.ARC_RADIUS;
+			this.down += Math.max(arcs, this.items[i-1].height + this.items[i-1].down + Diagram.VERTICAL_SEPARATION + this.items[i].up);
+		}
+		this.down -= this.items[normal].height; // already counted in Choice.height
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.down
 			this.attrs['data-type'] = "choice"
