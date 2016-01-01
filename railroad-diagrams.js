@@ -169,10 +169,14 @@ At runtime, these constants can be found on the Diagram class.
 		this.items = items.map(wrapString);
 		this.items.unshift(new Start);
 		this.items.push(new End);
-		this.width = this.items.reduce(function(sofar, el) { return sofar + el.width + (el.needsSpace?20:0)}, 0)+1;
-		this.height = this.items.reduce(function(sofar, el) { return sofar + el.height }, 0);
-		this.up = Math.max.apply(null, this.items.map(function (x) { return x.up; }));
-		this.down = Math.max.apply(null, this.items.map(function (x) { return x.down; }));
+		this.up = this.down = this.height = this.width = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			this.width += item.width + (item.needsSpace?20:0);
+			this.up = Math.max(this.up, item.up - this.height);
+			this.height += item.height;
+			this.down = Math.max(this.down - item.height, item.down);
+		}
 		this.formatted = false;
 	}
 	subclassOf(Diagram, FakeSVG);
@@ -246,17 +250,17 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g');
 		this.items = items.map(wrapString);
 		var numberOfItems = this.items.length;
-		this.width = this.items.reduce(function(sofar, el, i) {
-			return sofar + el.width + (el.needsSpace && i > 0 ? 10 : 0) + (el.needsSpace && i < numberOfItems-1 ? 10 : 0);
-		}, 0);
 		this.needsSpace = true;
-		this.up = this.down = this.height = 0;
+		this.up = this.down = this.height = this.width = 0;
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
+			this.width += item.width + (item.needsSpace?20:0);
 			this.up = Math.max(this.up, item.up - this.height);
 			this.height += item.height;
 			this.down = Math.max(this.down - item.height, item.down);
 		}
+		if(this.items[0].needsSpace) this.width -= 10;
+		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.down
 			this.attrs['data-type'] = "sequence"
