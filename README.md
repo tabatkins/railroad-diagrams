@@ -27,7 +27,7 @@ Components are either leaves or containers.
 The leaves:
 * Terminal(text, href) or a bare string - represents literal text. The 'href' attribute is optional, and creates a hyperlink with the given destination.
 * NonTerminal(text, href) - represents an instruction or another production. The 'href' attribute is optional, and creates a hyperlink with the given destination.
-* Comment(text) - a comment
+* Comment(text, href) - a comment. The 'href' attribute is optional, and creates a hyperlink with the given destination.
 * Skip() - an empty line
 
 The containers:
@@ -36,7 +36,7 @@ The containers:
 * Optional(child, skip) - like ? in a regex.  A shorthand for `Choice(1, [Skip(), child])`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 * OneOrMore(child, repeat) - like + in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
 * ZeroOrMore(child, repeat, skip) - like * in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`.  The optional `skip` parameter is identical to Optional().
-* Stack(Children) - vertical concatenation where every item starts with a new line. A Stack must be the last child when used within a Sequence, Diagram or another Stack.
+* Stack(Children) - vertical concatenation where every item starts with a new line.
 
 For convenience, each component can be called with or without `new`.
 If called without `new`,
@@ -50,7 +50,7 @@ The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an 
 Options
 -------
 
-There are a few options you can tweak, at the bottom of the file.  Just tweak either until the diagram looks like what you want.
+There are a few options you can tweak, with the defaults at the bottom of the file, and the live values hanging off of the `Diagram` object.  Just tweak either until the diagram looks like what you want.
 You can also change the CSS file - feel free to tweak to your heart's content.
 Note, though, that if you change the text sizes in the CSS,
 you'll have to go adjust the metrics for the leaf nodes as well.
@@ -64,9 +64,7 @@ you'll have to go adjust the metrics for the leaf nodes as well.
 Caveats
 -------
 
-At this early stage, the generator is feature-complete and works as intended, but still has several TODOs:
-
-* The font-sizes are hard-coded right now, and the font handling in general is very dumb - I'm just guessing at some metrics that are probably "good enough" rather than measuring things properly.
+SVG can't actually respond to the sizes of content; in particular, there's no way to make SVG adjust sizing/positioning based on the length of some text.  Instead, I guess at some font metrics, which mostly work as long as you're using a fairly standard monospace font.  This works pretty well, but long text inside of a construct might eventually overflow the construct.
 
 Python Port
 -----------
@@ -75,9 +73,9 @@ In addition to the canonical JS version, the library now exists as a Python libr
 
 Using it is basically identical.  The config variables are globals in the file, and so may be adjusted either manually or via tweaking from inside your program.
 
-The methods `Stack` and `ComplexDiagram` are not available.
-
 The main difference from the JS port is how you extract the string from the Diagram.  You'll find a `writeSvg(writerFunc)` method on `Diagram`, which takes a callback of one argument and passes it the string form of the diagram.  For example, it can be used like `Diagram(...).writeSvg(sys.stdout.write)` to write to stdout.  **Note**: the callback will be called multiple times as it builds up the string, not just once with the whole thing.  If you need it all at once, consider something like a `StringIO` as an easy way to collect it into a single string.
+
+As well, if you want a "complex" diagram, pass `type="complex"` to the `Diagram` constructor, rather than using a separate `ComplexDiagram()` constructor like in the JS port.
 
 License
 -------
