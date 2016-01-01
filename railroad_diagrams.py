@@ -10,7 +10,8 @@ DEBUG=False
 CHARACTER_ADVANCE = 8
 
 def e(text):
-    return re.replace(r"[*_\`\[\]<&]", text, lambda c: "&#{0};".format(ord(c)))
+    import re
+    return re.sub(r"[*_\`\[\]<&]", lambda c: "&#{0};".format(ord(c.group(0))), unicode(text))
 
 def determineGaps(outer, inner):
     diff = outer - inner
@@ -42,7 +43,7 @@ class DiagramItem(object):
         for name, value in sorted(self.attrs.items()):
             write(' {0}="{1}"'.format(name, e(value)))
         write('>')
-        if this.name in ["g", "svg"]:
+        if self.name in ["g", "svg"]:
             write('\n')
         for child in self.children:
             if isinstance(child, DiagramItem):
@@ -188,8 +189,8 @@ class Choice(DiagramItem):
         self.items = [wrapString(item) for item in items]
         self.width = ARC_RADIUS * 4 + max(item.width for item in self.items)
         last = len(items)-1;
-        self.up = items[0].up;
-        self.down = items[-1].down;
+        self.up = self.items[0].up;
+        self.down = self.items[-1].down;
         for i, item in enumerate(self.items):
             if i in [default-1, default+1]:
                 arcs = ARC_RADIUS*2
