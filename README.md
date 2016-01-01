@@ -32,7 +32,7 @@ The leaves:
 
 The containers:
 * Sequence(children) - like simple concatenation in a regex
-* Stack(Children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
+* Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
 * Choice(index, children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, [Skip(), child])`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 * OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
