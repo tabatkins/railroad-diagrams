@@ -22,6 +22,11 @@ def determineGaps(outer, inner):
     else:
         return diff/2, diff/2
 
+def doubleenumerate(seq):
+    length = len(list(seq))
+    for i,item in enumerate(seq):
+        yield i, i-length, item
+
 
 
 class DiagramItem(object):
@@ -300,7 +305,7 @@ class Choice(DiagramItem):
                     + VERTICAL_SEPARATION
                     + above[0].down
                     + above[0].height)
-        for i, item in enumerate(above):
+        for i,ni,item in doubleenumerate(above):
             Path(x, y).arc('se').up(distanceFromY - ARC_RADIUS * 2).arc('wn').addTo(self)
             item.format(x + ARC_RADIUS * 2, y - distanceFromY, innerWidth).addTo(self)
             Path(x + ARC_RADIUS * 2 + innerWidth, y - distanceFromY + item.height).arc('ne') \
@@ -309,8 +314,8 @@ class Choice(DiagramItem):
                 ARC_RADIUS,
                 item.up
                     + VERTICAL_SEPARATION
-                    + (self.items[i - 1].down if i > 0 else 0)
-                    + self.items[i-1].height)
+                    + (self.items[i + 1].down if ni < -1 else 0)
+                    + self.items[i + 1].height)
 
         # Do the straight-line path.
         Path(x, y).right(ARC_RADIUS * 2).addTo(self)
