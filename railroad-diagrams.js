@@ -262,7 +262,7 @@ At runtime, these constants can be found on the Diagram class.
 		if(this.items[0].needsSpace) this.width -= 10;
 		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "sequence"
 		}
 	}
@@ -316,7 +316,7 @@ At runtime, these constants can be found on the Diagram class.
 			}
 		}
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "stack"
 		}
 	}
@@ -389,7 +389,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		this.down -= this.items[normal].height; // already counted in Choice.height
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "choice"
 		}
 	}
@@ -468,7 +468,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = this.item.up;
 		this.down = Math.max(Diagram.ARC_RADIUS*2, this.item.down + Diagram.VERTICAL_SEPARATION + this.rep.up + this.rep.height + this.rep.down);
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "oneormore"
 		}
 	}
@@ -508,7 +508,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.down = 10;
 		this.type = type || "simple";
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "start"
 		}
 	}
@@ -531,7 +531,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.down = 10;
 		this.type = type || "simple";
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "end"
 		}
 	}
@@ -555,7 +555,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 11;
 		this.down = 11;
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "terminal"
 		}
 	}
@@ -587,7 +587,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 11;
 		this.down = 11;
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "nonterminal"
 		}
 	}
@@ -619,7 +619,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 11;
 		this.down = 11;
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "comment"
 		}
 	}
@@ -648,7 +648,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.up = 0;
 		this.down = 0;
 		if(Diagram.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.down
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "skip"
 		}
 	}

@@ -185,7 +185,7 @@ class Sequence(DiagramItem):
         if self.items[-1].needsSpace:
             self.width -= 10
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "sequence"
 
     def format(self, x, y, width):
@@ -226,7 +226,7 @@ class Stack(DiagramItem):
             if i != len(self.items)-1:
                 self.height += max(item.down + VERTICAL_SEPARATION, ARC_RADIUS*2) + max(self.items[i+1].up + VERTICAL_SEPARATION, ARC_RADIUS*2)
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "stack"
 
     def format(self, x, y, width):
@@ -282,7 +282,7 @@ class Choice(DiagramItem):
                 self.down += max(arcs, item.up + VERTICAL_SEPARATION + self.items[i-1].down + self.items[i-1].height)
         self.down -= self.items[default].height # already counted in self.height
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "choice"
 
     def format(self, x, y, width):
@@ -363,7 +363,7 @@ class OneOrMore(DiagramItem):
             self.item.down + VERTICAL_SEPARATION + self.rep.up + self.rep.height + self.rep.down)
         self.needsSpace = True
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "oneormore"
 
     def format(self, x, y, width):
@@ -403,7 +403,7 @@ class Start(DiagramItem):
         self.down = 10
         self.type = type
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "start"
 
     def format(self, x, y, _width):
@@ -422,7 +422,7 @@ class End(DiagramItem):
         self.down = 10
         self.type = type
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "end"
 
     def format(self, x, y, _width):
@@ -443,7 +443,7 @@ class Terminal(DiagramItem):
         self.down = 11
         self.needsSpace = True
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "terminal"
 
     def format(self, x, y, width):
@@ -474,7 +474,7 @@ class NonTerminal(DiagramItem):
         self.down = 11
         self.needsSpace = True
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "non-terminal"
 
     def format(self, x, y, width):
@@ -505,7 +505,7 @@ class Comment(DiagramItem):
         self.down = 11
         self.needsSpace = True
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "comment"
 
     def format(self, x, y, width):
@@ -531,7 +531,7 @@ class Skip(DiagramItem):
         self.up = 0
         self.down = 0
         if DEBUG:
-            self.attrs['data-updown'] = "{0} {1}".format(self.up, self.down)
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "skip"
 
     def format(self, x, y, width):
