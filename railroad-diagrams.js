@@ -1,3 +1,4 @@
+"use strict";
 /*
 Railroad Diagrams
 by Tab Atkins Jr. (and others)
@@ -44,6 +45,15 @@ At runtime, these constants can be found on the Diagram class.
 
 	function wrapString(value) {
 		return ((typeof value) == 'string') ? new Terminal(value) : value;
+	}
+
+	function sum(iter, func) {
+		if(!func) func = function(x) { return x; };
+		var sum = 0;
+		for(var i = 0; i < iter.length; i++) {
+			sum += func(iter[i]);
+		}
+		return sum;
 	}
 
 	function SVG(name, attrs, text) {
@@ -360,6 +370,87 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
+	function OptionalSequence(items) {
+		if(!(this instanceof OptionalSequence)) return new OptionalSequence([].slice.call(arguments));
+		FakeSVG.call(this, 'g');
+		if( items.length === 0 ) {
+			throw new RangeError("OptionalSequence() must have at least one child.");
+		}
+		this.items = items.map(wrapString);
+		this.needsSpace = false;
+		this.width = Diagram.ARC_RADIUS *4;
+		this.up = 0;
+		this.height = sum(this.items, function(x){return x.height});
+		this.down = this.items[0].down;
+		var heightSoFar = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			this.up = Math.max(this.up, Math.max(Diagram.ARC_RADIUS*2, item.up + Diagram.VERTICAL_SEPARATION) - heightSoFar);
+			heightSoFar += item.height;
+			if(i > 0) {
+				this.down = Math.max(this.height + this.down, heightSoFar + Math.max(Diagram.ARC_RADIUS*2, item.down + Diagram.VERTICAL_SEPARATION)) - this.height;
+			}
+			this.width += Math.max(Diagram.ARC_RADIUS*2, item.width + (item.needsSpace?20:0));
+			if(i == 0) this.width += Diagram.ARC_RADIUS;
+			else if(i == 1) this.width += Diagram.ARC_RADIUS*2;
+			else if(i < this.items.length - 1) this.width += Diagram.ARC_RADIUS*3;
+		}
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "optseq"
+		}
+	}
+	subclassOf(OptionalSequence, FakeSVG);
+	OptionalSequence.prototype.format = function(x, y, width) {
+		var gaps = determineGaps(width, this.width)
+		Path(x, y).h(gaps[0]).addTo(this)
+		Path(x + gaps[0] + this.width, y + this.height).h(gaps[1]).addTo(this)
+		x += gaps[0]
+		var upperLineY = y - this.up;
+		var last = this.items.length - 1;
+		Path(x,y)
+			.arc('se')
+			.up(Math.max(0, this.up - Diagram.ARC_RADIUS*2))
+			.arc('wn')
+			.right(this.width - Diagram.ARC_RADIUS*5 - this.items[last].width - (this.items[last].needsSpace?20:0))
+			.arc('ne')
+			.down(Math.max(0, this.up + this.height - this.items[last].height - Diagram.ARC_RADIUS*2))
+			.arc('ws')
+			.addTo(this);
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			var itemWidth = item.width + (item.needsSpace?20:0);
+			if(i == 0) var spaceSize = Diagram.ARC_RADIUS;
+			else if(i == 1) var spaceSize = Diagram.ARC_RADIUS*2;
+			else var spaceSize = Diagram.ARC_RADIUS*3;
+			if(i > 0) {
+				if(i < last) {
+					Path(x + spaceSize - Diagram.ARC_RADIUS*2, upperLineY)
+						.arc('ne')
+						.down(Math.abs(upperLineY - y) - Diagram.ARC_RADIUS*2)
+						.arc('ws')
+						.addTo(this);
+				}
+				Path(x + spaceSize - Diagram.ARC_RADIUS*2, y)
+					.arc('ne')
+					.down(item.height + Math.max(0, item.down + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
+					.arc('ws')
+					.right(itemWidth - Diagram.ARC_RADIUS)
+					.arc('se')
+					.up(Math.max(0, item.down + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
+					.arc('wn')
+					.addTo(this);
+			}
+			Path(x, y).right(spaceSize).addTo(this);
+			x += spaceSize;
+			item.format(x, y, itemWidth).addTo(this);
+			x += itemWidth;
+			y += item.height;
+		}
+		Path(x, y).right(Diagram.ARC_RADIUS*2).addTo(this);
+		return this;
+	};
+
 	function Choice(normal, items) {
 		if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
 		FakeSVG.call(this, 'g');
@@ -673,12 +764,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{

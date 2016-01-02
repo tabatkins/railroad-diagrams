@@ -259,6 +259,82 @@ class Stack(DiagramItem):
         return self
 
 
+class OptionalSequence(DiagramItem):
+    def __init__(self, *items):
+        DiagramItem.__init__(self, 'g')
+        self.items = [wrapString(item) for item in items]
+        self.needsSpace = False
+        self.width = ARC_RADIUS * 4
+        self.up = 0
+        self.height = sum(item.height for item in self.items)
+        self.down = self.items[0].down
+        heightSoFar = 0
+        for i,item in enumerate(self.items):
+            self.up = max(self.up, max(ARC_RADIUS * 2, item.up + VERTICAL_SEPARATION) - heightSoFar)
+            heightSoFar += item.height
+            if i > 0:
+                self.down = max(self.height + self.down, heightSoFar + max(ARC_RADIUS*2, item.down + VERTICAL_SEPARATION)) - self.height
+            self.width += max(ARC_RADIUS * 2, item.width + (20 if item.needsSpace else 0))
+            if i == 0:
+                self.width += ARC_RADIUS
+            elif i == 1:
+                self.width += ARC_RADIUS * 2
+            elif 2 <= i < len(self.items) - 1:
+                self.width += ARC_RADIUS * 3
+            else:
+                pass
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
+            self.attrs['data-type'] = "optseq"
+
+    def format(self, x, y, width):
+        leftGap, rightGap = determineGaps(width, self.width)
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y + self.height).h(rightGap).addTo(self)
+        x += leftGap
+        upperLineY = y - self.up
+        (Path(x, y)
+            .arc('se')
+            .up(max(0, self.up - ARC_RADIUS*2))
+            .arc('wn')
+            .right(self.width - ARC_RADIUS*5 - self.items[-1].width - (20 if self.items[-1].needsSpace else 0))
+            .arc('ne')
+            .down(max(0, self.up + self.height - self.items[-1].height - ARC_RADIUS*2))
+            .arc('ws')
+            .addTo(self))
+        for i,ni,item in doubleenumerate(self.items):
+            itemWidth = item.width + (20 if item.needsSpace else 0)
+            if i == 0:
+                spaceSize = ARC_RADIUS * 1
+            elif i == 1:
+                spaceSize = ARC_RADIUS * 2
+            else:
+                spaceSize = ARC_RADIUS * 3
+            if i > 0:
+                if ni < -1:
+                    (Path(x + spaceSize - ARC_RADIUS*2, upperLineY)
+                        .arc('ne')
+                        .down(abs(upperLineY - y) - ARC_RADIUS*2)
+                        .arc('ws')
+                        .addTo(self))
+                (Path(x + spaceSize - ARC_RADIUS*2, y)
+                    .arc('ne')
+                    .down(item.height + max(0, item.down + VERTICAL_SEPARATION - ARC_RADIUS*2))
+                    .arc('ws')
+                    .right(itemWidth - ARC_RADIUS)
+                    .arc('se')
+                    .up(max(0, item.down + VERTICAL_SEPARATION - ARC_RADIUS*2))
+                    .arc('wn')
+                    .addTo(self))
+            Path(x, y).h(spaceSize).addTo(self)
+            x += spaceSize
+            item.format(x, y, itemWidth).addTo(self)
+            x += itemWidth
+            y += item.height
+        Path(x, y).h(ARC_RADIUS).addTo(self)
+        return self
+
+
 class Choice(DiagramItem):
     def __init__(self, default, *items):
         DiagramItem.__init__(self, 'g')
