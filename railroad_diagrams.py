@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Display constants
 VERTICAL_SEPARATION = 8
 ARC_RADIUS = 10
@@ -48,18 +50,18 @@ class DiagramItem(object):
         return self
 
     def writeSvg(self, write):
-        write('<{0}'.format(self.name))
+        write(u'<{0}'.format(self.name))
         for name, value in sorted(self.attrs.items()):
-            write(' {0}="{1}"'.format(name, e(value)))
-        write('>')
+            write(u' {0}="{1}"'.format(name, e(value)))
+        write(u'>')
         if self.name in ["g", "svg"]:
-            write('\n')
+            write(u'\n')
         for child in self.children:
             if isinstance(child, DiagramItem):
                 child.writeSvg(write)
             else:
                 write(e(child))
-        write('</{0}>'.format(self.name))
+        write(u'</{0}>'.format(self.name))
 
 
 class Path(DiagramItem):
@@ -418,6 +420,124 @@ class Choice(DiagramItem):
                     + item.down
                     + VERTICAL_SEPARATION
                     + (below[i + 1].up if i+1 < len(below) else 0))
+        return self
+
+class ChoiceMult(DiagramItem):
+    def __init__(self, default, type, *items):
+        DiagramItem.__init__(self, 'g')
+        assert 0 <= default < len(items)
+        assert type in ["any", "all"]
+        self.default = default
+        self.type = type
+        self.needsSpace = True
+        self.items = [wrapString(item) for item in items]
+        self.innerWidth = max(item.width for item in self.items)
+        self.width = 15 + max(25, ARC_RADIUS) + self.innerWidth + max(20, ARC_RADIUS) + 10
+        self.up = self.items[0].up;
+        self.down = self.items[-1].down;
+        self.height = self.items[default].height
+        for i, item in enumerate(self.items):
+            if i in [default-1, default+1]:
+                minimum = 10 + ARC_RADIUS
+            else:
+                minimum = ARC_RADIUS
+            if i < default:
+                self.up += max(minimum, item.height + item.down + VERTICAL_SEPARATION + self.items[i+1].up)
+            elif i == default:
+                continue
+            else:
+                self.down += max(minimum, item.up + VERTICAL_SEPARATION + self.items[i-1].down + self.items[i-1].height)
+        self.down -= self.items[default].height # already counted in self.height
+        if DEBUG:
+            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
+            self.attrs['data-type'] = "choicemult"
+
+    def format(self, x, y, width):
+        leftGap, rightGap = determineGaps(width, self.width)
+
+        # Hook up the two sides if self is narrower than its stated width.
+        Path(x, y).h(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y + self.height).h(rightGap).addTo(self)
+        x += leftGap
+
+        default = self.items[self.default]
+
+        # Do the elements that curve above
+        above = self.items[:self.default][::-1]
+        if above:
+            distanceFromY = max(
+                10 + ARC_RADIUS,
+                default.up
+                    + VERTICAL_SEPARATION
+                    + above[0].down
+                    + above[0].height)
+        for i,ni,item in doubleenumerate(above):
+            (Path(x + 30, y)
+                .up(distanceFromY - ARC_RADIUS)
+                .arc('wn')
+                .addTo(self))
+            item.format(x + 30 + ARC_RADIUS, y - distanceFromY, self.innerWidth).addTo(self)
+            (Path(x + 30 + ARC_RADIUS + self.innerWidth, y - distanceFromY + item.height)
+                .arc('ne')
+                .down(distanceFromY - item.height + default.height - 10)
+                .addTo(self))
+            distanceFromY += max(
+                ARC_RADIUS,
+                item.up
+                    + VERTICAL_SEPARATION
+                    + (self.items[i + 1].down if ni < -1 else 0)
+                    + self.items[i + 1].height)
+
+        # Do the straight-line path.
+        Path(x + 30, y).right(ARC_RADIUS).addTo(self)
+        self.items[self.default].format(x + 30 + ARC_RADIUS, y, self.innerWidth).addTo(self)
+        Path(x + 30 + ARC_RADIUS + self.innerWidth, y + self.height).right(ARC_RADIUS).addTo(self)
+
+        # Do the elements that curve below
+        below = self.items[self.default + 1:]
+        for i, item in enumerate(below):
+            if i == 0:
+                distanceFromY = max(
+                    10 + ARC_RADIUS,
+                    default.height
+                        + default.down
+                        + VERTICAL_SEPARATION
+                        + item.up)
+            (Path(x+30, y)
+                .down(distanceFromY - ARC_RADIUS)
+                .arc('ws')
+                .addTo(self))
+            item.format(x + 30 + ARC_RADIUS, y + distanceFromY, self.innerWidth).addTo(self)
+            (Path(x + 30 + ARC_RADIUS + self.innerWidth, y + distanceFromY + item.height)
+                .arc('se')
+                .up(distanceFromY - ARC_RADIUS + item.height - default.height)
+                .addTo(self))
+            distanceFromY += max(
+                ARC_RADIUS,
+                item.height
+                    + item.down
+                    + VERTICAL_SEPARATION
+                    + (below[i + 1].up if i+1 < len(below) else 0))
+        text = DiagramItem('g', attrs={"class": "diagram-text"}).addTo(self)
+        DiagramItem('title', text="take one or more branches, once each, in any order" if self.type=="any" else "take all branches, once each, in any order").addTo(text)
+        DiagramItem('path', attrs={
+            "d": "M {x} {y} h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z".format(x=x+30, y=y-10),
+            "class": "diagram-text"
+            }).addTo(text)
+        DiagramItem('text', text="1+" if self.type=="any" else "all", attrs={
+            "x": x + 15,
+            "y": y + 4,
+            "class": "diagram-text"
+            }).addTo(text)
+        DiagramItem('path', attrs={
+            "d": "M {x} {y} h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z".format(x=x+self.width-20, y=y-10),
+            "class": "diagram-text"
+            }).addTo(text)
+        DiagramItem('text', text=u"↺", attrs={
+            "x": x + self.width - 10,
+            "y": y + 4,
+            "class": "diagram-arrow"
+            }).addTo(text)
         return self
 
 
