@@ -388,12 +388,13 @@ class Choice(DiagramItem):
             item.format(x + ARC_RADIUS * 2, y - distanceFromY, innerWidth).addTo(self)
             Path(x + ARC_RADIUS * 2 + innerWidth, y - distanceFromY + item.height).arc('ne') \
                 .down(distanceFromY - item.height + default.height - ARC_RADIUS*2).arc('ws').addTo(self)
-            distanceFromY += max(
-                ARC_RADIUS,
-                item.up
-                    + VERTICAL_SEPARATION
-                    + (self.items[i + 1].down if ni < -1 else 0)
-                    + self.items[i + 1].height)
+            if ni < -1:
+                distanceFromY += max(
+                    ARC_RADIUS,
+                    item.up
+                        + VERTICAL_SEPARATION
+                        + above[i+1].down
+                        + above[i+1].height)
 
         # Do the straight-line path.
         Path(x, y).right(ARC_RADIUS * 2).addTo(self)
@@ -402,14 +403,14 @@ class Choice(DiagramItem):
 
         # Do the elements that curve below
         below = self.items[self.default + 1:]
+        if below:
+            distanceFromY = max(
+                ARC_RADIUS * 2,
+                default.height
+                    + default.down
+                    + VERTICAL_SEPARATION
+                    + below[0].up)
         for i, item in enumerate(below):
-            if i == 0:
-                distanceFromY = max(
-                    ARC_RADIUS * 2,
-                    default.height
-                        + default.down
-                        + VERTICAL_SEPARATION
-                        + item.up)
             Path(x, y).arc('ne').down(distanceFromY - ARC_RADIUS * 2).arc('ws').addTo(self)
             item.format(x + ARC_RADIUS * 2, y + distanceFromY, innerWidth).addTo(self)
             Path(x + ARC_RADIUS * 2 + innerWidth, y + distanceFromY + item.height).arc('se') \
@@ -422,7 +423,7 @@ class Choice(DiagramItem):
                     + (below[i + 1].up if i+1 < len(below) else 0))
         return self
 
-class ChoiceMult(DiagramItem):
+class MultipleChoice(DiagramItem):
     def __init__(self, default, type, *items):
         DiagramItem.__init__(self, 'g')
         assert 0 <= default < len(items)
@@ -432,7 +433,7 @@ class ChoiceMult(DiagramItem):
         self.needsSpace = True
         self.items = [wrapString(item) for item in items]
         self.innerWidth = max(item.width for item in self.items)
-        self.width = 15 + max(25, ARC_RADIUS) + self.innerWidth + max(20, ARC_RADIUS) + 10
+        self.width = 30 + ARC_RADIUS + self.innerWidth + ARC_RADIUS + 20
         self.up = self.items[0].up;
         self.down = self.items[-1].down;
         self.height = self.items[default].height
@@ -450,7 +451,7 @@ class ChoiceMult(DiagramItem):
         self.down -= self.items[default].height # already counted in self.height
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "choicemult"
+            self.attrs['data-type'] = "multiplechoice"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -479,14 +480,15 @@ class ChoiceMult(DiagramItem):
             item.format(x + 30 + ARC_RADIUS, y - distanceFromY, self.innerWidth).addTo(self)
             (Path(x + 30 + ARC_RADIUS + self.innerWidth, y - distanceFromY + item.height)
                 .arc('ne')
-                .down(distanceFromY - item.height + default.height - 10)
+                .down(distanceFromY - item.height + default.height - ARC_RADIUS - 10)
                 .addTo(self))
-            distanceFromY += max(
-                ARC_RADIUS,
-                item.up
-                    + VERTICAL_SEPARATION
-                    + (self.items[i + 1].down if ni < -1 else 0)
-                    + self.items[i + 1].height)
+            if ni < -1:
+                distanceFromY += max(
+                    ARC_RADIUS,
+                    item.up
+                        + VERTICAL_SEPARATION
+                        + above[i+1].down
+                        + above[i+1].height)
 
         # Do the straight-line path.
         Path(x + 30, y).right(ARC_RADIUS).addTo(self)
@@ -495,14 +497,14 @@ class ChoiceMult(DiagramItem):
 
         # Do the elements that curve below
         below = self.items[self.default + 1:]
+        if below:
+            distanceFromY = max(
+                10 + ARC_RADIUS,
+                default.height
+                    + default.down
+                    + VERTICAL_SEPARATION
+                    + below[0].up)
         for i, item in enumerate(below):
-            if i == 0:
-                distanceFromY = max(
-                    10 + ARC_RADIUS,
-                    default.height
-                        + default.down
-                        + VERTICAL_SEPARATION
-                        + item.up)
             (Path(x+30, y)
                 .down(distanceFromY - ARC_RADIUS)
                 .arc('ws')
@@ -510,7 +512,7 @@ class ChoiceMult(DiagramItem):
             item.format(x + 30 + ARC_RADIUS, y + distanceFromY, self.innerWidth).addTo(self)
             (Path(x + 30 + ARC_RADIUS + self.innerWidth, y + distanceFromY + item.height)
                 .arc('se')
-                .up(distanceFromY - ARC_RADIUS + item.height - default.height)
+                .up(distanceFromY - ARC_RADIUS + item.height - default.height - 10)
                 .addTo(self))
             distanceFromY += max(
                 ARC_RADIUS,
