@@ -49,11 +49,12 @@ At runtime, these constants can be found on the Diagram class.
 
 	function sum(iter, func) {
 		if(!func) func = function(x) { return x; };
-		var sum = 0;
-		for(var i = 0; i < iter.length; i++) {
-			sum += func(iter[i]);
-		}
-		return sum;
+		return iter.map(func).reduce(function(a,b){return a+b}, 0);
+	}
+
+	function max(iter, func) {
+		if(!func) func = function(x) { return x; };
+		return Math.max.apply(null, iter.map(func));
 	}
 
 	function SVG(name, attrs, text) {
@@ -508,7 +509,7 @@ At runtime, these constants can be found on the Diagram class.
 			item.format(x+Diagram.ARC_RADIUS*2,y - distanceFromY,innerWidth).addTo(this);
 			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y-distanceFromY+item.height)
 				.arc('ne')
-				.down(distanceFromY - item.height + this.items[this.normal].height - Diagram.ARC_RADIUS*2)
+				.down(distanceFromY - item.height + this.height - Diagram.ARC_RADIUS*2)
 				.arc('ws').addTo(this);
 			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.up + Diagram.VERTICAL_SEPARATION + (i == 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
 		}
@@ -522,7 +523,7 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = this.normal+1; i <= last; i++) {
 			var item = this.items[i];
 			if( i == this.normal + 1 ) {
-				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.items[this.normal].height + this.items[this.normal].down + Diagram.VERTICAL_SEPARATION + item.up);
+				var distanceFromY = Math.max(Diagram.ARC_RADIUS*2, this.height + this.items[this.normal].down + Diagram.VERTICAL_SEPARATION + item.up);
 			}
 			Path(x,y)
 				.arc('ne')
@@ -531,13 +532,124 @@ At runtime, these constants can be found on the Diagram class.
 			item.format(x+Diagram.ARC_RADIUS*2, y+distanceFromY, innerWidth).addTo(this);
 			Path(x+Diagram.ARC_RADIUS*2+innerWidth, y+distanceFromY+item.height)
 				.arc('se')
-				.up(distanceFromY - Diagram.ARC_RADIUS*2 + item.height - this.items[this.normal].height)
+				.up(distanceFromY - Diagram.ARC_RADIUS*2 + item.height - this.height)
 				.arc('wn').addTo(this);
 			distanceFromY += Math.max(Diagram.ARC_RADIUS, item.height + item.down + Diagram.VERTICAL_SEPARATION + (i == last ? 0 : this.items[i+1].up));
 		}
 
 		return this;
 	}
+
+	function MultipleChoice(normal, type, items) {
+		if(!(this instanceof MultipleChoice)) return new MultipleChoice(normal, type, [].slice.call(arguments,2));
+		FakeSVG.call(this, 'g');
+		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
+			throw new TypeError("The first argument of MultipleChoice() must be an integer.");
+		} else if(normal < 0 || normal >= items.length) {
+			throw new RangeError("The first argument of MultipleChoice() must be an index for one of the items.");
+		} else {
+			this.normal = normal;
+		}
+		if( type != "any" && type != "all" ) {
+			throw new SyntaxError("The second argument of MultipleChoice must be 'any' or 'all'.");
+		} else {
+			this.type = type;
+		}
+		this.needsSpace = true;
+		this.items = items.map(wrapString);
+		this.innerWidth = max(this.items, function(x){return x.width});
+		this.width = 30 + Diagram.ARC_RADIUS + this.innerWidth + Diagram.ARC_RADIUS + 20;
+		this.up = this.items[0].up;
+		this.down = this.items[this.items.length-1].down;
+		this.height = this.items[normal].height;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			if(i == normal - 1 || i == normal + 1) var minimum = 10 + Diagram.ARC_RADIUS;
+			else var minimum = Diagram.ARC_RADIUS;
+			if(i < normal) {
+				this.up += Math.max(minimum, item.height + item.down + Diagram.VERTICAL_SEPARATION + this.items[i+1].up);
+			} else if(i > normal) {
+				this.down += Math.max(minimum, item.up + Diagram.VERTICAL_SEPARATION + this.items[i-1].down + this.items[i-1].height);
+			}
+		}
+		this.down -= this.items[normal].height; // already counted in this.height
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "multiplechoice"
+		}
+	}
+	subclassOf(MultipleChoice, FakeSVG);
+	MultipleChoice.prototype.format = function(x, y, width) {
+		var gaps = determineGaps(width, this.width);
+		Path(x, y).right(gaps[0]).addTo(this);
+		Path(x + gaps[0] + this.width, y + this.height).right(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		var normal = this.items[this.normal];
+
+		// Do the elements that curve above
+		for(var i = this.normal - 1; i >= 0; i--) {
+			var item = this.items[i];
+			if( i == this.normal - 1 ) {
+				var distanceFromY = Math.max(10 + Diagram.ARC_RADIUS, normal.up + Diagram.VERTICAL_SEPARATION + item.down + item.height);
+			}
+			Path(x + 30,y)
+				.up(distanceFromY - Diagram.ARC_RADIUS)
+				.arc('wn').addTo(this);
+			item.format(x + 30 + Diagram.ARC_RADIUS, y - distanceFromY, this.innerWidth).addTo(this);
+			Path(x + 30 + Diagram.ARC_RADIUS + this.innerWidth, y - distanceFromY + item.height)
+				.arc('ne')
+				.down(distanceFromY - item.height + this.height - Diagram.ARC_RADIUS - 10)
+				.addTo(this);
+			if(i != 0) {
+				distanceFromY += Math.max(Diagram.ARC_RADIUS, item.up + Diagram.VERTICAL_SEPARATION + this.items[i-1].down + this.items[i-1].height);
+			}
+		}
+
+		Path(x + 30, y).right(Diagram.ARC_RADIUS).addTo(this);
+		normal.format(x + 30 + Diagram.ARC_RADIUS, y, this.innerWidth).addTo(this);
+		Path(x + 30 + Diagram.ARC_RADIUS + this.innerWidth, y + this.height).right(Diagram.ARC_RADIUS).addTo(this);
+
+		for(var i = this.normal+1; i < this.items.length; i++) {
+			var item = this.items[i];
+			if(i == this.normal + 1) {
+				var distanceFromY = Math.max(10+Diagram.ARC_RADIUS, normal.height + normal.down + Diagram.VERTICAL_SEPARATION + item.up);
+			}
+			Path(x + 30, y)
+				.down(distanceFromY - Diagram.ARC_RADIUS)
+				.arc('ws')
+				.addTo(this);
+			item.format(x + 30 + Diagram.ARC_RADIUS, y + distanceFromY, this.innerWidth).addTo(this)
+			Path(x + 30 + Diagram.ARC_RADIUS + this.innerWidth, y + distanceFromY + item.height)
+				.arc('se')
+				.up(distanceFromY - Diagram.ARC_RADIUS + item.height - normal.height)
+				.addTo(this);
+			if(i != this.items.length - 1) {
+				distanceFromY += Math.max(Diagram.ARC_RADIUS, item.height + item.down + Diagram.VERTICAL_SEPARATION + this.items[i+1].up);
+			}
+		}
+        var text = FakeSVG('g', {"class": "diagram-text"}).addTo(this)
+        FakeSVG('title', {}, (this.type=="any"?"take one or more branches, once each, in any order":"take all branches, once each, in any order")).addTo(text)
+        FakeSVG('path', {
+            "d": "M "+(x+30)+" "+(y-10)+" h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z",
+            "class": "diagram-text"
+            }).addTo(text)
+        FakeSVG('text', {
+            "x": x + 15,
+            "y": y + 4,
+            "class": "diagram-text"
+            }, (this.type=="any"?"1+":"all")).addTo(text)
+        FakeSVG('path', {
+            "d": "M "+(x+this.width-20)+" "+(y-10)+" h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z",
+            "class": "diagram-text"
+            }).addTo(text)
+        FakeSVG('text', {
+            "x": x + this.width - 10,
+            "y": y + 4,
+            "class": "diagram-arrow"
+            }, "↺").addTo(text)
+        return this;
+	};
 
 	function Optional(item, skip) {
 		if( skip === undefined )
@@ -764,12 +876,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, Choice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'Choice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
