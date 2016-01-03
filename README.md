@@ -31,25 +31,25 @@ The leaves:
 The containers:
 * Sequence(children) - like simple concatenation in a regex
     
-    <img alt="Sequence('1', '2', '3')" title="Sequence('1', '2', '3')" srcset="images/rr-sequence.png 2x">
+    ![Sequence('1', '2', '3')](images/rr-sequence.png "Sequence('1', '2', '3')")
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
     
-    ![Stack('1', '2', '3')](images/rr-stack.png)
+    ![Stack('1', '2', '3')](images/rr-stack.png "Stack('1', '2', '3')")
 * OptionalSequence(children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
 
-    ![OptionalSequence('1', '2', '3')](images/rr-optseq.png)
+    ![OptionalSequence('1', '2', '3')](images/rr-optseq.png "OptionalSequence('1', '2', '3')")
 * Choice(index, children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 
-    ![Choice('1', '2', '3')](images/rr-choice.png)
+    ![Choice('1', '2', '3')](images/rr-choice.png "Choice('1', '2', '3')")
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 
-    ![Optional('foo'), Optional('bar', 'skip'))](images/rr-optional.png)
+    ![Optional('foo'), Optional('bar', 'skip'))](images/rr-optional.png "Optional('foo'), Optional('bar', 'skip'))")
 * OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
 
-    ![OneOrMore('foo', Comment('bar'))](images/rr-oneormore.png)
+    ![OneOrMore('foo', Comment('bar'))](images/rr-oneormore.png "OneOrMore('foo', Comment('bar'))")
 * ZeroOrMore(child, repeat, skip) - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`.  The optional `skip` parameter is identical to Optional().
 
-    ![ZeroOrMore('foo', Comment('bar'))](images/rr-zeroormore.png)
+    ![ZeroOrMore('foo', Comment('bar'))](images/rr-zeroormore.png "ZeroOrMore('foo', Comment('bar'))")
 
 For convenience, each component can be called with or without `new`.
 If called without `new`,
