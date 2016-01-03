@@ -1,20 +1,18 @@
 Railroad-diagram Generator
 ==========================
 
-This is a small js library for generating railroad diagrams
+![](images/rr-title.png)
+
+This is a small library for generating railroad diagrams
 (like what [JSON.org](http://json.org) uses)
-using SVG.
+using SVG, with both JS and Python ports.
 
 Railroad diagrams are a way of visually representing a grammar
 in a form that is more readable than using regular expressions or BNF.
-I think (though I haven't given it a lot of thought yet) that if it's easy to write a context-free grammar for the language,
-the corresponding railroad diagram will be easy as well.
+They can easily represent any context-free grammar, and some more powerful grammars.
+There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted, so I wrote my own.
 
-There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted.
-[Here's an example of how they look!](https://tabatkins.github.io/railroad-diagrams/example.html)
-And [here's an online generator for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
-
-The library now exists in a Python port as well!  See the information further down.
+[Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
 Details
 -------
@@ -32,7 +30,11 @@ The leaves:
 
 The containers:
 * Sequence(children) - like simple concatenation in a regex
+    
+    ![Sequence('1', '2', '3')](images/rr-sequence.png)
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
+    
+    ![Stack('1', '2', '3')](images/rr-stack.png)
 * OptionalSequence(children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
 * Choice(index, children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
