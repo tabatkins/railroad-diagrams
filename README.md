@@ -31,7 +31,7 @@ The leaves:
 The containers:
 * Sequence(children) - like simple concatenation in a regex
     
-    ![Sequence('1', '2', '3')](images/rr-sequence.png)
+    <img alt="Sequence('1', '2', '3')" title="Sequence('1', '2', '3')" srcset="images/rr-sequence.png 2x">
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
     
     ![Stack('1', '2', '3')](images/rr-stack.png)
