@@ -30,17 +30,20 @@ The leaves:
 
 The containers:
 * Sequence(children) - like simple concatenation in a regex
-    
+
     ![Sequence('1', '2', '3')](images/rr-sequence.png "Sequence('1', '2', '3')")
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
-    
+
     ![Stack('1', '2', '3')](images/rr-stack.png "Stack('1', '2', '3')")
 * OptionalSequence(children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
 
     ![OptionalSequence('1', '2', '3')](images/rr-optseq.png "OptionalSequence('1', '2', '3')")
 * Choice(index, children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 
-    ![Choice('1', '2', '3')](images/rr-choice.png "Choice('1', '2', '3')")
+    ![Choice(1, '1', '2', '3')](images/rr-choice.png "Choice(1, '1', '2', '3')")
+* MultipleChoice(index, type, children) - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either "any" (1+ branches can be taken) or "all" (all branches must be taken).
+
+    ![MultipleChoice(1, 'all', '1', '2', '3')](images/rr-multchoice.png "MultipleChoice(1, 'all', '1', '2', '3')")
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 
     ![Optional('foo'), Optional('bar', 'skip'))](images/rr-optional.png "Optional('foo'), Optional('bar', 'skip'))")
