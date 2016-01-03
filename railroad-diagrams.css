@@ -34,10 +34,8 @@ svg.railroad-diagram path.diagram-text {
     stroke-width: 3;
     stroke: black;
     fill: white;
-}
-svg.railroad-diagram .diagram-text {
     cursor: help;
 }
-svg.railroad-diagram g.diagram-text:hover path {
+svg.railroad-diagram g.diagram-text:hover path.diagram-text {
     fill: #eee;
 }

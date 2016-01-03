@@ -628,27 +628,26 @@ At runtime, these constants can be found on the Diagram class.
 				distanceFromY += Math.max(Diagram.ARC_RADIUS, item.height + item.down + Diagram.VERTICAL_SEPARATION + this.items[i+1].up);
 			}
 		}
-        var text = FakeSVG('g', {"class": "diagram-text"}).addTo(this)
-        FakeSVG('title', {}, (this.type=="any"?"take one or more branches, once each, in any order":"take all branches, once each, in any order")).addTo(text)
-        FakeSVG('path', {
-            "d": "M "+(x+30)+" "+(y-10)+" h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z",
-            "class": "diagram-text"
-            }).addTo(text)
-        FakeSVG('text', {
-            "x": x + 15,
-            "y": y + 4,
-            "class": "diagram-text"
-            }, (this.type=="any"?"1+":"all")).addTo(text)
-        FakeSVG('path', {
-            "d": "M "+(x+this.width-20)+" "+(y-10)+" h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z",
-            "class": "diagram-text"
-            }).addTo(text)
-        FakeSVG('text', {
-            "x": x + this.width - 10,
-            "y": y + 4,
-            "class": "diagram-arrow"
-            }, "↺").addTo(text)
-        return this;
+		var text = FakeSVG('g', {"class": "diagram-text"}).addTo(this)
+		FakeSVG('title', {}, (this.type=="any"?"take one or more branches, once each, in any order":"take all branches, once each, in any order")).addTo(text)
+		FakeSVG('path', {
+			"d": "M "+(x+30)+" "+(y-10)+" h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z",
+			"class": "diagram-text"
+			}).addTo(text)
+		FakeSVG('text', {
+			"x": x + 15,
+			"y": y + 4,
+			"class": "diagram-text"
+			}, (this.type=="any"?"1+":"all")).addTo(text)
+		FakeSVG('path', {
+			"d": "M "+(x+this.width-20)+" "+(y-10)+" h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z",
+			"class": "diagram-text"
+			}).addTo(text)
+		FakeSVG('path', {
+			"d": "M "+(x+this.width-13)+" "+(y-2)+" a 4 4 0 1 0 6 -1 m 2.75 -1 h -4 v 4 m 0 -3 h 2",
+			"style": "stroke-width: 1.75"
+		}).addTo(text)
+		return this;
 	};
 
 	function Optional(item, skip) {
