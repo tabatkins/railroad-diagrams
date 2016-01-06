@@ -167,6 +167,27 @@ class Diagram(DiagramItem):
             self.format()
         return DiagramItem.writeSvg(self, write)
 
+    def parseCSSGrammar(self, text):
+        token_patterns = {
+            'keyword': r"[\w-]+\(?",
+            'type': r"<[\w-]+(\(\))?>",
+            'char': r"[/,()]",
+            'literal': r"'(.)'",
+            'openbracket': r"\[",
+            'closebracket': r"\]",
+            'closebracketbang': r"\]!",
+            'bar': r"\|",
+            'doublebar': r"\|\|",
+            'doubleand': r"&&",
+            'multstar': r"\*",
+            'multplus': r"\+",
+            'multhash': r"#",
+            'multnum1': r"{\s*(\d+)\s*}",
+            'multnum2': r"{\s*(\d+)\s*,\s*(\d*)\s*}",
+            'multhashnum1': r"#{\s*(\d+)\s*}",
+            'multhashnum2': r"{\s*(\d+)\s*,\s*(\d*)\s*}"
+        }
+
 
 class Sequence(DiagramItem):
     def __init__(self, *items):
