@@ -283,6 +283,12 @@ class Stack(DiagramItem):
 
 
 class OptionalSequence(DiagramItem):
+    def __new__(cls, *items):
+        if len(items) <= 1:
+            return Sequence(*items)
+        else:
+            return super(OptionalSequence, cls).__new__(cls, *items)
+
     def __init__(self, *items):
         DiagramItem.__init__(self, 'g')
         self.items = [wrapString(item) for item in items]
