@@ -33,6 +33,7 @@ function process() {
 	try {
 		var result = eval(input).format();
 	} catch (e) {
+		find('.output-text').textContent = "Invalid input.\n" + e
 		return;
 	}
 	find('.output-image').innerHTML = '';
