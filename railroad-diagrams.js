@@ -377,6 +377,9 @@ At runtime, these constants can be found on the Diagram class.
 		if( items.length === 0 ) {
 			throw new RangeError("OptionalSequence() must have at least one child.");
 		}
+		if( items.length === 1 ) {
+			return new Sequence(items);
+		}
 		this.items = items.map(wrapString);
 		this.needsSpace = false;
 		this.width = Diagram.ARC_RADIUS *4;
