@@ -18,8 +18,15 @@
 window.find = document.querySelector.bind(document);
 
 find('.input').addEventListener('input', process, false);
+window.addEventListener('load', initialProcess, false);
 
-window.addEventListener('load', process, false);
+function initialProcess() {
+	if( location.hash && location.hash.length > 1) {
+		find('.input').textContent = location.hash.substr(1)
+	}
+	process();
+}
+
 
 function process() {
 	var input = find('.input').value;
