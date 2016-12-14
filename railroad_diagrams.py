@@ -76,19 +76,21 @@ class Path(DiagramItem):
         self.attrs['d'] += 'h{0}'.format(val)
         return self
 
-    right = h
+    def right(self, val):
+        return self.h(max(0, val))
 
     def left(self, val):
-        return self.h(-val)
+        return self.h(-max(0, val))
 
     def v(self, val):
         self.attrs['d'] += 'v{0}'.format(val)
         return self
 
-    down = v
+    def down(self, val):
+        return self.v(max(0, val))
 
     def up(self, val):
-        return self.v(-val)
+        return self.v(-max(0, val))
 
     def arc(self, sweep):
         x = ARC_RADIUS

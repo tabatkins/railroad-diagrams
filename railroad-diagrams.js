@@ -142,14 +142,14 @@ At runtime, these constants can be found on the Diagram class.
 		this.attrs.d += 'h'+val;
 		return this;
 	}
-	Path.prototype.right = Path.prototype.h;
-	Path.prototype.left = function(val) { return this.h(-val); }
+	Path.prototype.right = function(val) { return this.h(Math.max(0, val)); }
+	Path.prototype.left = function(val) { return this.h(-Math.max(0, val)); }
 	Path.prototype.v = function(val) {
 		this.attrs.d += 'v'+val;
 		return this;
 	}
-	Path.prototype.down = Path.prototype.v;
-	Path.prototype.up = function(val) { return this.v(-val); }
+	Path.prototype.down = function(val) { return this.v(Math.max(0, val)); }
+	Path.prototype.up = function(val) { return this.v(-Math.max(0, val)); }
 	Path.prototype.arc = function(sweep){
 		var x = Diagram.ARC_RADIUS;
 		var y = Diagram.ARC_RADIUS;
