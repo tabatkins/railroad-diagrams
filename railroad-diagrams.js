@@ -310,8 +310,8 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		this.items = items.map(wrapString);
 		this.width = Math.max.apply(null, this.items.map(function(e) { return e.width + (e.needsSpace?20:0); }));
-		if(this.items[0].needsSpace) this.width -= 10;
-		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
+		//if(this.items[0].needsSpace) this.width -= 10;
+		//if(this.items[this.items.length-1].needsSpace) this.width -= 10;
 		if(this.items.length > 1){
 			this.width += Diagram.ARC_RADIUS*2;
 		}
