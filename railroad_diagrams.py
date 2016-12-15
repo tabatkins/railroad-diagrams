@@ -236,10 +236,6 @@ class Stack(DiagramItem):
         self.items = [wrapString(item) for item in items]
         self.needsSpace = True
         self.width = max(item.width + (20 if item.needsSpace else 0) for item in self.items)
-        if self.items[0].needsSpace:
-            self.width -= 10
-        if self.items[-1].needsSpace:
-            self.width -= 10
         # pretty sure that space calc is totes wrong
         if len(self.items) > 1:
             self.width += ARC_RADIUS*2
