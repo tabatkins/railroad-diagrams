@@ -242,10 +242,13 @@ class Stack(DiagramItem):
         self.up = self.items[0].up
         self.down = self.items[-1].down
         self.height = 0
+        last = len(self.items)
         for i,item in enumerate(self.items):
             self.height += item.height
-            if i != len(self.items)-1:
-                self.height += max(item.down + VERTICAL_SEPARATION, ARC_RADIUS*2) + max(self.items[i+1].up + VERTICAL_SEPARATION, ARC_RADIUS*2)
+            if i > 0:
+                this.height += max(ARC_RADIUS*2, item.up + VERTICAL_SEPARATION)
+            if i < last:
+                this.height += max(ARC_RADIUS*2, item.down + VERTICAL_SEPARATION)
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "stack"

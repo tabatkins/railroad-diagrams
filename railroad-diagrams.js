@@ -320,10 +320,15 @@ At runtime, these constants can be found on the Diagram class.
 		this.down = this.items[this.items.length-1].down;
 
 		this.height = 0;
+		var last = this.items.length - 1;
 		for(var i = 0; i < this.items.length; i++) {
-			this.height += this.items[i].height;
-			if(i !== this.items.length-1) {
-				this.height += Math.max(this.items[i].down + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2) + Math.max(this.items[i+1].up + Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2);
+			var item = this.items[i];
+			this.height += item.height;
+			if(i > 0) {
+				this.height += Math.max(Diagram.ARC_RADIUS*2, item.up + Diagram.VERTICAL_SEPARATION);
+			}
+			if(i < last) {
+				this.height += Math.max(Diagram.ARC_RADIUS*2, item.down + Diagram.VERTICAL_SEPARATION);
 			}
 		}
 		if(Diagram.DEBUG) {
