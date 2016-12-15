@@ -294,7 +294,7 @@ class OptionalSequence(DiagramItem):
         DiagramItem.__init__(self, 'g')
         self.items = [wrapString(item) for item in items]
         self.needsSpace = False
-        self.width = ARC_RADIUS * 4
+        self.width = 0
         self.up = 0
         self.height = sum(item.height for item in self.items)
         self.down = self.items[0].down
@@ -304,64 +304,90 @@ class OptionalSequence(DiagramItem):
             heightSoFar += item.height
             if i > 0:
                 self.down = max(self.height + self.down, heightSoFar + max(ARC_RADIUS*2, item.down + VERTICAL_SEPARATION)) - self.height
-            self.width += max(ARC_RADIUS * 2, item.width + (20 if item.needsSpace else 0))
+            itemWidth = item.width + (20 if item.needsSpace else 0)
             if i == 0:
-                self.width += ARC_RADIUS
-            elif i == 1:
-                self.width += ARC_RADIUS * 2
-            elif 2 <= i < len(self.items) - 1:
-                self.width += ARC_RADIUS * 3
+                self.width += ARC_RADIUS + max(itemWidth, ARC_RADIUS)
             else:
-                pass
+                self.width += ARC_RADIUS*2 + max(itemWidth, ARC_RADIUS) + ARC_RADIUS
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "optseq"
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
-        Path(x, y).h(leftGap).addTo(self)
-        Path(x + leftGap + self.width, y + self.height).h(rightGap).addTo(self)
+        Path(x, y).right(leftGap).addTo(self)
+        Path(x + leftGap + self.width, y + self.height).right(rightGap).addTo(self)
         x += leftGap
         upperLineY = y - self.up
-        (Path(x, y)
-            .arc('se')
-            .up(max(0, self.up - ARC_RADIUS*2))
-            .arc('wn')
-            .right(self.width - ARC_RADIUS*5 - self.items[-1].width - (20 if self.items[-1].needsSpace else 0))
-            .arc('ne')
-            .down(max(0, self.up + self.height - self.items[-1].height - ARC_RADIUS*2))
-            .arc('ws')
-            .addTo(self))
-        for i,ni,item in doubleenumerate(self.items):
-            itemWidth = item.width + (20 if item.needsSpace else 0)
+        last = len(self.items) - 1
+        for i,item in enumerate(self.items):
+            itemSpace = 10 if item.needsSpace else 0
+            itemWidth = item.width + itemSpace
             if i == 0:
-                spaceSize = ARC_RADIUS * 1
-            elif i == 1:
-                spaceSize = ARC_RADIUS * 2
-            else:
-                spaceSize = ARC_RADIUS * 3
-            if i > 0:
-                if ni < -1:
-                    (Path(x + spaceSize - ARC_RADIUS*2, upperLineY)
-                        .arc('ne')
-                        .down(abs(upperLineY - y) - ARC_RADIUS*2)
-                        .arc('ws')
-                        .addTo(self))
-                (Path(x + spaceSize - ARC_RADIUS*2, y)
+                # Upper skip
+                (Path(x,y)
+                    .arc('se')
+                    .up(y - upperLineY - ARC_RADIUS*2)
+                    .arc('wn')
+                    .right(itemWidth - ARC_RADIUS)
                     .arc('ne')
-                    .down(item.height + max(0, item.down + VERTICAL_SEPARATION - ARC_RADIUS*2))
+                    .down(y + item.height - upperLineY - ARC_RADIUS*2)
+                    .arc('ws')
+                    .addTo(self))
+                # Straight line
+                (Path(x, y)
+                    .right(itemSpace + ARC_RADIUS)
+                    .addTo(self))
+                item.format(x + itemSpace + ARC_RADIUS, y, item.width).addTo(self)
+                x += itemWidth + ARC_RADIUS
+                y += item.height
+            elif i < last:
+                # Upper skip
+                (Path(x, upperLineY)
+                    .right(ARC_RADIUS*2 + max(itemWidth, ARC_RADIUS) + ARC_RADIUS)
+                    .arc('ne')
+                    .down(y - upperLineY + item.height - ARC_RADIUS*2)
+                    .arc('ws')
+                    .addTo(self))
+                # Straight line
+                (Path(x,y)
+                    .right(ARC_RADIUS*2)
+                    .addTo(self))
+                item.format(x + ARC_RADIUS*2, y, item.width).addTo(self)
+                (Path(x + item.width + ARC_RADIUS*2, y + item.height)
+                    .right(itemSpace + ARC_RADIUS)
+                    .addTo(self))
+                # Lower skip
+                (Path(x,y)
+                    .arc('ne')
+                    .down(item.height + max(item.down + VERTICAL_SEPARATION, ARC_RADIUS*2) - ARC_RADIUS*2)
                     .arc('ws')
                     .right(itemWidth - ARC_RADIUS)
                     .arc('se')
-                    .up(max(0, item.down + VERTICAL_SEPARATION - ARC_RADIUS*2))
+                    .up(item.down - ARC_RADIUS*2)
                     .arc('wn')
                     .addTo(self))
-            Path(x, y).h(spaceSize).addTo(self)
-            x += spaceSize
-            item.format(x, y, itemWidth).addTo(self)
-            x += itemWidth
-            y += item.height
-        Path(x, y).h(ARC_RADIUS).addTo(self)
+                x += ARC_RADIUS*2 + max(itemWidth, ARC_RADIUS) + ARC_RADIUS
+                y += item.height
+            else:
+                # Straight line
+                (Path(x, y)
+                    .right(ARC_RADIUS*2)
+                    .addTo(self))
+                item.format(x + ARC_RADIUS*2, y, item.width).addTo(self)
+                (Path(x + ARC_RADIUS*2 + item.width, y + item.height)
+                    .right(itemSpace + ARC_RADIUS)
+                    .addTo(self))
+                # Lower skip
+                (Path(x,y)
+                    .arc('ne')
+                    .down(item.height + max(item.down + VERTICAL_SEPARATION, ARC_RADIUS*2) - ARC_RADIUS*2)
+                    .arc('ws')
+                    .right(itemWidth - ARC_RADIUS)
+                    .arc('se')
+                    .up(item.down - ARC_RADIUS*2)
+                    .arc('wn')
+                    .addTo(self))
         return self
 
 

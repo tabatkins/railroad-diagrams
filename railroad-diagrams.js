@@ -385,24 +385,27 @@ At runtime, these constants can be found on the Diagram class.
 		if( items.length === 1 ) {
 			return new Sequence(items);
 		}
+		var arc = Diagram.ARC_RADIUS;
 		this.items = items.map(wrapString);
 		this.needsSpace = false;
-		this.width = Diagram.ARC_RADIUS *4;
+		this.width = 0;
 		this.up = 0;
 		this.height = sum(this.items, function(x){return x.height});
 		this.down = this.items[0].down;
 		var heightSoFar = 0;
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
-			this.up = Math.max(this.up, Math.max(Diagram.ARC_RADIUS*2, item.up + Diagram.VERTICAL_SEPARATION) - heightSoFar);
+			this.up = Math.max(this.up, Math.max(arc*2, item.up + Diagram.VERTICAL_SEPARATION) - heightSoFar);
 			heightSoFar += item.height;
 			if(i > 0) {
-				this.down = Math.max(this.height + this.down, heightSoFar + Math.max(Diagram.ARC_RADIUS*2, item.down + Diagram.VERTICAL_SEPARATION)) - this.height;
+				this.down = Math.max(this.height + this.down, heightSoFar + Math.max(arc*2, item.down + Diagram.VERTICAL_SEPARATION)) - this.height;
 			}
-			this.width += Math.max(Diagram.ARC_RADIUS*2, item.width + (item.needsSpace?20:0));
-			if(i == 0) this.width += Diagram.ARC_RADIUS;
-			else if(i == 1) this.width += Diagram.ARC_RADIUS*2;
-			else if(i < this.items.length - 1) this.width += Diagram.ARC_RADIUS*3;
+			var itemWidth = (item.needsSpace?10:0) + item.width;
+			if(i == 0) {
+				this.width += arc + Math.max(itemWidth, arc);
+			} else {
+				this.width += arc*2 + Math.max(itemWidth, arc) + arc;
+			}
 		}
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -411,52 +414,86 @@ At runtime, these constants can be found on the Diagram class.
 	}
 	subclassOf(OptionalSequence, FakeSVG);
 	OptionalSequence.prototype.format = function(x, y, width) {
-		var gaps = determineGaps(width, this.width)
-		Path(x, y).h(gaps[0]).addTo(this)
-		Path(x + gaps[0] + this.width, y + this.height).h(gaps[1]).addTo(this)
+		var arc = Diagram.ARC_RADIUS;
+		var gaps = determineGaps(width, this.width);
+		Path(x, y).right(gaps[0]).addTo(this);
+		Path(x + gaps[0] + this.width, y + this.height).right(gaps[1]).addTo(this);
 		x += gaps[0]
 		var upperLineY = y - this.up;
 		var last = this.items.length - 1;
-		Path(x,y)
-			.arc('se')
-			.up(Math.max(0, this.up - Diagram.ARC_RADIUS*2))
-			.arc('wn')
-			.right(this.width - Diagram.ARC_RADIUS*5 - this.items[last].width - (this.items[last].needsSpace?20:0))
-			.arc('ne')
-			.down(Math.max(0, this.up + this.height - this.items[last].height - Diagram.ARC_RADIUS*2))
-			.arc('ws')
-			.addTo(this);
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
-			var itemWidth = item.width + (item.needsSpace?20:0);
-			if(i == 0) var spaceSize = Diagram.ARC_RADIUS;
-			else if(i == 1) var spaceSize = Diagram.ARC_RADIUS*2;
-			else var spaceSize = Diagram.ARC_RADIUS*3;
-			if(i > 0) {
-				if(i < last) {
-					Path(x + spaceSize - Diagram.ARC_RADIUS*2, upperLineY)
-						.arc('ne')
-						.down(Math.abs(upperLineY - y) - Diagram.ARC_RADIUS*2)
-						.arc('ws')
-						.addTo(this);
-				}
-				Path(x + spaceSize - Diagram.ARC_RADIUS*2, y)
-					.arc('ne')
-					.down(item.height + Math.max(0, item.down + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
-					.arc('ws')
-					.right(itemWidth - Diagram.ARC_RADIUS)
+			var itemSpace = (item.needsSpace?10:0);
+			var itemWidth = item.width + itemSpace;
+			if(i == 0) {
+				// Upper skip
+				Path(x,y)
 					.arc('se')
-					.up(Math.max(0, item.down + Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS*2))
+					.up(y - upperLineY - arc*2)
+					.arc('wn')
+					.right(itemWidth - arc)
+					.arc('ne')
+					.down(y + item.height - upperLineY - arc*2)
+					.arc('ws')
+					.addTo(this);
+				// Straight line
+				Path(x, y)
+					.right(itemSpace + arc)
+					.addTo(this);
+				item.format(x + itemSpace + arc, y, item.width).addTo(this);
+				x += itemWidth + arc;
+				y += item.height;
+				// x ends on the far side of the first element,
+				// where the next element's skip needs to begin
+			} else if(i < last) {
+				// Upper skip
+				Path(x, upperLineY)
+					.right(arc*2 + Math.max(itemWidth, arc) + arc)
+					.arc('ne')
+					.down(y - upperLineY + item.height - arc*2)
+					.arc('ws')
+					.addTo(this);
+				// Straight line
+				Path(x,y)
+					.right(arc*2)
+					.addTo(this);
+				item.format(x + arc*2, y, item.width).addTo(this);
+				Path(x + item.width + arc*2, y + item.height)
+					.right(itemSpace + arc)
+					.addTo(this);
+				// Lower skip
+				Path(x,y)
+					.arc('ne')
+					.down(item.height + Math.max(item.down + Diagram.VERTICAL_SEPARATION, arc*2) - arc*2)
+					.arc('ws')
+					.right(itemWidth - arc)
+					.arc('se')
+					.up(item.down - arc*2)
+					.arc('wn')
+					.addTo(this);
+				x += arc*2 + Math.max(itemWidth, arc) + arc;
+				y += item.height;
+			} else {
+				// Straight line
+				Path(x, y)
+					.right(arc*2)
+					.addTo(this);
+				item.format(x + arc*2, y, item.width).addTo(this);
+				Path(x + arc*2 + item.width, y + item.height)
+					.right(itemSpace + arc)
+					.addTo(this);
+				// Lower skip
+				Path(x,y)
+					.arc('ne')
+					.down(item.height + Math.max(item.down + Diagram.VERTICAL_SEPARATION, arc*2) - arc*2)
+					.arc('ws')
+					.right(itemWidth - arc)
+					.arc('se')
+					.up(item.down - arc*2)
 					.arc('wn')
 					.addTo(this);
 			}
-			Path(x, y).right(spaceSize).addTo(this);
-			x += spaceSize;
-			item.format(x, y, itemWidth).addTo(this);
-			x += itemWidth;
-			y += item.height;
 		}
-		Path(x, y).right(Diagram.ARC_RADIUS*2).addTo(this);
 		return this;
 	};
 
