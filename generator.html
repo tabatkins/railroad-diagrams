@@ -22,7 +22,7 @@ window.addEventListener('load', initialProcess, false);
 
 function initialProcess() {
 	if( location.hash && location.hash.length > 1) {
-		find('.input').textContent = location.hash.substr(1)
+		find('.input').textContent = decodeURIComponent(location.hash.substr(1))
 	}
 	process();
 }
