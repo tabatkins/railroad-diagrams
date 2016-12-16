@@ -468,7 +468,7 @@ At runtime, these constants can be found on the Diagram class.
 					.arc('ws')
 					.right(itemWidth - arc)
 					.arc('se')
-					.up(item.down - arc*2)
+					.up(item.down + Diagram.VERTICAL_SEPARATION - arc*2)
 					.arc('wn')
 					.addTo(this);
 				x += arc*2 + Math.max(itemWidth, arc) + arc;
@@ -489,7 +489,7 @@ At runtime, these constants can be found on the Diagram class.
 					.arc('ws')
 					.right(itemWidth - arc)
 					.arc('se')
-					.up(item.down - arc*2)
+					.up(item.down + Diagram.VERTICAL_SEPARATION - arc*2)
 					.arc('wn')
 					.addTo(this);
 			}

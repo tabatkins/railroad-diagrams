@@ -364,7 +364,7 @@ class OptionalSequence(DiagramItem):
                     .arc('ws')
                     .right(itemWidth - ARC_RADIUS)
                     .arc('se')
-                    .up(item.down - ARC_RADIUS*2)
+                    .up(item.down + VERTICAL_SEPARATION - ARC_RADIUS*2)
                     .arc('wn')
                     .addTo(self))
                 x += ARC_RADIUS*2 + max(itemWidth, ARC_RADIUS) + ARC_RADIUS
@@ -385,7 +385,7 @@ class OptionalSequence(DiagramItem):
                     .arc('ws')
                     .right(itemWidth - ARC_RADIUS)
                     .arc('se')
-                    .up(item.down - ARC_RADIUS*2)
+                    .up(item.down + VERTICAL_SEPARATION - ARC_RADIUS*2)
                     .arc('wn')
                     .addTo(self))
         return self
