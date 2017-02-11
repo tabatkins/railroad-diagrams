@@ -198,13 +198,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "doubleand":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "doubleand", "children": children}]
 		else:
 			return [tokens]
@@ -214,13 +214,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "bar":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "doublebar", "children": children}]
 		else:
 			return [tokens]
@@ -231,13 +231,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "bar":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "bar", "children": children}]
 		else:
 			return [tokens]
@@ -273,7 +273,7 @@ def parse(tokens):
 			else:
 				d.append(token)
 		return d
-	return Diagram(*convertTokens(tokenTree))
+	return rr.Diagram(convertTokens(tokenTree))
 
 
 
@@ -302,8 +302,8 @@ tokenPatterns = {
 }
 
 tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
-tokens = parse(tokens)
+parsed_diagram = parse(tokens)
 # pprint.PrettyPrinter(indent=2).pprint(tokens)
 with io.open('testpy.html', 'w', encoding='utf-8') as fh:
 	fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
-	rr.Diagram(*tokens).writeSvg(fh.write)
+	rr.Diagram(parsed_diagram).writeSvg(fh.write)
