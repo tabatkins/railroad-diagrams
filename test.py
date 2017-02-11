@@ -7,6 +7,7 @@ import pprint
 import collections as coll
 import itertools
 import sys
+from xml.etree import ElementTree
 
 import railroad_diagrams as rr
 
@@ -306,9 +307,19 @@ tokenPatterns = {
     'ws': r"\s+"
 }
 
-tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
-parsed_diagram = parse(tokens)
-# pprint.PrettyPrinter(indent=2).pprint(tokens)
-with io.open('testpy.html', 'w', encoding='utf-8') as fh:
-	fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
-	rr.Diagram(parsed_diagram).writeSvg(fh.write)
+
+def test_token_rendering():
+    tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
+    parsed_diagram = parse(tokens)
+    output = io.StringIO()
+    rr.Diagram(parsed_diagram).writeSvg(output.write)
+    ElementTree.fromstring(output.getvalue())  # test the output is well-formed XML.
+
+
+if __name__ == '__main__':
+    tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
+    parsed_diagram = parse(tokens)
+    # pprint.PrettyPrinter(indent=2).pprint(tokens)
+    with io.open('testpy.html', 'w', encoding='utf-8') as fh:
+        fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
+        rr.Diagram(parsed_diagram).writeSvg(fh.write)
