@@ -9,6 +9,7 @@ import itertools
 import sys
 from xml.etree import ElementTree
 
+from railroad_diagrams import *
 import railroad_diagrams as rr
 
 if sys.version_info >= (3, ):
@@ -254,32 +255,32 @@ def parse(tokens):
 		for token in tokens:
 			name = token['name']
 			if name in ["keyword", "char"]:
-				d.append(rr.Terminal(token['match'].group(0)))
+				d.append(Terminal(token['match'].group(0)))
 			elif name == "literal":
-				d.append(rr.Terminal(token['match'].group(1)))
+				d.append(Terminal(token['match'].group(1)))
 			elif name == "type":
-				d.append(rr.NonTerminal(token['match'].group(0)))
+				d.append(NonTerminal(token['match'].group(0)))
 			elif name == "sequence":
 				token['children'] = convertTokens(token['children'])
-				d.append(rr.Sequence(*token['children']))
+				d.append(Sequence(*token['children']))
 			elif name == "optionalsequence":
 				token['children'] = convertTokens(token['children'])
-				d.append(rr.OptionalSequence(*token['children']))
+				d.append(OptionalSequence(*token['children']))
 			elif name == "multopt":
-				d[-1] = rr.Optional(d[-1])
+				d[-1] = Optional(d[-1])
 			elif name == "multstar":
-				d[-1] = rr.ZeroOrMore(d[-1])
+				d[-1] = ZeroOrMore(d[-1])
 			elif name == "multplus":
-				d[-1] = rr.OneOrMore(d[-1])
+				d[-1] = OneOrMore(d[-1])
 			elif name == "multhash":
-				d[-1] = rr.OneOrMore(d[-1], Terminal(','))
+				d[-1] = OneOrMore(d[-1], Terminal(','))
 			elif name in ["multopt", "multstar", "multplus", "multhash"]:
 				token['child'] = d[-1]
 				d[-1] = token
 			else:
 				d.append(token)
 		return d
-	return rr.Diagram(convertTokens(tokenTree))
+	return Diagram(convertTokens(tokenTree))
 
 
 
@@ -308,12 +309,26 @@ tokenPatterns = {
 }
 
 
-def test_token_rendering():
+def test_token_rendering_example():
     tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
     parsed_diagram = parse(tokens)
     output = io.StringIO()
-    rr.Diagram(parsed_diagram).writeSvg(output.write)
+    Diagram(parsed_diagram).writeSvg(output.write)
     ElementTree.fromstring(output.getvalue())  # test the output is well-formed XML.
+
+
+def test_example_polyglot_file():
+    name_to_diagram = {}
+    def add(name, diagram):
+        output = io.StringIO()
+        diagram.writeSvg(output.write)
+        name_to_diagram[name] = output.getvalue()
+
+    exec(open('css-example.py-js').read(), locals(), globals())
+
+    for name, diagram_xml in name_to_diagram.items():
+        # Test the output is well-formed XML.
+        ElementTree.fromstring(diagram_xml)
 
 
 if __name__ == '__main__':
@@ -322,4 +337,4 @@ if __name__ == '__main__':
     # pprint.PrettyPrinter(indent=2).pprint(tokens)
     with io.open('testpy.html', 'w', encoding='utf-8') as fh:
         fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
-        rr.Diagram(parsed_diagram).writeSvg(fh.write)
+        Diagram(parsed_diagram).writeSvg(fh.write)
