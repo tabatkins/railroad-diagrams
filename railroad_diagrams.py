@@ -1,4 +1,8 @@
 # coding=utf-8
+import sys
+
+if sys.version_info >= (3, ):
+    unicode = str
 
 # Display constants
 VERTICAL_SEPARATION = 8

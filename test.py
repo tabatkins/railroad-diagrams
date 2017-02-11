@@ -6,8 +6,13 @@ import io
 import pprint
 import collections as coll
 import itertools
+import sys
 
 import railroad_diagrams as rr
+
+if sys.version_info >= (3, ):
+    basestring = (str, bytes)
+
 
 class TokenStream:
 	def __init__(self, tokens, before=None, after=None):
@@ -71,7 +76,7 @@ class TokenStream:
 				if attrName in tok:
 					return tok[attrName]
 				else:
-					raise AttributeError, attrName
+					raise AttributeError(attrName)
 			return _missing
 
 	def __iter__(self):
