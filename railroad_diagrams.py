@@ -373,7 +373,7 @@ class OptionalSequence(DiagramItem):
         if len(items) <= 1:
             return Sequence(*items)
         else:
-            return super(OptionalSequence, cls).__new__(cls, *items)
+            return super(OptionalSequence, cls).__new__(cls)
 
     def __init__(self, *items):
         DiagramItem.__init__(self, 'g')
