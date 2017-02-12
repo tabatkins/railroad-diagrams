@@ -151,13 +151,10 @@ class Diagram(DiagramItem):
 
     def __repr__(self):
         items = ', '.join(map(repr, self.items[1:-1]))
-        if self.type is not None:
-            if items:
-                return 'Diagram(%s, type=%r)' % (items, self.type)
-            else:
-                return 'Diagram(type=%r)' % (self.type, )
+        if items:
+            return 'Diagram(%s, type=%r)' % (items, self.type)
         else:
-            return 'Diagram(%s)' % items
+            return 'Diagram(type=%r)' % (self.type, )
 
     def format(self, paddingTop=20, paddingRight=None, paddingBottom=None, paddingLeft=None):
         if paddingRight is None:
