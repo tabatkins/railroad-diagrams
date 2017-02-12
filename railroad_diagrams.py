@@ -128,17 +128,66 @@ def wrapString(value):
     return value if isinstance(value, DiagramItem) else Terminal(value)
 
 
+DEFAULT_STYLE = '''\
+    svg.railroad-diagram {
+        background-color:hsl(30,20%,95%);
+    }
+    svg.railroad-diagram path {
+        stroke-width:3;
+        stroke:black;
+        fill:rgba(0,0,0,0);
+    }
+    svg.railroad-diagram text {
+        font:bold 14px monospace;
+        text-anchor:middle;
+    }
+    svg.railroad-diagram text.label{
+        text-anchor:start;
+    }
+    svg.railroad-diagram text.comment{
+        font:italic 12px monospace;
+    }
+    svg.railroad-diagram rect{
+        stroke-width:3;
+        stroke:black;
+        fill:hsl(120,100%,90%);
+    }
+'''
+
+
+class Style(DiagramItem):
+    def __init__(self, css):
+        self.name = 'style'
+        self.css = css
+        self.height = 0
+        self.width = 0
+        self.needsSpace = False
+
+    def format(self, x, y, width):
+        return self
+
+    def writeSvg(self, write):
+        # Write included stylesheet as CDATA. See https://developer.mozilla.org/en-US/docs/Web/SVG/Element/style
+        cdata = u'/* <![CDATA[ */\n{css}\n/* ]]> */\n'.format(css=self.css)
+        write(u'<style>{cdata}</style>'.format(cdata=cdata))
+
+
 class Diagram(DiagramItem):
     def __init__(self, *items, **kwargs):
         # Accepts a type=[simple|complex] kwarg
         DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
         self.type = kwargs.get("type", "simple")
+        self.css = kwargs.get("css", DEFAULT_STYLE)
         self.items = [Start(self.type)] + [wrapString(item) for item in items] + [End(self.type)]
+        if self.css:
+            self.items.insert(0, Style(self.css))
         self.up = 0
         self.down = 0
         self.height = 0
         self.width = 0
         for item in self.items:
+            if isinstance(item, Style):
+                continue
             self.width += item.width + (20 if item.needsSpace else 0)
             self.up = max(self.up, item.up - self.height)
             self.height += item.height
@@ -150,11 +199,16 @@ class Diagram(DiagramItem):
         self.formatted = False
 
     def __repr__(self):
-        items = ', '.join(map(repr, self.items[1:-1]))
-        if items:
-            return 'Diagram(%s, type=%r)' % (items, self.type)
+        if self.css:
+            items = ', '.join(map(repr, self.items[2:-1]))
         else:
-            return 'Diagram(type=%r)' % (self.type, )
+            items = ', '.join(map(repr, self.items[1:-1]))
+        pieces = [] if not items else [items]
+        if self.css != DEFAULT_STYLE:
+            pieces.append('css=%r' % self.css)
+        if self.type != 'simple':
+            pieces.append('type=%r' % self.type)
+        return 'Diagram(%s)' % ', '.join(pieces)
 
     def format(self, paddingTop=20, paddingRight=None, paddingBottom=None, paddingLeft=None):
         if paddingRight is None:
@@ -859,5 +913,6 @@ if __name__ == '__main__':
         sys.stdout.write('\n')
 
     import sys
-    sys.stdout.write("<!doctype html><title>Test</title><style>svg.railroad-diagram{background-color:hsl(30,20%,95%);}svg.railroad-diagram path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);}svg.railroad-diagram text{font:bold 14px monospace;text-anchor:middle;}svg.railroad-diagram text.label{text-anchor:start;}svg.railroad-diagram text.comment{font:italic 12px monospace;}svg.railroad-diagram rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}</style>")
+    sys.stdout.write("<!doctype html><title>Test</title><body>")
     exec(open('css-example.py-js').read())
+    sys.stdout.write('</body></html>')
