@@ -331,6 +331,27 @@ def test_example_polyglot_file():
         ElementTree.fromstring(diagram_xml)
 
 
+def test_rendering():
+    diagram = Diagram(
+        Stack(Terminal('a'), Terminal('b')),
+        OptionalSequence(Terminal('a'), Terminal('b')),
+        MultipleChoice(0, 'any', Terminal('a'), Terminal('b')),
+    )
+    assert eval(repr(diagram)) == diagram
+    output = io.StringIO()
+    diagram.writeSvg(output.write)
+    ElementTree.fromstring(output.getvalue().encode('utf-8'))  # Test the output is well-formed XML.
+
+
+def test_test_equality():
+    assert Diagram(Choice(1, NonTerminal('a'), Terminal('b'))) == Diagram(Choice(1, NonTerminal('a'), Terminal('b')))
+    assert Diagram(Choice(1, NonTerminal('c'), Terminal('b'))) != Diagram(Choice(1, NonTerminal('a'), Terminal('b')))
+    assert ZeroOrMore('a') == ZeroOrMore('a')
+    assert ZeroOrMore('a') != ZeroOrMore('b')
+    assert OneOrMore('a') == OneOrMore('a')
+    assert OneOrMore('a') != OneOrMore('b')
+
+
 if __name__ == '__main__':
     tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
     parsed_diagram = parse(tokens)

@@ -67,9 +67,17 @@ class DiagramItem(object):
                 write(e(child))
         write(u'</{0}>'.format(self.name))
 
+    def __eq__(self, other):
+        return type(self) == type(other) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class Path(DiagramItem):
     def __init__(self, x, y):
+        self.x = x
+        self.y = y
         DiagramItem.__init__(self, 'path', {'d': 'M%s %s' % (x, y)})
 
     def m(self, x, y):
@@ -112,6 +120,9 @@ class Path(DiagramItem):
         self.attrs['d'] += 'h.5'
         return self
 
+    def __repr__(self):
+        return 'Path(%r, %r)' % (self.x, self.y)
+
 
 def wrapString(value):
     return value if isinstance(value, DiagramItem) else Terminal(value)
@@ -137,6 +148,16 @@ class Diagram(DiagramItem):
         if self.items[-1].needsSpace:
             self.width -= 10
         self.formatted = False
+
+    def __repr__(self):
+        items = ', '.join(map(repr, self.items[1:-1]))
+        if self.type is not None:
+            if items:
+                return 'Diagram(%s, type=%r)' % (items, self.type)
+            else:
+                return 'Diagram(type=%r)' % (self.type, )
+        else:
+            return 'Diagram(%s)' % items
 
     def format(self, paddingTop=20, paddingRight=None, paddingBottom=None, paddingLeft=None):
         if paddingRight is None:
@@ -217,6 +238,10 @@ class Sequence(DiagramItem):
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "sequence"
 
+    def __repr__(self):
+        items = ', '.join(map(repr, self.items))
+        return 'Sequence(%s)' % items
+
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
         Path(x, y).h(leftGap).addTo(self)
@@ -233,6 +258,7 @@ class Sequence(DiagramItem):
                 Path(x, y).h(10).addTo(self)
                 x += 10
         return self
+
 
 class Stack(DiagramItem):
     def __init__(self, *items):
@@ -256,6 +282,10 @@ class Stack(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "stack"
+
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'Stack(%s)' % items
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -316,6 +346,10 @@ class OptionalSequence(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "optseq"
+
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'OptionalSequence(%s)' % items
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -421,6 +455,10 @@ class Choice(DiagramItem):
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "choice"
 
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'Choice(%r, %s)' % (self.default, items)
+
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
 
@@ -510,6 +548,10 @@ class MultipleChoice(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "multiplechoice"
+
+    def __repr__(self):
+        items = ', '.join(map(repr, self.items))
+        return 'MultipleChoice(%r, %r, %s)' % (self.default, self.type, items)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -645,6 +687,9 @@ class OneOrMore(DiagramItem):
 
         return self
 
+    def __repr__(self):
+        return 'OneOrMore(%r, repeat=%r)' % (self.item, self.rep)
+
 
 def ZeroOrMore(item, repeat=None):
     result = Optional(OneOrMore(item, repeat))
@@ -669,6 +714,9 @@ class Start(DiagramItem):
             self.attrs['d'] = 'M {0} {1} v 20 m 0 -10 h 20.5'
         return self
 
+    def __repr__(self):
+        return 'Start(type=%r)' % self.type
+
 
 class End(DiagramItem):
     def __init__(self, type="simple"):
@@ -688,6 +736,9 @@ class End(DiagramItem):
             self.attrs['d'] = 'M {0} {1} h 20 m 0 -10 v 20'
         return self
 
+    def __repr__(self):
+        return 'End(type=%r)' % self.type
+
 
 class Terminal(DiagramItem):
     def __init__(self, text, href=None):
@@ -701,6 +752,9 @@ class Terminal(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "terminal"
+
+    def __repr__(self):
+        return 'Terminal(%r, href=%r)' % (self.text, self.href)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -732,6 +786,9 @@ class NonTerminal(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "non-terminal"
+
+    def __repr__(self):
+        return 'NonTerminal(%r, href=%r)' % (self.text, self.href)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -793,6 +850,9 @@ class Skip(DiagramItem):
     def format(self, x, y, width):
         Path(x, y).right(width).addTo(self)
         return self
+
+    def __repr__(self):
+        return 'Skip()'
 
 
 if __name__ == '__main__':
