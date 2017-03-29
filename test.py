@@ -6,8 +6,15 @@ import io
 import pprint
 import collections as coll
 import itertools
+import sys
+from xml.etree import ElementTree
 
+from railroad_diagrams import *
 import railroad_diagrams as rr
+
+if sys.version_info >= (3, ):
+    basestring = (str, bytes)
+
 
 class TokenStream:
 	def __init__(self, tokens, before=None, after=None):
@@ -71,7 +78,7 @@ class TokenStream:
 				if attrName in tok:
 					return tok[attrName]
 				else:
-					raise AttributeError, attrName
+					raise AttributeError(attrName)
 			return _missing
 
 	def __iter__(self):
@@ -198,13 +205,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "doubleand":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "doubleand", "children": children}]
 		else:
 			return [tokens]
@@ -214,13 +221,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "bar":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "doublebar", "children": children}]
 		else:
 			return [tokens]
@@ -231,13 +238,13 @@ def parse(tokens):
 			group = []
 			for t in tokens:
 				if t['name'] == "bar":
-					children.append({"name":"sequence": "children":group})
+					children.append({"name":"sequence", "children":group})
 				elif t['name'] in ["sequence", "optionalsequence"]:
 					t['children'] = groupOne(t['children'])
 					group.append(t)
 				else:
 					group.append(t)
-			children.append({"name":"sequence": "children":group})
+			children.append({"name":"sequence", "children":group})
 			return [{"name": "bar", "children": children}]
 		else:
 			return [tokens]
@@ -248,32 +255,32 @@ def parse(tokens):
 		for token in tokens:
 			name = token['name']
 			if name in ["keyword", "char"]:
-				d.append(rr.Terminal(token['match'].group(0)))
+				d.append(Terminal(token['match'].group(0)))
 			elif name == "literal":
-				d.append(rr.Terminal(token['match'].group(1)))
+				d.append(Terminal(token['match'].group(1)))
 			elif name == "type":
-				d.append(rr.NonTerminal(token['match'].group(0)))
+				d.append(NonTerminal(token['match'].group(0)))
 			elif name == "sequence":
 				token['children'] = convertTokens(token['children'])
-				d.append(rr.Sequence(*token['children']))
+				d.append(Sequence(*token['children']))
 			elif name == "optionalsequence":
 				token['children'] = convertTokens(token['children'])
-				d.append(rr.OptionalSequence(*token['children']))
+				d.append(OptionalSequence(*token['children']))
 			elif name == "multopt":
-				d[-1] = rr.Optional(d[-1])
+				d[-1] = Optional(d[-1])
 			elif name == "multstar":
-				d[-1] = rr.ZeroOrMore(d[-1])
+				d[-1] = ZeroOrMore(d[-1])
 			elif name == "multplus":
-				d[-1] = rr.OneOrMore(d[-1])
+				d[-1] = OneOrMore(d[-1])
 			elif name == "multhash":
-				d[-1] = rr.OneOrMore(d[-1], Terminal(','))
+				d[-1] = OneOrMore(d[-1], Terminal(','))
 			elif name in ["multopt", "multstar", "multplus", "multhash"]:
 				token['child'] = d[-1]
 				d[-1] = token
 			else:
 				d.append(token)
 		return d
-	return Diagram(*convertTokens(tokenTree))
+	return Diagram(convertTokens(tokenTree))
 
 
 
@@ -301,9 +308,54 @@ tokenPatterns = {
     'ws': r"\s+"
 }
 
-tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
-tokens = parse(tokens)
-# pprint.PrettyPrinter(indent=2).pprint(tokens)
-with io.open('testpy.html', 'w', encoding='utf-8') as fh:
-	fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
-	rr.Diagram(*tokens).writeSvg(fh.write)
+
+def test_token_rendering_example():
+    tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
+    parsed_diagram = parse(tokens)
+    output = io.StringIO()
+    Diagram(parsed_diagram).writeSvg(output.write)
+    ElementTree.fromstring(output.getvalue())  # test the output is well-formed XML.
+
+
+def test_example_polyglot_file():
+    name_to_diagram = {}
+    def add(name, diagram):
+        output = io.StringIO()
+        diagram.writeSvg(output.write)
+        name_to_diagram[name] = output.getvalue()
+
+    exec(open('css-example.py-js').read(), locals(), globals())
+
+    for name, diagram_xml in name_to_diagram.items():
+        # Test the output is well-formed XML.
+        ElementTree.fromstring(diagram_xml)
+
+
+def test_rendering():
+    diagram = Diagram(
+        Stack(Terminal('a'), Terminal('b')),
+        OptionalSequence(Terminal('a'), Terminal('b')),
+        MultipleChoice(0, 'any', Terminal('a'), Terminal('b')),
+    )
+    assert eval(repr(diagram)) == diagram
+    output = io.StringIO()
+    diagram.writeSvg(output.write)
+    ElementTree.fromstring(output.getvalue().encode('utf-8'))  # Test the output is well-formed XML.
+
+
+def test_test_equality():
+    assert Diagram(Choice(1, NonTerminal('a'), Terminal('b'))) == Diagram(Choice(1, NonTerminal('a'), Terminal('b')))
+    assert Diagram(Choice(1, NonTerminal('c'), Terminal('b'))) != Diagram(Choice(1, NonTerminal('a'), Terminal('b')))
+    assert ZeroOrMore('a') == ZeroOrMore('a')
+    assert ZeroOrMore('a') != ZeroOrMore('b')
+    assert OneOrMore('a') == OneOrMore('a')
+    assert OneOrMore('a') != OneOrMore('b')
+
+
+if __name__ == '__main__':
+    tokens = [t for t in tokenize(tokenPatterns, "none | [ <‘flex-grow’> <‘flex-shrink’>? || <‘flex-basis’> ]") if t['name'] != 'ws']
+    parsed_diagram = parse(tokens)
+    # pprint.PrettyPrinter(indent=2).pprint(tokens)
+    with io.open('testpy.html', 'w', encoding='utf-8') as fh:
+        fh.write("<!doctype html><link rel=stylesheet href=railroad-diagrams.css>")
+        Diagram(parsed_diagram).writeSvg(fh.write)

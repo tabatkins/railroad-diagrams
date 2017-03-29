@@ -1,4 +1,8 @@
 # coding=utf-8
+import sys
+
+if sys.version_info >= (3, ):
+    unicode = str
 
 # Display constants
 VERTICAL_SEPARATION = 8
@@ -63,9 +67,17 @@ class DiagramItem(object):
                 write(e(child))
         write(u'</{0}>'.format(self.name))
 
+    def __eq__(self, other):
+        return type(self) == type(other) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class Path(DiagramItem):
     def __init__(self, x, y):
+        self.x = x
+        self.y = y
         DiagramItem.__init__(self, 'path', {'d': 'M%s %s' % (x, y)})
 
     def m(self, x, y):
@@ -108,9 +120,59 @@ class Path(DiagramItem):
         self.attrs['d'] += 'h.5'
         return self
 
+    def __repr__(self):
+        return 'Path(%r, %r)' % (self.x, self.y)
+
 
 def wrapString(value):
     return value if isinstance(value, DiagramItem) else Terminal(value)
+
+
+DEFAULT_STYLE = '''\
+    svg.railroad-diagram {
+        background-color:hsl(30,20%,95%);
+    }
+    svg.railroad-diagram path {
+        stroke-width:3;
+        stroke:black;
+        fill:rgba(0,0,0,0);
+    }
+    svg.railroad-diagram text {
+        font:bold 14px monospace;
+        text-anchor:middle;
+    }
+    svg.railroad-diagram text.label{
+        text-anchor:start;
+    }
+    svg.railroad-diagram text.comment{
+        font:italic 12px monospace;
+    }
+    svg.railroad-diagram rect{
+        stroke-width:3;
+        stroke:black;
+        fill:hsl(120,100%,90%);
+    }
+'''
+
+
+class Style(DiagramItem):
+    def __init__(self, css):
+        self.name = 'style'
+        self.css = css
+        self.height = 0
+        self.width = 0
+        self.needsSpace = False
+
+    def __repr__(self):
+        return 'Style(%r)' % css
+
+    def format(self, x, y, width):
+        return self
+
+    def writeSvg(self, write):
+        # Write included stylesheet as CDATA. See https://developer.mozilla.org/en-US/docs/Web/SVG/Element/style
+        cdata = u'/* <![CDATA[ */\n{css}\n/* ]]> */\n'.format(css=self.css)
+        write(u'<style>{cdata}</style>'.format(cdata=cdata))
 
 
 class Diagram(DiagramItem):
@@ -118,12 +180,17 @@ class Diagram(DiagramItem):
         # Accepts a type=[simple|complex] kwarg
         DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
         self.type = kwargs.get("type", "simple")
+        self.css = kwargs.get("css", DEFAULT_STYLE)
         self.items = [Start(self.type)] + [wrapString(item) for item in items] + [End(self.type)]
+        if self.css:
+            self.items.insert(0, Style(self.css))
         self.up = 0
         self.down = 0
         self.height = 0
         self.width = 0
         for item in self.items:
+            if isinstance(item, Style):
+                continue
             self.width += item.width + (20 if item.needsSpace else 0)
             self.up = max(self.up, item.up - self.height)
             self.height += item.height
@@ -133,6 +200,18 @@ class Diagram(DiagramItem):
         if self.items[-1].needsSpace:
             self.width -= 10
         self.formatted = False
+
+    def __repr__(self):
+        if self.css:
+            items = ', '.join(map(repr, self.items[2:-1]))
+        else:
+            items = ', '.join(map(repr, self.items[1:-1]))
+        pieces = [] if not items else [items]
+        if self.css != DEFAULT_STYLE:
+            pieces.append('css=%r' % self.css)
+        if self.type != 'simple':
+            pieces.append('type=%r' % self.type)
+        return 'Diagram(%s)' % ', '.join(pieces)
 
     def format(self, paddingTop=20, paddingRight=None, paddingBottom=None, paddingLeft=None):
         if paddingRight is None:
@@ -213,6 +292,10 @@ class Sequence(DiagramItem):
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "sequence"
 
+    def __repr__(self):
+        items = ', '.join(map(repr, self.items))
+        return 'Sequence(%s)' % items
+
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
         Path(x, y).h(leftGap).addTo(self)
@@ -229,6 +312,7 @@ class Sequence(DiagramItem):
                 Path(x, y).h(10).addTo(self)
                 x += 10
         return self
+
 
 class Stack(DiagramItem):
     def __init__(self, *items):
@@ -252,6 +336,10 @@ class Stack(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "stack"
+
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'Stack(%s)' % items
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -288,7 +376,7 @@ class OptionalSequence(DiagramItem):
         if len(items) <= 1:
             return Sequence(*items)
         else:
-            return super(OptionalSequence, cls).__new__(cls, *items)
+            return super(OptionalSequence, cls).__new__(cls)
 
     def __init__(self, *items):
         DiagramItem.__init__(self, 'g')
@@ -312,6 +400,10 @@ class OptionalSequence(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "optseq"
+
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'OptionalSequence(%s)' % items
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -417,6 +509,10 @@ class Choice(DiagramItem):
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "choice"
 
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'Choice(%r, %s)' % (self.default, items)
+
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
 
@@ -506,6 +602,10 @@ class MultipleChoice(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "multiplechoice"
+
+    def __repr__(self):
+        items = ', '.join(map(repr, self.items))
+        return 'MultipleChoice(%r, %r, %s)' % (self.default, self.type, items)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -641,6 +741,9 @@ class OneOrMore(DiagramItem):
 
         return self
 
+    def __repr__(self):
+        return 'OneOrMore(%r, repeat=%r)' % (self.item, self.rep)
+
 
 def ZeroOrMore(item, repeat=None):
     result = Optional(OneOrMore(item, repeat))
@@ -665,6 +768,9 @@ class Start(DiagramItem):
             self.attrs['d'] = 'M {0} {1} v 20 m 0 -10 h 20.5'
         return self
 
+    def __repr__(self):
+        return 'Start(type=%r)' % self.type
+
 
 class End(DiagramItem):
     def __init__(self, type="simple"):
@@ -684,6 +790,9 @@ class End(DiagramItem):
             self.attrs['d'] = 'M {0} {1} h 20 m 0 -10 v 20'
         return self
 
+    def __repr__(self):
+        return 'End(type=%r)' % self.type
+
 
 class Terminal(DiagramItem):
     def __init__(self, text, href=None):
@@ -697,6 +806,9 @@ class Terminal(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "terminal"
+
+    def __repr__(self):
+        return 'Terminal(%r, href=%r)' % (self.text, self.href)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -728,6 +840,9 @@ class NonTerminal(DiagramItem):
         if DEBUG:
             self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
             self.attrs['data-type'] = "non-terminal"
+
+    def __repr__(self):
+        return 'NonTerminal(%r, href=%r)' % (self.text, self.href)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -790,6 +905,9 @@ class Skip(DiagramItem):
         Path(x, y).right(width).addTo(self)
         return self
 
+    def __repr__(self):
+        return 'Skip()'
+
 
 if __name__ == '__main__':
     def add(name, diagram):
@@ -798,5 +916,6 @@ if __name__ == '__main__':
         sys.stdout.write('\n')
 
     import sys
-    sys.stdout.write("<!doctype html><title>Test</title><style>svg.railroad-diagram{background-color:hsl(30,20%,95%);}svg.railroad-diagram path{stroke-width:3;stroke:black;fill:rgba(0,0,0,0);}svg.railroad-diagram text{font:bold 14px monospace;text-anchor:middle;}svg.railroad-diagram text.label{text-anchor:start;}svg.railroad-diagram text.comment{font:italic 12px monospace;}svg.railroad-diagram rect{stroke-width:3;stroke:black;fill:hsl(120,100%,90%);}</style>")
+    sys.stdout.write("<!doctype html><title>Test</title><body>")
     exec(open('css-example.py-js').read())
+    sys.stdout.write('</body></html>')
