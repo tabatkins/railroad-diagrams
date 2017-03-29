@@ -242,7 +242,7 @@ class Stack(DiagramItem):
         self.up = self.items[0].up
         self.down = self.items[-1].down
         self.height = 0
-        last = len(self.items)
+        last = len(self.items) - 1
         for i,item in enumerate(self.items):
             self.height += item.height
             if i > 0:
