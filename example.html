@@ -7,24 +7,30 @@ h1 {
 	font-family: sans-serif;
 	font-size: 1em;
 }
-div svg.railroad-diagram {
-	width: 80%;  /* Scale to the width of the parent */
-	height: 100%;  /* Preserve the ratio. Could be related to https://bugs.webkit.org/show_bug.cgi?id=82489 */
+script {
+	display: block;
+	white-space: pre;
+	margin-top: -1em;
 }
 </style>
 <link rel='stylesheet' href='railroad-diagrams.css'>
 <script src='railroad-diagrams.js'></script>
 <body>
+
+<h1 id=test>TEST</h1>
+<script>
+Diagram(
+	Choice(1, "above", AlternatingSequence("one", "two"), "below")).addTo();
+</script>
+
 <h1 id='ident'>IDENT</h1>
-<div>
-<script >
+<script>
 ComplexDiagram(
 	Choice(0, Skip(), '-'),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
 		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
 </script>
-</div>
 <h1 id='function'>FUNCTION</h1>
 <script>
 Diagram(NonTerminal('IDENT'), '(').addTo();

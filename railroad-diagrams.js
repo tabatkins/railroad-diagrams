@@ -167,6 +167,10 @@ At runtime, these constants can be found on the Diagram class.
 		this.attrs.d += "a"+Diagram.ARC_RADIUS+" "+Diagram.ARC_RADIUS+" 0 0 "+cw+' '+x+' '+y;
 		return this;
 	}
+	Path.prototype.l = function(x, y) {
+		this.attrs.d += 'l'+x+' '+y;
+		return this;
+	}
 	Path.prototype.format = function() {
 		// All paths in this library start/end horizontally.
 		// The extra .5 ensures a minor overlap, so there's no seams in bad rasterizers.
@@ -495,7 +499,86 @@ At runtime, these constants can be found on the Diagram class.
 			}
 		}
 		return this;
-	};
+	}
+
+	function AlternatingSequence(items) {
+		if(!(this instanceof AlternatingSequence)) return new AlternatingSequence([].slice.call(arguments));
+		FakeSVG.call(this, 'g');
+		if( items.length === 1 ) {
+			return new Sequence(items);
+		}
+		if( items.length !== 2 ) {
+			throw new RangeError("AlternatingSequence() must have one or two children.");
+		}
+		this.items = items.map(wrapString);
+		this.needsSpace = false;
+
+		const arc = Diagram.ARC_RADIUS;
+		const vert = Diagram.VERTICAL_SEPARATION;
+		const max = Math.max;
+		const first = this.items[0];
+		const second = this.items[1];
+		const crossoverHeight = max(arc*2, vert);
+		const crossoverWidth = max(arc*2, vert);
+
+		const firstOut = max(arc + arc, crossoverHeight/2 + arc + arc, crossoverHeight/2 + vert + first.down);
+		this.up = firstOut + first.height + first.up;
+
+		const secondIn = max(arc + arc, crossoverHeight/2 + arc + arc, crossoverHeight/2 + vert + second.up);
+		this.down = secondIn + second.height + second.down;
+
+		this.height = 0;
+
+		const firstWidth = 2*(first.needsSpace?10:0) + first.width;
+		const secondWidth = 2*(second.needsSpace?10:0) + second.width;
+		this.width = 2*arc + max(firstWidth, crossoverWidth, secondWidth) + 2*arc;
+
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "altseq"
+		}
+	}
+	subclassOf(AlternatingSequence, FakeSVG);
+	AlternatingSequence.prototype.format = function(x, y, width) {
+		const arc = Diagram.ARC_RADIUS;
+		const gaps = determineGaps(width, this.width);
+		Path(x,y).right(gaps[0]).addTo(this);
+		console.log(gaps);
+		x += gaps[0];
+		Path(x+this.width, y).right(gaps[1]).addTo(this);
+		// bounding box
+		//Path(x+gaps[0], y).up(this.up).right(this.width).down(this.up+this.down).left(this.width).up(this.down).addTo(this);
+		const first = this.items[0];
+		const second = this.items[1];
+
+		// top
+		const firstIn = this.up - first.up;
+		const firstOut = this.up - first.up - first.height;
+		const firstSpace = first.needsSpace?10:0;
+		Path(x,y).arc('se').up(firstIn-2*arc).arc('wn').right(firstSpace).addTo(this);
+		first.format(x + 2*arc + firstSpace, y - firstIn, first.width).addTo(this);
+		Path(x + 2*arc + firstSpace + first.width, y - firstOut).right(firstSpace).arc('ne').down(firstOut - 2*arc).arc('ws').addTo(this);
+
+		// bottom
+		const secondIn = this.down - second.down - second.height;
+		const secondOut = this.down - second.down;
+		const secondSpace = second.needsSpace?10:0;
+		Path(x,y).arc('ne').down(secondIn - 2*arc).arc('ws').right(secondSpace).addTo(this);
+		second.format(x + 2*arc + secondSpace, y + secondIn, second.width).addTo(this);
+		Path(x + 2*arc + secondSpace + second.width, y + secondOut).right(secondSpace).arc('se').up(secondOut - 2*arc).arc('wn').addTo(this);
+
+		// crossover
+		const crossoverSize = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
+		const crossBar = (this.width - 4*arc - crossoverSize)/2;
+		Path(x+arc, y - crossoverSize/2 - arc).arc('ws').right(crossBar).addTo(this);
+		Path(x+arc, y + crossoverSize/2 + arc).arc('wn').right(crossBar).addTo(this);
+		Path(x+2*arc+crossBar+crossoverSize, y - crossoverSize/2).right(crossBar).arc('se').addTo(this);
+		Path(x+2*arc+crossBar+crossoverSize, y + crossoverSize/2).right(crossBar).arc('ne').addTo(this);
+		Path(x+2*arc+crossBar, y - crossoverSize/2).l(crossoverSize, crossoverSize).addTo(this);
+		Path(x+2*arc+crossBar, y + crossoverSize/2).l(crossoverSize, -crossoverSize).addTo(this);
+
+		return this;
+	}
 
 	function Choice(normal, items) {
 		if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
@@ -920,12 +1003,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
@@ -933,6 +1016,6 @@ At runtime, these constants can be found on the Diagram class.
 	ARC_RADIUS: 10,
 	DIAGRAM_CLASS: 'railroad-diagram',
 	STROKE_ODD_PIXEL_LENGTH: true,
-	INTERNAL_ALIGNMENT: 'center',
+	INTERNAL_ALIGNMENT: 'center'
 	}
 );
