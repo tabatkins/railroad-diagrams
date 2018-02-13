@@ -151,6 +151,7 @@ At runtime, these constants can be found on the Diagram class.
 	Path.prototype.down = function(val) { return this.v(Math.max(0, val)); }
 	Path.prototype.up = function(val) { return this.v(-Math.max(0, val)); }
 	Path.prototype.arc = function(sweep){
+		// 1/4 of a circle
 		var x = Diagram.ARC_RADIUS;
 		var y = Diagram.ARC_RADIUS;
 		if(sweep[0] == 'e' || sweep[1] == 'w') {
@@ -165,6 +166,35 @@ At runtime, these constants can be found on the Diagram class.
 			var cw = 0;
 		}
 		this.attrs.d += "a"+Diagram.ARC_RADIUS+" "+Diagram.ARC_RADIUS+" 0 0 "+cw+' '+x+' '+y;
+		return this;
+	}
+	Path.prototype.arc_8 = function(start, dir) {
+		// 1/8 of a circle
+		const arc = Diagram.ARC_RADIUS;
+		const s2 = 1/Math.sqrt(2) * arc;
+		const s2inv = (arc - s2);
+		let path = "a " + arc + " " + arc + " 0 0 " + (dir=='cw' ? "1" : "0") + " ";
+		const sd = start+dir;
+		const offset =
+			sd == 'ncw'   ? [s2, s2inv] :
+			sd == 'necw'  ? [s2inv, s2] :
+			sd == 'ecw'   ? [-s2inv, s2] :
+			sd == 'secw'  ? [-s2, s2inv] :
+			sd == 'scw'   ? [-s2, -s2inv] :
+			sd == 'swcw'  ? [-s2inv, -s2] :
+			sd == 'wcw'   ? [s2inv, -s2] :
+			sd == 'nwcw'  ? [s2, -s2inv] :
+			sd == 'nccw'  ? [-s2, s2inv] :
+			sd == 'nwccw' ? [-s2inv, s2] :
+			sd == 'wccw'  ? [s2inv, s2] :
+			sd == 'swccw' ? [s2, s2inv] :
+			sd == 'sccw'  ? [s2, -s2inv] :
+			sd == 'seccw' ? [s2inv, -s2] :
+			sd == 'eccw'  ? [-s2inv, -s2] :
+			sd == 'neccw' ? [-s2, -s2inv] : null
+		;
+		path += offset.join(" ");
+		this.attrs.d += path;
 		return this;
 	}
 	Path.prototype.l = function(x, y) {
@@ -518,20 +548,23 @@ At runtime, these constants can be found on the Diagram class.
 		const max = Math.max;
 		const first = this.items[0];
 		const second = this.items[1];
-		const crossoverHeight = max(arc*2, vert);
-		const crossoverWidth = max(arc*2, vert);
 
-		const firstOut = max(arc + arc, crossoverHeight/2 + arc + arc, crossoverHeight/2 + vert + first.down);
+		const arcX = 1 / Math.sqrt(2) * arc * 2;
+		const arcY = (1 - 1 / Math.sqrt(2)) * arc * 2;
+		const crossY = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
+		const crossX = (crossY - arcY) + arcX;
+
+		const firstOut = max(arc + arc, crossY/2 + arc + arc, crossY/2 + vert + first.down);
 		this.up = firstOut + first.height + first.up;
 
-		const secondIn = max(arc + arc, crossoverHeight/2 + arc + arc, crossoverHeight/2 + vert + second.up);
+		const secondIn = max(arc + arc, crossY/2 + arc + arc, crossY/2 + vert + second.up);
 		this.down = secondIn + second.height + second.down;
 
 		this.height = 0;
 
 		const firstWidth = 2*(first.needsSpace?10:0) + first.width;
 		const secondWidth = 2*(second.needsSpace?10:0) + second.width;
-		this.width = 2*arc + max(firstWidth, crossoverWidth, secondWidth) + 2*arc;
+		this.width = 2*arc + max(firstWidth, crossX, secondWidth) + 2*arc;
 
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -554,28 +587,33 @@ At runtime, these constants can be found on the Diagram class.
 		// top
 		const firstIn = this.up - first.up;
 		const firstOut = this.up - first.up - first.height;
-		const firstSpace = first.needsSpace?10:0;
-		Path(x,y).arc('se').up(firstIn-2*arc).arc('wn').right(firstSpace).addTo(this);
-		first.format(x + 2*arc + firstSpace, y - firstIn, first.width).addTo(this);
-		Path(x + 2*arc + firstSpace + first.width, y - firstOut).right(firstSpace).arc('ne').down(firstOut - 2*arc).arc('ws').addTo(this);
+		Path(x,y).arc('se').up(firstIn-2*arc).arc('wn').addTo(this);
+		first.format(x + 2*arc, y - firstIn, this.width - 4*arc).addTo(this);
+		Path(x + this.width - 2*arc, y - firstOut).arc('ne').down(firstOut - 2*arc).arc('ws').addTo(this);
 
 		// bottom
 		const secondIn = this.down - second.down - second.height;
 		const secondOut = this.down - second.down;
-		const secondSpace = second.needsSpace?10:0;
-		Path(x,y).arc('ne').down(secondIn - 2*arc).arc('ws').right(secondSpace).addTo(this);
-		second.format(x + 2*arc + secondSpace, y + secondIn, second.width).addTo(this);
-		Path(x + 2*arc + secondSpace + second.width, y + secondOut).right(secondSpace).arc('se').up(secondOut - 2*arc).arc('wn').addTo(this);
+		Path(x,y).arc('ne').down(secondIn - 2*arc).arc('ws').addTo(this);
+		second.format(x + 2*arc, y + secondIn, this.width - 4*arc).addTo(this);
+		Path(x + this.width - 2*arc, y + secondOut).arc('se').up(secondOut - 2*arc).arc('wn').addTo(this);
 
 		// crossover
-		const crossoverSize = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
-		const crossBar = (this.width - 4*arc - crossoverSize)/2;
-		Path(x+arc, y - crossoverSize/2 - arc).arc('ws').right(crossBar).addTo(this);
-		Path(x+arc, y + crossoverSize/2 + arc).arc('wn').right(crossBar).addTo(this);
-		Path(x+2*arc+crossBar+crossoverSize, y - crossoverSize/2).right(crossBar).arc('se').addTo(this);
-		Path(x+2*arc+crossBar+crossoverSize, y + crossoverSize/2).right(crossBar).arc('ne').addTo(this);
-		Path(x+2*arc+crossBar, y - crossoverSize/2).l(crossoverSize, crossoverSize).addTo(this);
-		Path(x+2*arc+crossBar, y + crossoverSize/2).l(crossoverSize, -crossoverSize).addTo(this);
+		const arcX = 1 / Math.sqrt(2) * arc * 2;
+		const arcY = (1 - 1 / Math.sqrt(2)) * arc * 2;
+		const crossY = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
+		const crossX = (crossY - arcY) + arcX;
+		const crossBar = (this.width - 4*arc - crossX)/2;
+		Path(x+arc, y - crossY/2 - arc).arc('ws').right(crossBar)
+			.arc_8('n', 'cw').l(crossX - arcX, crossY - arcY).arc_8('sw', 'ccw')
+			.right(crossBar).arc('ne').addTo(this);
+		Path(x+arc, y + crossY/2 + arc).arc('wn').right(crossBar)
+			.arc_8('s', 'ccw').l(crossX - arcX, -(crossY - arcY)).arc_8('nw', 'cw')
+			.right(crossBar).arc('se').addTo(this);
+
+		//Path(x+arc, y + crossoverSize/2 + arc).arc('wn').right(crossBar).addTo(this);
+		//Path(x+2*arc+crossBar+crossoverSize, y - crossoverSize/2).right(crossBar).arc('ne').addTo(this);
+		//Path(x+2*arc+crossBar, y + crossoverSize/2).l(crossoverSize, -crossoverSize).addTo(this);
 
 		return this;
 	}
