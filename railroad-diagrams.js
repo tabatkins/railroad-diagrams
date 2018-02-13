@@ -551,7 +551,7 @@ At runtime, these constants can be found on the Diagram class.
 
 		const arcX = 1 / Math.sqrt(2) * arc * 2;
 		const arcY = (1 - 1 / Math.sqrt(2)) * arc * 2;
-		const crossY = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
+		const crossY = Math.max(arc, Diagram.VERTICAL_SEPARATION);
 		const crossX = (crossY - arcY) + arcX;
 
 		const firstOut = max(arc + arc, crossY/2 + arc + arc, crossY/2 + vert + first.down);
@@ -601,7 +601,7 @@ At runtime, these constants can be found on the Diagram class.
 		// crossover
 		const arcX = 1 / Math.sqrt(2) * arc * 2;
 		const arcY = (1 - 1 / Math.sqrt(2)) * arc * 2;
-		const crossY = Math.max(2*arc, Diagram.VERTICAL_SEPARATION);
+		const crossY = Math.max(arc, Diagram.VERTICAL_SEPARATION);
 		const crossX = (crossY - arcY) + arcX;
 		const crossBar = (this.width - 4*arc - crossX)/2;
 		Path(x+arc, y - crossY/2 - arc).arc('ws').right(crossBar)
