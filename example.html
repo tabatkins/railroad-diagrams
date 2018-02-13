@@ -17,11 +17,13 @@ script {
 <script src='railroad-diagrams.js'></script>
 <body>
 
+<!--
 <h1 id=test>TEST</h1>
 <script>
 Diagram(
-	Choice(1, "above", AlternatingSequence("one", "two"), "below")).addTo();
+	Choice(1, "above", AlternatingSequence(Stack("foo", "foo"), Stack("bar", "bar")), "below")).addTo();
 </script>
+-->
 
 <h1 id='ident'>IDENT</h1>
 <script>
@@ -183,6 +185,46 @@ Diagram(
 			)),
 			Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
 		)
+	)
+).addTo();
+</script>
+
+<h1 id='image-func'>image() function</h1>
+<xmp>
+image() = image( <image-tags>? [ <image-src>? , <color>? ]! )
+<image-tags> = [ ltr | rtl ]
+<image-src> = [ <url> | <string> ]</xmp>
+<script>
+Diagram(
+	Optional(
+		Sequence(
+			Choice(0, "ltr", "rtl")
+		)
+	),
+	OptionalSequence(
+		Choice(0, NonTerminal("<url>"), NonTerminal("<string>")),
+		NonTerminal("<color>")
+	)
+).addTo();
+</script>
+
+<h1 id='glob'>glob pattern</h1>
+Alternating alphanums and <code>*</code> chars
+<script>
+Diagram(
+	AlternatingSequence(
+		OneOrMore(NonTerminal("alphanumeric")),
+		"*"
+	)
+).addTo();
+</script>
+
+<h1 id='grid-auto-flow'>CSS grid-auto-flow property</h1>
+<script>
+Diagram(
+	MultipleChoice(0, "any",
+		Choice(1, "row", "column"),
+		"dense"
 	)
 ).addTo();
 </script>
