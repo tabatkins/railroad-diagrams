@@ -410,6 +410,76 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
+	function VerticalSequence(items) {
+		if(!(this instanceof VerticalSequence)) return new VerticalSequence([].slice.call(arguments));
+		FakeSVG.call(this, 'g');
+		if( items.length === 0 ) {
+			throw new RangeError("VerticalSequence() must have at least one child.");
+		}
+		this.items = items.map(wrapString);
+		this.width = Math.max.apply(null, this.items.map(function(e) { return e.width + (e.needsSpace?20:0); }));
+		//if(this.items[0].needsSpace) this.width -= 10;
+		//if(this.items[this.items.length-1].needsSpace) this.width -= 10;
+		if(this.items.length > 1){
+			this.width += Diagram.ARC_RADIUS*2;
+		}
+		this.needsSpace = true;
+		this.up = this.items[0].up;
+		this.down = this.items[this.items.length-1].down;
+
+		this.height = 0;
+		var last = this.items.length - 1;
+		for(var i = 0; i < this.items.length; i++) {
+			if(i !== this.items.length-1) {
+				this.height += this.items[i].height + this.items[i].down + this.items[i+1].up + Diagram.VERTICAL_SEPARATION;
+			}
+		}
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "verticalsequence"
+		}
+	}
+	subclassOf(VerticalSequence, FakeSVG);
+	VerticalSequence.prototype.format = function(x,y,width) {
+		var gaps = determineGaps(width, this.width);
+		Path(x,y).h(gaps[0]).addTo(this);
+		x += gaps[0];
+		var xInitial = x;
+		var minWidth = 1000;
+		for(let itemNum in this.items){
+			let item = this.items[itemNum];
+			minWidth = item.width < minWidth ? item.width : minWidth;
+		}
+
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			item.format(x, y, item.width).addTo(this);
+			y += item.height;
+			
+			if(i !== this.items.length-1) {
+				x += minWidth / 2;
+				y += item.down
+				Path(x, y)
+					.v(Diagram.VERTICAL_SEPARATION).addTo(this)
+				y += this.items[i+1].up + Diagram.VERTICAL_SEPARATION;
+				x = xInitial;
+			}
+			else{
+				x += item.width;
+				y += item.height;
+			}
+
+		}
+
+		if(this.items.length > 1) {
+			Path(x,y).h(this.width - this.items[this.items.length - 1].width).addTo(this);
+			x += Diagram.ARC_RADIUS;
+		}
+		Path(x,y).h(gaps[1]).addTo(this);
+
+		return this;
+	}
+
 	function OptionalSequence(items) {
 		if(!(this instanceof OptionalSequence)) return new OptionalSequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
@@ -643,9 +713,8 @@ At runtime, these constants can be found on the Diagram class.
 		for(var i = normal+1; i <= last; i++) {
 			if(i == normal+1) var arcs = Diagram.ARC_RADIUS*2;
 			else var arcs = Diagram.ARC_RADIUS;
-			this.down += Math.max(arcs, this.items[i-1].height + this.items[i-1].down + Diagram.VERTICAL_SEPARATION + this.items[i].up);
+			this.down += Math.max(arcs, this.items[i].height + this.items[i-1].down + Diagram.VERTICAL_SEPARATION + this.items[i].up);
 		}
-		this.down -= this.items[normal].height; // already counted in Choice.height
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "choice"
@@ -1041,12 +1110,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, VerticalSequence, OptionalSequence, AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'VerticalSequence', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
