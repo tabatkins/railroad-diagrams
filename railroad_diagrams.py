@@ -745,8 +745,8 @@ class OneOrMore(DiagramItem):
         return 'OneOrMore(%r, repeat=%r)' % (self.item, self.rep)
 
 
-def ZeroOrMore(item, repeat=None):
-    result = Optional(OneOrMore(item, repeat))
+def ZeroOrMore(item, repeat=None, skip=False):
+    result = Optional(OneOrMore(item, repeat), skip)
     return result
 
 
