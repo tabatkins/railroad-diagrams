@@ -336,6 +336,105 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
+	function HorizontalChoice(items) {
+		if(!(this instanceof HorizontalChoice)) return new HorizontalChoice([].slice.call(arguments));
+		FakeSVG.call(this, 'g');
+		this.items = items.map(wrapString);
+		var numberOfItems = this.items.length;
+		this.needsSpace = true;
+		this.up = this.down = this.height = this.width = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			this.width += item.width + (item.needsSpace?20:0);
+			if (items.length > 1 && i > 0) {
+				this.width += Diagram.ARC_RADIUS * 3;
+			}
+			this.up = Math.max(this.up, item.up - this.height);
+			this.height += item.height;
+			this.down = Math.max(this.down - item.height, item.down);
+		}
+		if (items.length > 1) {
+			this.up += Diagram.VERTICAL_SEPARATION * 3; // space for input track
+			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
+			this.width += Diagram.ARC_RADIUS * 4; // space for track switches
+		}
+
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "horizontalchoice"
+		}
+	}
+	subclassOf(HorizontalChoice, FakeSVG);
+	HorizontalChoice.prototype.format = function(x,y,width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		Path(x,y).h(gaps[0]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		x += gaps[0];
+		if (this.items.length > 1) {
+			Path(x,y).h(Diagram.ARC_RADIUS * 2).addTo(this);
+			Path(x,y)
+				.arc('se')
+				.up(this.up - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.arc('wn').addTo(this);
+
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + this.down - Diagram.VERTICAL_SEPARATION)
+				.arc('se')
+				.up(this.down - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.arc('wn').addTo(this);
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y)
+				.h(Diagram.ARC_RADIUS * 2).addTo(this);
+			x += Diagram.ARC_RADIUS * 2;
+		}
+
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			var itemWidth = item.width+ (item.needsSpace ? 20 : 0);
+			if (this.items.length > 1) {
+				if (i < this.items.length - 1) {
+					Path(x, y - this.up + Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+
+					Path(x + itemWidth, y)
+						.arc('ne')
+						.down(this.down - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.arc('ws').addTo(this);
+
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - this.up + Diagram.VERTICAL_SEPARATION)
+						.arc('ne')
+						.down(this.up - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.arc('ws').addTo(this);
+				}
+
+				if (i < this.items.length - 2) {
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - this.up + Diagram.VERTICAL_SEPARATION)
+						.h(Diagram.ARC_RADIUS * 2).addTo(this);
+				}
+
+				if (i > 0) {
+					Path(x - Diagram.ARC_RADIUS, y + this.down - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					if (i < this.items.length -1) {
+						Path(x + Diagram.ARC_RADIUS, y + this.down - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					}
+				}
+			}
+
+			if (item.needsSpace) {
+				Path(x, y).h(10).addTo(this);
+				x += 10;
+			}
+			item.format(x, y, item.width).addTo(this);
+			x += item.width;
+			y += item.height;
+			if (item.needsSpace) {
+				Path(x, y).h(10).addTo(this);
+				x += 10;
+			}
+			x += Diagram.ARC_RADIUS * 3;
+		}
+
+		return this;
+	}
+
 	function Stack(items) {
 		if(!(this instanceof Stack)) return new Stack([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
@@ -799,16 +898,16 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG('path', {
 			"d": "M "+(x+30)+" "+(y-10)+" h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z",
 			"class": "diagram-text"
-			}).addTo(text)
+		}).addTo(text)
 		FakeSVG('text', {
 			"x": x + 15,
 			"y": y + 4,
 			"class": "diagram-text"
-			}, (this.type=="any"?"1+":"all")).addTo(text)
+		}, (this.type=="any"?"1+":"all")).addTo(text)
 		FakeSVG('path', {
 			"d": "M "+(x+this.width-20)+" "+(y-10)+" h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z",
 			"class": "diagram-text"
-			}).addTo(text)
+		}).addTo(text)
 		FakeSVG('path', {
 			"d": "M "+(x+this.width-13)+" "+(y-2)+" a 4 4 0 1 0 6 -1 m 2.75 -1 h -4 v 4 m 0 -3 h 2",
 			"style": "stroke-width: 1.75"
@@ -1041,19 +1140,19 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, HorizontalChoice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'HorizontalChoice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
-	VERTICAL_SEPARATION: 8,
-	ARC_RADIUS: 10,
-	DIAGRAM_CLASS: 'railroad-diagram',
-	STROKE_ODD_PIXEL_LENGTH: true,
-	INTERNAL_ALIGNMENT: 'center'
+		VERTICAL_SEPARATION: 8,
+		ARC_RADIUS: 10,
+		DIAGRAM_CLASS: 'railroad-diagram',
+		STROKE_ODD_PIXEL_LENGTH: true,
+		INTERNAL_ALIGNMENT: 'center'
 	}
 );
