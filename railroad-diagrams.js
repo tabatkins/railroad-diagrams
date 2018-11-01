@@ -371,16 +371,28 @@ At runtime, these constants can be found on the Diagram class.
 		Path(x,y).h(gaps[0]).addTo(this);
 		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
+		var maxDown = 0;
+		for(var i = 1; i < this.items.length; i++) {
+			maxDown = Math.max(maxDown, this.items[i].down);
+		}
+		maxDown += (Diagram.ARC_RADIUS * 3) - Diagram.VERTICAL_SEPARATION;
+
+		var maxUp = 0;
+		for(var i = 0; i < this.items.length - 1; i++) {
+			maxUp = Math.max(maxUp, this.items[i].up);
+		}
+		maxUp += (Diagram.ARC_RADIUS * 3) - Diagram.VERTICAL_SEPARATION;
+
 		if (this.items.length > 1) {
 			Path(x,y).h(Diagram.ARC_RADIUS * 2).addTo(this);
 			Path(x,y)
 				.arc('se')
-				.up(this.up - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.up(maxUp - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
 				.arc('wn').addTo(this);
 
-			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + this.down - Diagram.VERTICAL_SEPARATION)
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + maxDown - Diagram.VERTICAL_SEPARATION)
 				.arc('se')
-				.up(this.down - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.up(maxDown - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
 				.arc('wn').addTo(this);
 			Path(x + this.width - Diagram.ARC_RADIUS * 2, y)
 				.h(Diagram.ARC_RADIUS * 2).addTo(this);
@@ -392,28 +404,28 @@ At runtime, these constants can be found on the Diagram class.
 			var itemWidth = item.width+ (item.needsSpace ? 20 : 0);
 			if (this.items.length > 1) {
 				if (i < this.items.length - 1) {
-					Path(x, y - this.up + Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					Path(x, y - maxUp + Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
 
 					Path(x + itemWidth, y)
 						.arc('ne')
-						.down(this.down - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.down(maxDown - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
 						.arc('ws').addTo(this);
 
-					Path(x + itemWidth + Diagram.ARC_RADIUS, y - this.up + Diagram.VERTICAL_SEPARATION)
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
 						.arc('ne')
-						.down(this.up - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.down(maxUp - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
 						.arc('ws').addTo(this);
 				}
 
 				if (i < this.items.length - 2) {
-					Path(x + itemWidth + Diagram.ARC_RADIUS, y - this.up + Diagram.VERTICAL_SEPARATION)
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
 						.h(Diagram.ARC_RADIUS * 2).addTo(this);
 				}
 
 				if (i > 0) {
-					Path(x - Diagram.ARC_RADIUS, y + this.down - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					Path(x - Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
 					if (i < this.items.length -1) {
-						Path(x + Diagram.ARC_RADIUS, y + this.down - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+						Path(x + Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
 					}
 				}
 			}
