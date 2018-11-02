@@ -52,13 +52,15 @@ function process(input) {
 </script>
 
 <style>
-html, body { margin: 0; padding: 0; height: 100%; }
-body {
-	display: grid;
-	grid-template:
-		"input  code" 1fr
-		"output output" 1fr
-		/ 1fr   1fr;
+@media all and (min-width: 400px) {
+	html, body { margin: 0; padding: 0; height: 100%; }
+	body {
+		display: grid;
+		grid-template:
+			"input  code" 1fr
+			"output expl" 1fr
+			/ 1fr   1fr;
+	}
 }
 .input {
 	grid-area: input;
@@ -68,5 +70,8 @@ body {
 }
 .output-image {
 	grid-area: output;
+}
+.explanation {
+	grid-area: expl;
 }
 </style>
