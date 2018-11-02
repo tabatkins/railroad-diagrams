@@ -531,6 +531,88 @@ class OptionalSequence(DiagramItem):
                     .addTo(self))
         return self
 
+class AlternatingSequence(DiagramItem):
+    def __new__(cls, *items):
+        if len(items) == 2:
+            return super(AlternatingSequence, cls).__new__(cls)
+        else:
+            raise Exception("AlternatingSequence takes exactly two arguments got " + len(items))
+
+    def __init__(self, *items):
+        DiagramItem.__init__(self, 'g')
+        self.items = [wrapString(item) for item in items]
+        self.needsSpace = False
+
+        arc = ARC_RADIUS
+        vert = VERTICAL_SEPARATION
+        first = self.items[0]
+        second = self.items[1]
+
+        arcX = 1 / Math.sqrt(2) * arc * 2
+        arcY = (1 - 1 / Math.sqrt(2)) * arc * 2
+        crossY = max(arc, vert)
+        crossX = (crossY - arcY) + arcX
+
+        firstOut = max(arc + arc, crossY/2 + arc + arc, crossY/2 + vert + first.down)
+        self.up = firstOut + first.height + first.up
+
+        secondIn = max(arc + arc, crossY/2 + arc + arc, crossY/2 + vert + second.up)
+        self.down = secondIn + second.height + second.down
+
+        self.height = 0
+
+        firstWidth = (20 if first.needsSpace else 0) + first.width
+        secondWidth = (20 if second.needsSpace else 0) + second.width
+        self.width = 2*arc + max(firstWidth, crossX, secondWidth) + 2*arc
+
+        if DEBUG:
+            self.attrs['data-updown'] = self.up + " " + self.height + " " + self.down
+            self.attrs['data-type'] = "altseq"
+
+    def __repr__(self):
+        items = ', '.join(repr(item) for item in self.items)
+        return 'AlternatingSequence(%s)' % items
+
+    def format(self, x, y, width):
+        arc = ARC_RADIUS
+        gaps = determineGaps(width, self.width)
+        Path(x,y).right(gaps[0]).addTo(self)
+        x += gaps[0]
+        Path(x+self.width, y).right(gaps[1]).addTo(self)
+        # bounding box
+        # Path(x+gaps[0], y).up(self.up).right(self.width).down(self.up+self.down).left(self.width).up(self.down).addTo(self)
+        first = self.items[0]
+        second = self.items[1]
+
+        # top
+        firstIn = self.up - first.up
+        firstOut = self.up - first.up - first.height
+        Path(x,y).arc('se').up(firstIn-2*arc).arc('wn').addTo(self)
+        first.format(x + 2*arc, y - firstIn, self.width - 4*arc).addTo(self)
+        Path(x + self.width - 2*arc, y - firstOut).arc('ne').down(firstOut - 2*arc).arc('ws').addTo(self)
+
+        # bottom
+        secondIn = self.down - second.down - second.height
+        secondOut = self.down - second.down
+        Path(x,y).arc('ne').down(secondIn - 2*arc).arc('ws').addTo(self)
+        second.format(x + 2*arc, y + secondIn, self.width - 4*arc).addTo(self)
+        Path(x + self.width - 2*arc, y + secondOut).arc('se').up(secondOut - 2*arc).arc('wn').addTo(self)
+
+        # crossover
+        arcX = 1 / Math.sqrt(2) * arc * 2
+        arcY = (1 - 1 / Math.sqrt(2)) * arc * 2
+        crossY = max(arc, VERTICAL_SEPARATION)
+        crossX = (crossY - arcY) + arcX
+        crossBar = (self.width - 4*arc - crossX)/2
+        (Path(x+arc, y - crossY/2 - arc).arc('ws').right(crossBar)
+            .arc_8('n', 'cw').l(crossX - arcX, crossY - arcY).arc_8('sw', 'ccw')
+            .right(crossBar).arc('ne').addTo(self))
+        (Path(x+arc, y + crossY/2 + arc).arc('wn').right(crossBar)
+            .arc_8('s', 'ccw').l(crossX - arcX, -(crossY - arcY)).arc_8('nw', 'cw')
+            .right(crossBar).arc('se').addTo(self))
+
+        return self
+
 
 class Choice(DiagramItem):
     def __init__(self, default, *items):
