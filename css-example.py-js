@@ -181,3 +181,44 @@ add('Function block', Diagram(
 	ZeroOrMore(NonTerminal('Component value')),
 	')'));
 
+add('glob pattern', Diagram(
+	AlternatingSequence(
+		NonTerminal("ident"),
+		"*")))
+
+add('SQL', Diagram(
+	Stack(
+		Sequence(
+			'SELECT',
+			Optional('DISTINCT', 'skip'),
+			Choice(0,
+				'*',
+				OneOrMore(
+					Sequence(NonTerminal('expression'), Optional(Sequence('AS', NonTerminal('output_name')))),
+					','
+				)
+			),
+			'FROM',
+			OneOrMore(NonTerminal('from_item'), ','),
+			Optional(Sequence('WHERE', NonTerminal('condition')))
+		),
+		Sequence(
+			Optional(Sequence('GROUP BY', NonTerminal('expression'))),
+			Optional(Sequence('HAVING', NonTerminal('condition'))),
+			Optional(Sequence(
+				Choice(0, 'UNION', 'INTERSECT', 'EXCEPT'),
+				Optional('ALL'),
+				NonTerminal('select')
+			))
+		),
+		Sequence(
+			Optional(Sequence(
+				'ORDER BY',
+				OneOrMore(Sequence(NonTerminal('expression'), Choice(0, Skip(), 'ASC', 'DESC')), ','))
+			),
+			Optional(Sequence(
+				'LIMIT',
+				Choice(0, NonTerminal('count'), 'ALL')
+			)),
+			Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
+		))))
