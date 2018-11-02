@@ -35,6 +35,11 @@ def doubleenumerate(seq):
     for i,item in enumerate(seq):
         yield i, i-length, item
 
+def addDebug(el):
+    if not DEBUG:
+        return
+    el.attrs['data-x'] = "{0} w:{1} h:{2}/{3}/{4}".format(type(el).__name__, el.width, el.up, el.height, el.down)
+
 
 
 class DiagramItem(object):
@@ -338,9 +343,7 @@ class Sequence(DiagramItem):
             self.width -= 10
         if self.items[-1].needsSpace:
             self.width -= 10
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "sequence"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(map(repr, self.items))
@@ -383,9 +386,7 @@ class Stack(DiagramItem):
                 self.height += max(ARC_RADIUS*2, item.up + VERTICAL_SEPARATION)
             if i < last:
                 self.height += max(ARC_RADIUS*2, item.down + VERTICAL_SEPARATION)
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "stack"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(repr(item) for item in self.items)
@@ -447,9 +448,7 @@ class OptionalSequence(DiagramItem):
                 self.width += ARC_RADIUS + max(itemWidth, ARC_RADIUS)
             else:
                 self.width += ARC_RADIUS*2 + max(itemWidth, ARC_RADIUS) + ARC_RADIUS
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "optseq"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(repr(item) for item in self.items)
@@ -565,10 +564,7 @@ class AlternatingSequence(DiagramItem):
         firstWidth = (20 if first.needsSpace else 0) + first.width
         secondWidth = (20 if second.needsSpace else 0) + second.width
         self.width = 2*arc + max(firstWidth, crossX, secondWidth) + 2*arc
-
-        if DEBUG:
-            self.attrs['data-updown'] = self.up + " " + self.height + " " + self.down
-            self.attrs['data-type'] = "altseq"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(repr(item) for item in self.items)
@@ -637,9 +633,7 @@ class Choice(DiagramItem):
             else:
                 self.down += max(arcs, item.up + VERTICAL_SEPARATION + self.items[i-1].down + self.items[i-1].height)
         self.down -= self.items[default].height # already counted in self.height
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "choice"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(repr(item) for item in self.items)
@@ -731,9 +725,7 @@ class MultipleChoice(DiagramItem):
             else:
                 self.down += max(minimum, item.up + VERTICAL_SEPARATION + self.items[i-1].down + self.items[i-1].height)
         self.down -= self.items[default].height # already counted in self.height
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "multiplechoice"
+        addDebug(self)
 
     def __repr__(self):
         items = ', '.join(map(repr, self.items))
@@ -846,9 +838,7 @@ class OneOrMore(DiagramItem):
             ARC_RADIUS * 2,
             self.item.down + VERTICAL_SEPARATION + self.rep.up + self.rep.height + self.rep.down)
         self.needsSpace = True
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "oneormore"
+        addDebug(self)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -889,9 +879,7 @@ class Start(DiagramItem):
         self.up = 10
         self.down = 10
         self.type = type
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "start"
+        addDebug(self)
 
     def format(self, x, y, _width):
         if self.type == "simple":
@@ -911,9 +899,7 @@ class End(DiagramItem):
         self.up = 10
         self.down = 10
         self.type = type
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "end"
+        addDebug(self)
 
     def format(self, x, y, _width):
         if self.type == "simple":
@@ -935,9 +921,7 @@ class Terminal(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "terminal"
+        addDebug(self)
 
     def __repr__(self):
         return 'Terminal(%r, href=%r)' % (self.text, self.href)
@@ -969,9 +953,7 @@ class NonTerminal(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "non-terminal"
+        addDebug(self)
 
     def __repr__(self):
         return 'NonTerminal(%r, href=%r)' % (self.text, self.href)
@@ -1003,9 +985,7 @@ class Comment(DiagramItem):
         self.up = 11
         self.down = 11
         self.needsSpace = True
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "comment"
+        addDebug(self)
 
     def format(self, x, y, width):
         leftGap, rightGap = determineGaps(width, self.width)
@@ -1029,9 +1009,7 @@ class Skip(DiagramItem):
         self.width = 0
         self.up = 0
         self.down = 0
-        if DEBUG:
-            self.attrs['data-updown'] = "{0} {1} {2}".format(self.up, self.height, self.down)
-            self.attrs['data-type'] = "skip"
+        addDebug(self)
 
     def format(self, x, y, width):
         Path(x, y).right(width).addTo(self)
