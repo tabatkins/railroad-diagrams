@@ -113,23 +113,6 @@ add('<unicode-range-token>', Diagram(
 			'-',
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))));
 
-add('<include-match-token>', Diagram('~='));
-
-add('<dash-match-token>', Diagram('|='));
-
-add('<prefix-match-token>', Diagram('^='));
-
-add('<suffix-match-token>', Diagram('$='));
-
-add('<substring-match-token>', Diagram('*='));
-
-add('<column-token>', Diagram('||'));
-
-add('<CDO-token>', Diagram('<' + '!--'));
-
-add('<CDC-token>', Diagram('-' + '->'));
-
-
 NonTerminal = NonTerminal;
 
 add('Stylesheet', Diagram(ZeroOrMore(Choice(3,
