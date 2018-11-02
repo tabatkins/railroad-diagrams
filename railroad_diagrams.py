@@ -1,5 +1,6 @@
 # coding=utf-8
 import sys
+import math as Math
 
 if sys.version_info >= (3, ):
     unicode = str
@@ -84,6 +85,10 @@ class Path(DiagramItem):
         self.attrs['d'] += 'm{0} {1}'.format(x,y)
         return self
 
+    def l(self, x, y):
+        self.attrs['d'] += 'l{0} {1}'.format(x,y)
+        return self
+
     def h(self, val):
         self.attrs['d'] += 'h{0}'.format(val)
         return self
@@ -103,6 +108,50 @@ class Path(DiagramItem):
 
     def up(self, val):
         return self.v(-max(0, val))
+
+    def arc_8(self, start, dir):
+        # 1/8 of a circle
+        arc = ARC_RADIUS
+        s2 = 1/Math.sqrt(2) * arc
+        s2inv = (arc - s2)
+        path = "a {0} {0} 0 0 {1} ".format(arc, "1" if dir == 'cw' else "0")
+        sd = start+dir
+        if sd == 'ncw':
+            offset = [s2, s2inv]
+        elif sd == 'necw':
+            offset = [s2inv, s2]
+        elif sd == 'ecw':
+            offset = [-s2inv, s2]
+        elif sd == 'secw':
+            offset = [-s2, s2inv]
+        elif sd == 'scw':
+            offset = [-s2, -s2inv]
+        elif sd == 'swcw':
+            offset = [-s2inv, -s2]
+        elif sd == 'wcw':
+            offset = [s2inv, -s2]
+        elif sd == 'nwcw':
+            offset = [s2, -s2inv]
+        elif sd == 'nccw':
+            offset = [-s2, s2inv]
+        elif sd == 'nwccw':
+            offset = [-s2inv, s2]
+        elif sd == 'wccw':
+            offset = [s2inv, s2]
+        elif sd == 'swccw':
+            offset = [s2, s2inv]
+        elif sd == 'sccw':
+            offset = [s2, -s2inv]
+        elif sd == 'seccw':
+            offset = [s2inv, -s2]
+        elif sd == 'eccw':
+            offset = [-s2inv, -s2]
+        elif sd == 'neccw':
+            offset = [-s2, -s2inv]
+
+        path += " ".join(str(x) for x in offset)
+        self.attrs['d'] += path
+        return self
 
     def arc(self, sweep):
         x = ARC_RADIUS
