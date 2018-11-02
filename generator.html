@@ -21,21 +21,26 @@ console.log(rr);
 
 const find = document.querySelector.bind(document);
 
-find('.input').addEventListener('input', process, false);
+find('.input').addEventListener('input', e=>process(e.target.value), false);
 document.addEventListener('DOMContentLoaded', initialProcess, false);
 window.addEventListener('hashchange', initialProcess, false);
 
 function initialProcess() {
-	if( location.hash && location.hash.length > 1) {
-		find('.input').textContent = decodeURIComponent(location.hash.substr(1))
+	if(location.hash && location.hash.length > 1) {
+		const code = decodeURIComponent(location.hash.substr(1));
+		const input = find('.input');
+		if(code != input.value) {
+			input.textContent = code;
+			process(code);
+		}
 	}
-	process();
 }
 
-function process() {
-	var input = find('.input').value;
+function process(input) {
+	if(!input) input = find('.input').value;
 	try {
 		var result = eval(input).format();
+		location.hash = "#" + encodeURIComponent(input);
 	} catch (e) {
 		find('.output-text').textContent = "Invalid input.\n" + e
 		return;
