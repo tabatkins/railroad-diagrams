@@ -539,8 +539,8 @@ class Choice(DiagramItem):
         self.default = default
         self.items = [wrapString(item) for item in items]
         self.width = ARC_RADIUS * 4 + max(item.width for item in self.items)
-        self.up = self.items[0].up;
-        self.down = self.items[-1].down;
+        self.up = self.items[0].up
+        self.down = self.items[-1].down
         self.height = self.items[default].height
         for i, item in enumerate(self.items):
             if i in [default-1, default+1]:
@@ -633,8 +633,8 @@ class MultipleChoice(DiagramItem):
         self.items = [wrapString(item) for item in items]
         self.innerWidth = max(item.width for item in self.items)
         self.width = 30 + ARC_RADIUS + self.innerWidth + ARC_RADIUS + 20
-        self.up = self.items[0].up;
-        self.down = self.items[-1].down;
+        self.up = self.items[0].up
+        self.down = self.items[-1].down
         self.height = self.items[default].height
         for i, item in enumerate(self.items):
             if i in [default-1, default+1]:
