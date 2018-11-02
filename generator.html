@@ -1,7 +1,7 @@
 <!doctype html>
 <title>Railroad Diagram Generator</title>
-<script src="railroad-diagrams.js"></script>
 <link href="railroad-diagrams.css" rel=stylesheet>
+
 <textarea class='input'>Diagram(
   Optional('+', 'skip'),
   Choice(0,
@@ -13,12 +13,17 @@
       NonTerminal('escape'))))</textarea>
 <div class='output-image'></div>
 <textarea class='output-text' readonly></textarea>
-</div>
-<script>
-window.find = document.querySelector.bind(document);
+
+<script type=module>
+import rr, * as rrClass from "./railroad.js";
+Object.assign(window, rr);
+console.log(rr);
+
+const find = document.querySelector.bind(document);
 
 find('.input').addEventListener('input', process, false);
-window.addEventListener('load', initialProcess, false);
+document.addEventListener('DOMContentLoaded', initialProcess, false);
+window.addEventListener('hashchange', initialProcess, false);
 
 function initialProcess() {
 	if( location.hash && location.hash.length > 1) {
@@ -26,7 +31,6 @@ function initialProcess() {
 	}
 	process();
 }
-
 
 function process() {
 	var input = find('.input').value;
@@ -41,27 +45,23 @@ function process() {
 	find('.output-text').textContent = result;
 }
 </script>
+
 <style>
-* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+	display: grid;
+	grid-template:
+		"input  code" 1fr
+		"output output" 1fr
+		/ 1fr   1fr;
+}
 .input {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 50%;
-	height: 50%;
+	grid-area: input;
 }
 .output-text {
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 50%;
-	height: 50%;
+	grid-area: code;
 }
 .output-image {
-	position: absolute;
-	top: 50%;
-	left: 0;
-	right: 0;
-	height: 50%;
+	grid-area: output;
 }
 </style>
