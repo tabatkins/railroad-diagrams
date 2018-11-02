@@ -611,10 +611,6 @@ At runtime, these constants can be found on the Diagram class.
 			.arc_8('s', 'ccw').l(crossX - arcX, -(crossY - arcY)).arc_8('nw', 'cw')
 			.right(crossBar).arc('se').addTo(this);
 
-		//Path(x+arc, y + crossoverSize/2 + arc).arc('wn').right(crossBar).addTo(this);
-		//Path(x+2*arc+crossBar+crossoverSize, y - crossoverSize/2).right(crossBar).arc('ne').addTo(this);
-		//Path(x+2*arc+crossBar, y + crossoverSize/2).l(crossoverSize, -crossoverSize).addTo(this);
-
 		return this;
 	}
 
