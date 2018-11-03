@@ -354,15 +354,15 @@ At runtime, these constants can be found on the Diagram class.
 			}
 			this.up = Math.max(this.up, item.up);
 			this.height = Math.max(item.height, this.height);
-			this.down = Math.max(this.down - item.height, item.down + item.height);
 		}
 		if (items.length > 1) {
 			this.up += Diagram.VERTICAL_SEPARATION * 3; // space for input track
-			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
 			this.width += Diagram.ARC_RADIUS * 4; // space for track switches
+			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
 		}
-		this.height = Math.min(this.items[this.items.length - 1].height, this.height)
-		this.down -= this.height;
+		var maxHeight = this.height;
+		this.height = this.items[this.items.length - 1].height;
+		this.down += maxHeight - this.height;
 
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
