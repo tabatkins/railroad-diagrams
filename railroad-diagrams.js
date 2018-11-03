@@ -338,6 +338,9 @@ At runtime, these constants can be found on the Diagram class.
 
 	function HorizontalChoice(items) {
 		if(!(this instanceof HorizontalChoice)) return new HorizontalChoice([].slice.call(arguments));
+		if( items.length === 0 ) {
+			throw new RangeError("HorizontalChoice() must have at least one child.");
+		}
 		FakeSVG.call(this, 'g');
 		this.items = items.map(wrapString);
 		var numberOfItems = this.items.length;
@@ -350,16 +353,16 @@ At runtime, these constants can be found on the Diagram class.
 				this.width += Diagram.ARC_RADIUS * 3;
 			}
 			this.up = Math.max(this.up, item.up);
-			this.height += item.height;
-			this.down = Math.max(this.down - item.height, item.down);
+			this.height = Math.max(item.height, this.height);
+			this.down = Math.max(this.down - item.height, item.down + item.height);
 		}
 		if (items.length > 1) {
 			this.up += Diagram.VERTICAL_SEPARATION * 3; // space for input track
 			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
 			this.width += Diagram.ARC_RADIUS * 4; // space for track switches
 		}
-		this.down += this.height;
-		this.height = 0;
+		this.height = Math.min(this.items[this.items.length - 1].height, this.height)
+		this.down -= this.height;
 
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -371,9 +374,9 @@ At runtime, these constants can be found on the Diagram class.
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
-		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		Path(x + gaps[0] + this.width, y + this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
-		var maxDown = 0;
+		var maxDown = this.items[0].height > 0 ? this.items[0].down + this.items[0].height : 0;
 		for(var i = 1; i < this.items.length; i++) {
 			maxDown = Math.max(maxDown, this.items[i].down + this.items[i].height);
 		}
@@ -394,9 +397,9 @@ At runtime, these constants can be found on the Diagram class.
 
 			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + maxDown - Diagram.VERTICAL_SEPARATION)
 				.arc('se')
-				.up(maxDown - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.up(maxDown - this.height - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
 				.arc('wn').addTo(this);
-			Path(x + this.width - Diagram.ARC_RADIUS * 2, y)
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + this.height)
 				.h(Diagram.ARC_RADIUS * 2).addTo(this);
 			x += Diagram.ARC_RADIUS * 2;
 		}
@@ -410,7 +413,7 @@ At runtime, these constants can be found on the Diagram class.
 
 					Path(x + itemWidth, y + item.height)
 						.arc('ne')
-						.down(maxDown - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.down(maxDown - Diagram.VERTICAL_SEPARATION - item.height - Diagram.ARC_RADIUS * 2)
 						.arc('ws').addTo(this);
 
 					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
@@ -426,7 +429,7 @@ At runtime, these constants can be found on the Diagram class.
 
 				if (i > 0) {
 					Path(x - Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
-					if (i < this.items.length -1) {
+					if (i < this.items.length - 1) {
 						Path(x + Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
 					}
 				}
