@@ -349,7 +349,7 @@ At runtime, these constants can be found on the Diagram class.
 			if (items.length > 1 && i > 0) {
 				this.width += Diagram.ARC_RADIUS * 3;
 			}
-			this.up = Math.max(this.up, item.up - this.height);
+			this.up = Math.max(this.up, item.up);
 			this.height += item.height;
 			this.down = Math.max(this.down - item.height, item.down);
 		}
@@ -358,6 +358,8 @@ At runtime, these constants can be found on the Diagram class.
 			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
 			this.width += Diagram.ARC_RADIUS * 4; // space for track switches
 		}
+		this.down += this.height;
+		this.height = 0;
 
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -373,7 +375,7 @@ At runtime, these constants can be found on the Diagram class.
 		x += gaps[0];
 		var maxDown = 0;
 		for(var i = 1; i < this.items.length; i++) {
-			maxDown = Math.max(maxDown, this.items[i].down);
+			maxDown = Math.max(maxDown, this.items[i].down + this.items[i].height);
 		}
 		maxDown += (Diagram.ARC_RADIUS * 3) - Diagram.VERTICAL_SEPARATION;
 
@@ -406,14 +408,14 @@ At runtime, these constants can be found on the Diagram class.
 				if (i < this.items.length - 1) {
 					Path(x, y - maxUp + Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
 
-					Path(x + itemWidth, y)
+					Path(x + itemWidth, y + item.height)
 						.arc('ne')
 						.down(maxDown - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
 						.arc('ws').addTo(this);
 
 					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
 						.arc('ne')
-						.down(maxUp - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.down(maxUp - Diagram.VERTICAL_SEPARATION - Diagram.ARC_RADIUS * 2)
 						.arc('ws').addTo(this);
 				}
 
@@ -436,9 +438,8 @@ At runtime, these constants can be found on the Diagram class.
 			}
 			item.format(x, y, item.width).addTo(this);
 			x += item.width;
-			y += item.height;
 			if (item.needsSpace) {
-				Path(x, y).h(10).addTo(this);
+				Path(x, y + item.height).h(10).addTo(this);
 				x += 10;
 			}
 			x += Diagram.ARC_RADIUS * 3;
