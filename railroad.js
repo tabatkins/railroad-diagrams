@@ -28,7 +28,7 @@ export const Options = {
 };
 
 
-class FakeSVG {
+export class FakeSVG {
 	constructor(tagName, attrs, text) {
 		if(text) this.children = text;
 		else this.children = [];
@@ -80,7 +80,7 @@ class FakeSVG {
 }
 
 
-class Path extends FakeSVG {
+export class Path extends FakeSVG {
 	constructor(x,y) {
 		super('path');
 		this.attrs.d = "M"+x+' '+y;
