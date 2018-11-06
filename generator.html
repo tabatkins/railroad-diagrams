@@ -43,7 +43,7 @@ function process(input) {
 		location.hash = "#" + encodeURIComponent(input);
 	} catch (e) {
 		find('.output-text').textContent = "Invalid input.\n" + e
-		return;
+		throw e;
 	}
 	find('.output-image').innerHTML = '';
 	result.addTo(find('.output-image'));
