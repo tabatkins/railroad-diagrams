@@ -34,10 +34,10 @@ class FakeSVG {
 		else this.children = [];
 		this.tagName = tagName;
 		this.attrs = unnull(attrs, {});
-	};
+	}
 	format(x, y, width) {
 		// Virtual
-	};
+	}
 	addTo(parent) {
 		if(parent instanceof FakeSVG) {
 			parent.children.push(this);
@@ -47,7 +47,7 @@ class FakeSVG {
 			parent.appendChild(svg);
 			return svg;
 		}
-	};
+	}
 	toSVG() {
 		var el = SVG(this.tagName, this.attrs);
 		if(typeof this.children == 'string') {
@@ -58,7 +58,7 @@ class FakeSVG {
 			});
 		}
 		return el;
-	};
+	}
 	toString() {
 		var str = '<' + this.tagName;
 		var group = this.tagName == "g" || this.tagName == "svg";
@@ -111,10 +111,11 @@ class Path extends FakeSVG {
 		if(sweep[0] == 's' || sweep[1] == 'n') {
 			y *= -1;
 		}
+		var cw;
 		if(sweep == 'ne' || sweep == 'es' || sweep == 'sw' || sweep == 'wn') {
-			var cw = 1;
+			cw = 1;
 		} else {
-			var cw = 0;
+			cw = 0;
 		}
 		this.attrs.d += "a"+Options.AR+" "+Options.AR+" 0 0 "+cw+' '+x+' '+y;
 		return this;
@@ -258,8 +259,8 @@ export class Sequence extends FakeSVG {
 		if(this.items[0].needsSpace) this.width -= 10;
 		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "sequence"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "sequence";
 		}
 	}
 	format(x,y,width) {
@@ -319,8 +320,8 @@ export class Stack extends FakeSVG {
 			}
 		}
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "stack"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "stack";
 		}
 	}
 	format(x,y,width) {
@@ -390,15 +391,15 @@ export class OptionalSequence extends FakeSVG {
 				this.down = Math.max(this.height + this.down, heightSoFar + Math.max(arc*2, item.down + Options.VS)) - this.height;
 			}
 			var itemWidth = (item.needsSpace?10:0) + item.width;
-			if(i == 0) {
+			if(i === 0) {
 				this.width += arc + Math.max(itemWidth, arc);
 			} else {
 				this.width += arc*2 + Math.max(itemWidth, arc) + arc;
 			}
 		}
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "optseq"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "optseq";
 		}
 	}
 	format(x, y, width) {
@@ -406,14 +407,14 @@ export class OptionalSequence extends FakeSVG {
 		var gaps = determineGaps(width, this.width);
 		new Path(x, y).right(gaps[0]).addTo(this);
 		new Path(x + gaps[0] + this.width, y + this.height).right(gaps[1]).addTo(this);
-		x += gaps[0]
+		x += gaps[0];
 		var upperLineY = y - this.up;
 		var last = this.items.length - 1;
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
 			var itemSpace = (item.needsSpace?10:0);
 			var itemWidth = item.width + itemSpace;
-			if(i == 0) {
+			if(i === 0) {
 				// Upper skip
 				new Path(x,y)
 					.arc('se')
@@ -524,8 +525,8 @@ export class AlternatingSequence extends FakeSVG {
 		this.width = 2*arc + max(firstWidth, crossX, secondWidth) + 2*arc;
 
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "altseq"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "altseq";
 		}
 	}
 	format(x, y, width) {
@@ -589,21 +590,22 @@ export class Choice extends FakeSVG {
 		this.width = Math.max.apply(null, this.items.map(function(el){return el.width})) + Options.AR*4;
 		this.height = this.items[normal].height;
 		this.up = this.items[first].up;
+		var arcs;
 		for(var i = first; i < normal; i++) {
-			if(i == normal-1) var arcs = Options.AR*2;
-			else var arcs = Options.AR;
+			if(i == normal-1) arcs = Options.AR*2;
+			else arcs = Options.AR;
 			this.up += Math.max(arcs, this.items[i].height + this.items[i].down + Options.VS + this.items[i+1].up);
 		}
 		this.down = this.items[last].down;
-		for(var i = normal+1; i <= last; i++) {
-			if(i == normal+1) var arcs = Options.AR*2;
-			else var arcs = Options.AR;
+		for(i = normal+1; i <= last; i++) {
+			if(i == normal+1) arcs = Options.AR*2;
+			else arcs = Options.AR;
 			this.down += Math.max(arcs, this.items[i-1].height + this.items[i-1].down + Options.VS + this.items[i].up);
 		}
 		this.down -= this.items[normal].height; // already counted in Choice.height
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "choice"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "choice";
 		}
 	}
 	format(x,y,width) {
@@ -617,10 +619,11 @@ export class Choice extends FakeSVG {
 		var innerWidth = this.width - Options.AR*4;
 
 		// Do the elements that curve above
+		var distanceFromY;
 		for(var i = this.normal - 1; i >= 0; i--) {
-			var item = this.items[i];
+			let item = this.items[i];
 			if( i == this.normal - 1 ) {
-				var distanceFromY = Math.max(Options.AR*2, this.items[this.normal].up + Options.VS + item.down + item.height);
+				distanceFromY = Math.max(Options.AR*2, this.items[this.normal].up + Options.VS + item.down + item.height);
 			}
 			new Path(x,y)
 				.arc('se')
@@ -631,7 +634,7 @@ export class Choice extends FakeSVG {
 				.arc('ne')
 				.down(distanceFromY - item.height + this.height - Options.AR*2)
 				.arc('ws').addTo(this);
-			distanceFromY += Math.max(Options.AR, item.up + Options.VS + (i == 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
+			distanceFromY += Math.max(Options.AR, item.up + Options.VS + (i === 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
 		}
 
 		// Do the straight-line path.
@@ -640,10 +643,10 @@ export class Choice extends FakeSVG {
 		new Path(x+Options.AR*2+innerWidth, y+this.height).right(Options.AR*2).addTo(this);
 
 		// Do the elements that curve below
-		for(var i = this.normal+1; i <= last; i++) {
-			var item = this.items[i];
+		for(i = this.normal+1; i <= last; i++) {
+			let item = this.items[i];
 			if( i == this.normal + 1 ) {
-				var distanceFromY = Math.max(Options.AR*2, this.height + this.items[this.normal].down + Options.VS + item.up);
+				distanceFromY = Math.max(Options.AR*2, this.height + this.items[this.normal].down + Options.VS + item.up);
 			}
 			new Path(x,y)
 				.arc('ne')
@@ -711,8 +714,8 @@ export class HorizontalChoice extends FakeSVG {
 
 
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "horizontalchoice"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "horizontalchoice";
 		}
 	}
 	format(x,y,width) {
@@ -838,9 +841,10 @@ export class MultipleChoice extends FakeSVG {
 		this.down = this.items[this.items.length-1].down;
 		this.height = this.items[normal].height;
 		for(var i = 0; i < this.items.length; i++) {
-			var item = this.items[i];
-			if(i == normal - 1 || i == normal + 1) var minimum = 10 + Options.AR;
-			else var minimum = Options.AR;
+			let item = this.items[i];
+			let minimum;
+			if(i == normal - 1 || i == normal + 1) minimum = 10 + Options.AR;
+			else minimum = Options.AR;
 			if(i < normal) {
 				this.up += Math.max(minimum, item.height + item.down + Options.VS + this.items[i+1].up);
 			} else if(i > normal) {
@@ -849,8 +853,8 @@ export class MultipleChoice extends FakeSVG {
 		}
 		this.down -= this.items[normal].height; // already counted in this.height
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "multiplechoice"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "multiplechoice";
 		}
 	}
 	format(x, y, width) {
@@ -862,10 +866,11 @@ export class MultipleChoice extends FakeSVG {
 		var normal = this.items[this.normal];
 
 		// Do the elements that curve above
+		var distanceFromY;
 		for(var i = this.normal - 1; i >= 0; i--) {
 			var item = this.items[i];
 			if( i == this.normal - 1 ) {
-				var distanceFromY = Math.max(10 + Options.AR, normal.up + Options.VS + item.down + item.height);
+				distanceFromY = Math.max(10 + Options.AR, normal.up + Options.VS + item.down + item.height);
 			}
 			new Path(x + 30,y)
 				.up(distanceFromY - Options.AR)
@@ -875,7 +880,7 @@ export class MultipleChoice extends FakeSVG {
 				.arc('ne')
 				.down(distanceFromY - item.height + this.height - Options.AR - 10)
 				.addTo(this);
-			if(i != 0) {
+			if(i !== 0) {
 				distanceFromY += Math.max(Options.AR, item.up + Options.VS + this.items[i-1].down + this.items[i-1].height);
 			}
 		}
@@ -884,16 +889,16 @@ export class MultipleChoice extends FakeSVG {
 		normal.format(x + 30 + Options.AR, y, this.innerWidth).addTo(this);
 		new Path(x + 30 + Options.AR + this.innerWidth, y + this.height).right(Options.AR).addTo(this);
 
-		for(var i = this.normal+1; i < this.items.length; i++) {
-			var item = this.items[i];
+		for(i = this.normal+1; i < this.items.length; i++) {
+			let item = this.items[i];
 			if(i == this.normal + 1) {
-				var distanceFromY = Math.max(10+Options.AR, normal.height + normal.down + Options.VS + item.up);
+				distanceFromY = Math.max(10+Options.AR, normal.height + normal.down + Options.VS + item.up);
 			}
 			new Path(x + 30, y)
 				.down(distanceFromY - Options.AR)
 				.arc('ws')
 				.addTo(this);
-			item.format(x + 30 + Options.AR, y + distanceFromY, this.innerWidth).addTo(this)
+			item.format(x + 30 + Options.AR, y + distanceFromY, this.innerWidth).addTo(this);
 			new Path(x + 30 + Options.AR + this.innerWidth, y + distanceFromY + item.height)
 				.arc('se')
 				.up(distanceFromY - Options.AR + item.height - normal.height)
@@ -902,25 +907,25 @@ export class MultipleChoice extends FakeSVG {
 				distanceFromY += Math.max(Options.AR, item.height + item.down + Options.VS + this.items[i+1].up);
 			}
 		}
-		var text = new FakeSVG('g', {"class": "diagram-text"}).addTo(this)
-		new FakeSVG('title', {}, (this.type=="any"?"take one or more branches, once each, in any order":"take all branches, once each, in any order")).addTo(text)
+		var text = new FakeSVG('g', {"class": "diagram-text"}).addTo(this);
+		new FakeSVG('title', {}, (this.type=="any"?"take one or more branches, once each, in any order":"take all branches, once each, in any order")).addTo(text);
 		new FakeSVG('path', {
 			"d": "M "+(x+30)+" "+(y-10)+" h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z",
 			"class": "diagram-text"
-			}).addTo(text)
+			}).addTo(text);
 		new FakeSVG('text', {
 			"x": x + 15,
 			"y": y + 4,
 			"class": "diagram-text"
-			}, (this.type=="any"?"1+":"all")).addTo(text)
+			}, (this.type=="any"?"1+":"all")).addTo(text);
 		new FakeSVG('path', {
 			"d": "M "+(x+this.width-20)+" "+(y-10)+" h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z",
 			"class": "diagram-text"
-			}).addTo(text)
+			}).addTo(text);
 		new FakeSVG('path', {
 			"d": "M "+(x+this.width-13)+" "+(y-2)+" a 4 4 0 1 0 6 -1 m 2.75 -1 h -4 v 4 m 0 -3 h 2",
 			"style": "stroke-width: 1.75"
-		}).addTo(text)
+			}).addTo(text);
 		return this;
 	}
 }
@@ -943,7 +948,7 @@ funcs.Optional = (...args)=>new Optional(...args);
 export class OneOrMore extends FakeSVG {
 	constructor(item, rep) {
 		super('g');
-		rep = rep || (new Skip);
+		rep = rep || (new Skip());
 		this.item = wrapString(item);
 		this.rep = wrapString(rep);
 		this.width = Math.max(this.item.width, this.rep.width) + Options.AR*2;
@@ -952,8 +957,8 @@ export class OneOrMore extends FakeSVG {
 		this.down = Math.max(Options.AR*2, this.item.down + Options.VS + this.rep.up + this.rep.height + this.rep.down);
 		this.needsSpace = true;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "oneormore"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "oneormore";
 		}
 	}
 	format(x,y,width) {
@@ -997,8 +1002,8 @@ export class Start extends FakeSVG {
 		this.down = 10;
 		this.type = type || "simple";
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "start"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "start";
 		}
 	}
 	format(x,y) {
@@ -1022,8 +1027,8 @@ export class End extends FakeSVG {
 		this.down = 10;
 		this.type = type || "simple";
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "end"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "end";
 		}
 	}
 	format(x,y) {
@@ -1049,8 +1054,8 @@ export class Terminal extends FakeSVG {
 		this.down = 11;
 		this.needsSpace = true;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "terminal"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "terminal";
 		}
 	}
 	format(x, y, width) {
@@ -1083,8 +1088,8 @@ export class NonTerminal extends FakeSVG {
 		this.down = 11;
 		this.needsSpace = true;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "nonterminal"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "nonterminal";
 		}
 	}
 	format(x, y, width) {
@@ -1117,8 +1122,8 @@ export class Comment extends FakeSVG {
 		this.down = 11;
 		this.needsSpace = true;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "comment"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "comment";
 		}
 	}
 	format(x, y, width) {
@@ -1146,10 +1151,10 @@ export class Skip extends FakeSVG {
 		this.height = 0;
 		this.up = 0;
 		this.down = 0;
-		this.needsSpace = false
+		this.needsSpace = false;
 		if(Options.DEBUG) {
-			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
-			this.attrs['data-type'] = "skip"
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "skip";
 		}
 	}
 	format(x, y, width) {
@@ -1170,7 +1175,7 @@ export class Block extends FakeSVG {
 		this.needsSpace = true;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
-			this.attrs['data-type'] = "block"
+			this.attrs['data-type'] = "block";
 		}
 	}
 	format(x, y, width) {
@@ -1196,10 +1201,9 @@ function unnull(...args) {
 function determineGaps(outer, inner) {
 	var diff = outer - inner;
 	switch(Options.INTERNAL_ALIGNMENT) {
-		case 'left': return [0, diff]; break;
-		case 'right': return [diff, 0]; break;
-		case 'center':
-		default: return [diff/2, diff/2]; break;
+		case 'left': return [0, diff];
+		case 'right': return [diff, 0];
+		default: return [diff/2, diff/2];
 	}
 }
 
@@ -1236,7 +1240,7 @@ function escapeString(string) {
 	return string.replace(/[*_\`\[\]<&]/g, function(charString) {
 		return '&#' + charString.charCodeAt(0) + ';';
 	});
-};
+}
 
 function* enumerate(iter) {
 	var count = 0;
