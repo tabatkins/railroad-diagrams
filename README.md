@@ -19,7 +19,13 @@ Details
 
 To use the library, just include the js and css files, and then call the Diagram() function.
 Its arguments are the components of the diagram (Diagram is a special form of Sequence).
-An alternative to Diagram() is ComplexDiagram() which is used to describe a complex type diagram.
+
+Alternately, you can call ComplexDiagram();
+it's identical to Diagram(),
+but has slightly different start/end shapes,
+same as what JSON.org does to distinguish between "leaf" types like number (ordinary Diagram())
+and "container" types like Array (ComplexDiagram()).
+
 Components are either leaves or containers.
 
 The leaves:
@@ -29,7 +35,7 @@ The leaves:
 * Skip() - an empty line
 
 The containers:
-* Sequence(children) - like simple concatenation in a regex
+* Sequence(children) - like simple concatenation in a regex.
 
     ![Sequence('1', '2', '3')](images/rr-sequence.png "Sequence('1', '2', '3')")
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
