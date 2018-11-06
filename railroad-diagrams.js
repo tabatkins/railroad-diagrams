@@ -732,6 +732,7 @@ At runtime, these constants can be found on the Diagram class.
 		this.width = Diagram.ARC_RADIUS; // starting track
 		this.width += Diagram.ARC_RADIUS*2 * (this.items.length-1); // inbetween tracks
 		this.width += sum(this.items, x=>x.width + (x.needsSpace?20:0)); // items
+		this.width += (last.height > 0 ? Diagram.ARC_RADIUS : 0); // needs space to curve up
 		this.width += Diagram.ARC_RADIUS; //ending track
 
 		// Always exits at entrance height
@@ -771,8 +772,13 @@ At runtime, these constants can be found on the Diagram class.
 		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
+		const first = this.items[0];
+		const last = this.items[this.items.length-1];
+		const allButFirst = this.items.slice(1);
+		const allButLast = this.items.slice(0, -1);
+
 		// upper track
-		var upperSpan = (sum(this.items.slice(0,-1), x=>x.width+(x.needsSpace?20:0))
+		var upperSpan = (sum(allButLast, x=>x.width+(x.needsSpace?20:0))
 			+ (this.items.length - 2) * Diagram.ARC_RADIUS*2
 			- Diagram.ARC_RADIUS
 		);
@@ -784,11 +790,12 @@ At runtime, these constants can be found on the Diagram class.
 			.addTo(this);
 
 		// lower track
-		var lowerSpan = (sum(this.items.slice(1), x=>x.width+(x.needsSpace?20:0))
+		var lowerSpan = (sum(allButFirst, x=>x.width+(x.needsSpace?20:0))
 			+ (this.items.length - 2) * Diagram.ARC_RADIUS*2
+			+ (last.height > 0 ? Diagram.ARC_RADIUS : 0)
 			- Diagram.ARC_RADIUS
 		);
-		var lowerStart = x + Diagram.ARC_RADIUS + this.items[0].width+(this.items[0].needsSpace?20:0) + Diagram.ARC_RADIUS*2;
+		var lowerStart = x + Diagram.ARC_RADIUS + first.width+(first.needsSpace?20:0) + Diagram.ARC_RADIUS*2;
 		new Path(lowerStart, y+this._lowerTrack)
 			.h(lowerSpan)
 			.arc('se')

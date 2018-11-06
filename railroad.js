@@ -682,6 +682,7 @@ export class HorizontalChoice extends FakeSVG {
 		this.width = Options.AR; // starting track
 		this.width += Options.AR*2 * (this.items.length-1); // inbetween tracks
 		this.width += sum(this.items, x=>x.width + (x.needsSpace?20:0)); // items
+		this.width += (last.height > 0 ? Options.AR : 0); // needs space to curve up
 		this.width += Options.AR; //ending track
 
 		// Always exits at entrance height
@@ -721,8 +722,13 @@ export class HorizontalChoice extends FakeSVG {
 		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
+		const first = this.items[0];
+		const last = this.items[this.items.length-1];
+		const allButFirst = this.items.slice(1);
+		const allButLast = this.items.slice(0, -1);
+
 		// upper track
-		var upperSpan = (sum(this.items.slice(0,-1), x=>x.width+(x.needsSpace?20:0))
+		var upperSpan = (sum(allButLast, x=>x.width+(x.needsSpace?20:0))
 			+ (this.items.length - 2) * Options.AR*2
 			- Options.AR
 		);
@@ -734,11 +740,12 @@ export class HorizontalChoice extends FakeSVG {
 			.addTo(this);
 
 		// lower track
-		var lowerSpan = (sum(this.items.slice(1), x=>x.width+(x.needsSpace?20:0))
+		var lowerSpan = (sum(allButFirst, x=>x.width+(x.needsSpace?20:0))
 			+ (this.items.length - 2) * Options.AR*2
+			+ (last.height > 0 ? Options.AR : 0)
 			- Options.AR
 		);
-		var lowerStart = x + Options.AR + this.items[0].width+(this.items[0].needsSpace?20:0) + Options.AR*2;
+		var lowerStart = x + Options.AR + first.width+(first.needsSpace?20:0) + Options.AR*2;
 		new Path(lowerStart, y+this._lowerTrack)
 			.h(lowerSpan)
 			.arc('se')
