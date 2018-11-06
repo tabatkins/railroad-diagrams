@@ -982,7 +982,7 @@ funcs.OneOrMore = (...args)=>new OneOrMore(...args);
 
 export class ZeroOrMore extends FakeSVG {
 	constructor(item, rep, skip) {
-		return new Optional(OneOrMore(item, rep), skip);
+		return new Optional(new OneOrMore(item, rep), skip);
 	}
 }
 funcs.ZeroOrMore = (...args)=>new ZeroOrMore(...args);
