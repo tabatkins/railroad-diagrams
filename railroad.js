@@ -20,7 +20,7 @@ export default funcs;
 
 export const Options = {
 	DEBUG: false, // if true, writes some debug information into attributes
-	VS: 8, // minimum vertical separation between things
+	VS: 8, // minimum vertical separation between things. For a 3px stroke, must be at least 4
 	AR: 10, // radius of arcs
 	DIAGRAM_CLASS: 'railroad-diagram', // class to put on the root <svg>
 	STROKE_ODD_PIXEL_LENGTH: true, // is the stroke width an odd (1px, 3px, etc) pixel length?
@@ -663,6 +663,133 @@ export class Choice extends FakeSVG {
 funcs.Choice = (...args)=>new Choice(...args);
 
 
+export class HorizontalChoice extends FakeSVG {
+	constructor(...items) {
+		super('g');
+		if( items.length === 0 ) {
+			throw new RangeError("HorizontalChoice() must have at least one child.");
+		}
+		if( items.length === 1) {
+			return new Sequence(items);
+		}
+		this.items = items.map(wrapString);
+		const allButFirst = this.items.slice(1);
+		const allButLast = this.items.slice(0, -1);
+		const middles = this.items.slice(1, -1);
+		const first = this.items[0];
+		const last = this.items[this.items.length - 1];
+		this.needsSpace = false;
+		this.up = this.down = this.height = this.width = 0;
+
+		this.width = Options.AR; // starting track
+		this.width += Options.AR*2 * (this.items.length-1); // inbetween tracks
+		this.width += sum(this.items, x=>x.width + (x.needsSpace?20:0)); // items
+		this.width += Options.AR; //ending track
+
+		// Always exits at entrance height
+		this.height = 0;
+
+		// All but the last have a track running above them
+		this.up = Math.max(
+			Options.AR*2,
+			Options.VS,
+			max(allButLast, x=>x.up) + Options.VS,
+			last.up
+		);
+
+		// All but the first have a track running below them
+		// Last either straight-lines or curves up, so has different calculation
+		this.down = Math.max(
+			Options.VS,
+			max(middles, x=>x.height+Math.max(x.down+Options.VS, Options.AR*2)),
+			last.height + last.down + Options.VS,
+			first.height + first.down
+		);
+
+		if(Options.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "horizontalchoice"
+		}
+	}
+	format(x,y,width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		new Path(x,y).h(gaps[0]).addTo(this);
+		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		// upper track
+		var upperSpan = (sum(this.items.slice(0,-1), x=>x.width+(x.needsSpace?20:0))
+			+ (this.items.length - 2) * Options.AR*2
+			- Options.AR
+		);
+		new Path(x,y)
+			.arc('se')
+			.v(-(this.up - Options.AR*2))
+			.arc('wn')
+			.h(upperSpan)
+			.addTo(this);
+
+		// lower track
+		var lowerSpan = (sum(this.items.slice(1), x=>x.width+(x.needsSpace?20:0))
+			+ (this.items.length - 2) * Options.AR*2
+			- Options.AR
+		);
+		var lowerStart = x + Options.AR + this.items[0].width+(this.items[0].needsSpace?20:0) + Options.AR*2;
+		new Path(lowerStart, y+this.down)
+			.h(lowerSpan)
+			.arc('se')
+			.v(-(this.down - Options.AR*2))
+			.arc('wn')
+			.addTo(this);
+
+		// Items
+		for(const [i, item] of enumerate(this.items)) {
+			// input track
+			if(i === 0) {
+				new Path(x,y)
+					.h(Options.AR)
+					.addTo(this);
+				x += Options.AR;
+			} else {
+				new Path(x, y - this.up)
+					.arc('ne')
+					.v(this.up - Options.AR*2)
+					.arc('ws')
+					.addTo(this);
+				x += Options.AR*2;
+			}
+
+			// item
+			var itemWidth = item.width + (item.needsSpace?20:0);
+			item.format(x, y, itemWidth).addTo(this);
+			x += itemWidth;
+
+			// output track
+			if(i === this.items.length-1) {
+				if(item.height === 0) {
+					new Path(x,y)
+						.h(Options.AR)
+						.addTo(this);
+				} else {
+					new Path(x,y+item.height)
+					.arc('se')
+					.addTo(this);
+				}
+			} else {
+				new Path(x, y+item.height)
+					.arc('ne')
+					.v(this.down - item.height - Options.AR*2)
+					.arc('ws')
+					.addTo(this);
+			}
+		}
+		return this;
+	}
+}
+funcs.HorizontalChoice = (...args)=>new HorizontalChoice(...args);
+
+
 export class MultipleChoice extends FakeSVG {
 	constructor(normal, type, ...items) {
 		super('g');
@@ -778,9 +905,9 @@ funcs.MultipleChoice = (...args)=>new MultipleChoice(...args);
 export class Optional extends FakeSVG {
 	constructor(item, skip) {
 		if( skip === undefined )
-			return Choice(1, Skip(), item);
+			return new Choice(1, new Skip(), item);
 		else if ( skip === "skip" )
-			return Choice(0, Skip(), item);
+			return new Choice(0, new Skip(), item);
 		else
 			throw "Unknown value for Optional()'s 'skip' argument.";
 	}
@@ -1058,3 +1185,11 @@ function escapeString(string) {
 		return '&#' + charString.charCodeAt(0) + ';';
 	});
 };
+
+function* enumerate(iter) {
+	var count = 0;
+	for(const x of iter) {
+		yield [count, x];
+		count++;
+	}
+}
