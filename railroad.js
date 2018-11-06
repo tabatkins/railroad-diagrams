@@ -688,21 +688,21 @@ export class HorizontalChoice extends FakeSVG {
 		this.height = 0;
 
 		// All but the last have a track running above them
-		this.up = Math.max(
+		this._upperTrack = Math.max(
 			Options.AR*2,
 			Options.VS,
-			max(allButLast, x=>x.up) + Options.VS,
-			last.up
+			max(allButLast, x=>x.up) + Options.VS
 		);
+		this.up = Math.max(this._upperTrack, last.up);
 
 		// All but the first have a track running below them
 		// Last either straight-lines or curves up, so has different calculation
-		this.down = Math.max(
+		this._lowerTrack = Math.max(
 			Options.VS,
 			max(middles, x=>x.height+Math.max(x.down+Options.VS, Options.AR*2)),
-			last.height + last.down + Options.VS,
-			first.height + first.down
+			last.height + last.down + Options.VS
 		);
+		this.down = Math.max(this._lowerTrack, first.height + first.down);
 
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -723,7 +723,7 @@ export class HorizontalChoice extends FakeSVG {
 		);
 		new Path(x,y)
 			.arc('se')
-			.v(-(this.up - Options.AR*2))
+			.v(-(this._upperTrack - Options.AR*2))
 			.arc('wn')
 			.h(upperSpan)
 			.addTo(this);
@@ -734,10 +734,10 @@ export class HorizontalChoice extends FakeSVG {
 			- Options.AR
 		);
 		var lowerStart = x + Options.AR + this.items[0].width+(this.items[0].needsSpace?20:0) + Options.AR*2;
-		new Path(lowerStart, y+this.down)
+		new Path(lowerStart, y+this._lowerTrack)
 			.h(lowerSpan)
 			.arc('se')
-			.v(-(this.down - Options.AR*2))
+			.v(-(this._lowerTrack - Options.AR*2))
 			.arc('wn')
 			.addTo(this);
 
@@ -750,9 +750,9 @@ export class HorizontalChoice extends FakeSVG {
 					.addTo(this);
 				x += Options.AR;
 			} else {
-				new Path(x, y - this.up)
+				new Path(x, y - this._upperTrack)
 					.arc('ne')
-					.v(this.up - Options.AR*2)
+					.v(this._upperTrack - Options.AR*2)
 					.arc('ws')
 					.addTo(this);
 				x += Options.AR*2;
@@ -777,7 +777,7 @@ export class HorizontalChoice extends FakeSVG {
 			} else {
 				new Path(x, y+item.height)
 					.arc('ne')
-					.v(this.down - item.height - Options.AR*2)
+					.v(this._lowerTrack - item.height - Options.AR*2)
 					.arc('ws')
 					.addTo(this);
 			}
