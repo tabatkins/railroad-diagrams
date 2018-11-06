@@ -57,6 +57,14 @@ At runtime, these constants can be found on the Diagram class.
 		return Math.max.apply(null, iter.map(func));
 	}
 
+	function* enumerate(iter) {
+		var count = 0;
+		for(const x of iter) {
+			yield [count, x];
+			count++;
+		}
+	}
+
 	function SVG(name, attrs, text) {
 		attrs = attrs || {};
 		text = text || '';
@@ -278,6 +286,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		return this.$super.toString.call(this);
 	}
+	Diagram.DEBUG = true;
 
 	function ComplexDiagram() {
 		var diagram = new Diagram([].slice.call(arguments));
@@ -702,6 +711,248 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
+
+	function HorizontalChoice(items) {
+		if(!(this instanceof HorizontalChoice)) return new HorizontalChoice([].slice.call(arguments));
+		if( items.length === 1 ) {
+			return new Sequence(items);
+		}
+		FakeSVG.call(this, 'g');
+		this.items = items.map(wrapString);
+		var numberOfItems = this.items.length;
+		this.needsSpace = false;
+		this.up = Math.max(Diagram.ARC_RADIUS*2, max(this.items, x=>x.up + Diagram.VERTICAL_SEPARATION))
+		this.up = this.down = this.height = this.width = 0;
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			this.width += item.width + (item.needsSpace?20:0);
+			if (items.length > 1 && i > 0) {
+				this.width += Diagram.ARC_RADIUS * 3;
+			}
+			this.up = Math.max(this.up, item.up - this.height);
+			this.height += item.height;
+			this.down = Math.max(this.down - item.height, item.down);
+		}
+		if (items.length > 1) {
+			this.up += Diagram.VERTICAL_SEPARATION * 3; // space for input track
+			this.down += Diagram.VERTICAL_SEPARATION * 3; // space for output track
+			this.width += Diagram.ARC_RADIUS * 4; // space for track switches
+		}
+
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "horizontalchoice"
+		}
+	}
+	subclassOf(HorizontalChoice, FakeSVG);
+	HorizontalChoice.prototype.format = function(x,y,width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		Path(x,y).h(gaps[0]).addTo(this);
+		Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		x += gaps[0];
+		var maxDown = 0;
+		for(var i = 1; i < this.items.length; i++) {
+			maxDown = Math.max(maxDown, this.items[i].down);
+		}
+		maxDown += (Diagram.ARC_RADIUS * 3) - Diagram.VERTICAL_SEPARATION;
+
+		var maxUp = 0;
+		for(var i = 0; i < this.items.length - 1; i++) {
+			maxUp = Math.max(maxUp, this.items[i].up);
+		}
+		maxUp += (Diagram.ARC_RADIUS * 3) - Diagram.VERTICAL_SEPARATION;
+
+		if (this.items.length > 1) {
+			Path(x,y).h(Diagram.ARC_RADIUS * 2).addTo(this);
+			Path(x,y)
+				.arc('se')
+				.up(maxUp - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.arc('wn').addTo(this);
+
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y + maxDown - Diagram.VERTICAL_SEPARATION)
+				.arc('se')
+				.up(maxDown - Diagram.ARC_RADIUS * 2 - Diagram.VERTICAL_SEPARATION)
+				.arc('wn').addTo(this);
+			Path(x + this.width - Diagram.ARC_RADIUS * 2, y)
+				.h(Diagram.ARC_RADIUS * 2).addTo(this);
+			x += Diagram.ARC_RADIUS * 2;
+		}
+
+		for(var i = 0; i < this.items.length; i++) {
+			var item = this.items[i];
+			var itemWidth = item.width+ (item.needsSpace ? 20 : 0);
+			if (this.items.length > 1) {
+				if (i < this.items.length - 1) {
+					Path(x, y - maxUp + Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+
+					Path(x + itemWidth, y)
+						.arc('ne')
+						.down(maxDown - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.arc('ws').addTo(this);
+
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
+						.arc('ne')
+						.down(maxUp - Diagram.VERTICAL_SEPARATION - item.height + this.height - Diagram.ARC_RADIUS * 2)
+						.arc('ws').addTo(this);
+				}
+
+				if (i < this.items.length - 2) {
+					Path(x + itemWidth + Diagram.ARC_RADIUS, y - maxUp + Diagram.VERTICAL_SEPARATION)
+						.h(Diagram.ARC_RADIUS * 2).addTo(this);
+				}
+
+				if (i > 0) {
+					Path(x - Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					if (i < this.items.length -1) {
+						Path(x + Diagram.ARC_RADIUS, y + maxDown - Diagram.VERTICAL_SEPARATION).h(itemWidth + Diagram.ARC_RADIUS).addTo(this);
+					}
+				}
+			}
+
+			if (item.needsSpace) {
+				Path(x, y).h(10).addTo(this);
+				x += 10;
+			}
+			item.format(x, y, item.width).addTo(this);
+			x += item.width;
+			y += item.height;
+			if (item.needsSpace) {
+				Path(x, y).h(10).addTo(this);
+				x += 10;
+			}
+			x += Diagram.ARC_RADIUS * 3;
+		}
+
+		return this;
+	}
+
+
+	function HorizontalChoice(items) {
+		if(!(this instanceof HorizontalChoice)) return new HorizontalChoice([].slice.call(arguments));
+		if( items.length === 0 ) {
+			throw new RangeError("HorizontalChoice() must have at least one child.");
+		}
+		if( items.length === 1) {
+			return new Sequence(items);
+		}
+		FakeSVG.call(this, 'g');
+
+		this.items = items.map(wrapString);
+		const allButLast = this.items.slice(0, -1);
+		const middles = this.items.slice(1, -1);
+		const first = this.items[0];
+		const last = this.items[this.items.length - 1];
+		this.needsSpace = false;
+
+		this.width = Diagram.ARC_RADIUS; // starting track
+		this.width += Diagram.ARC_RADIUS*2 * (this.items.length-1); // inbetween tracks
+		this.width += sum(this.items, x=>x.width + (x.needsSpace?20:0)); // items
+		this.width += Diagram.ARC_RADIUS; //ending track
+
+		// Always exits at entrance height
+		this.height = 0;
+
+		// All but the last have a track running above them
+		this.up = Math.max(
+			Diagram.ARC_RADIUS*2,
+			Diagram.VERTICAL_SEPARATION,
+			max(allButLast, x=>x.up) + Diagram.VERTICAL_SEPARATION,
+			last.up
+		);
+
+		// All but the first have a track running below them
+		// Last either straight-lines or curves up, so has different calculation
+		this.down = Math.max(
+			Diagram.VERTICAL_SEPARATION,
+			max(middles, x=>x.height+Math.max(x.down+Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2)),
+			last.height + last.down + Diagram.VERTICAL_SEPARATION,
+			first.height + first.down
+		);
+
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
+			this.attrs['data-type'] = "horizontalchoice"
+		}
+	}
+	subclassOf(HorizontalChoice, FakeSVG);
+	HorizontalChoice.prototype.format = function(x,y,width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		new Path(x,y).h(gaps[0]).addTo(this);
+		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		// upper track
+		var upperSpan = (sum(this.items.slice(0,-1), x=>x.width+(x.needsSpace?20:0))
+			+ (this.items.length - 2) * Diagram.ARC_RADIUS*2
+			- Diagram.ARC_RADIUS
+		);
+		new Path(x,y)
+			.arc('se')
+			.v(-(this.up - Diagram.ARC_RADIUS*2))
+			.arc('wn')
+			.h(upperSpan)
+			.addTo(this);
+
+		// lower track
+		var lowerSpan = (sum(this.items.slice(1), x=>x.width+(x.needsSpace?20:0))
+			+ (this.items.length - 2) * Diagram.ARC_RADIUS*2
+			- Diagram.ARC_RADIUS
+		);
+		var lowerStart = x + Diagram.ARC_RADIUS + this.items[0].width+(this.items[0].needsSpace?20:0) + Diagram.ARC_RADIUS*2;
+		new Path(lowerStart, y+this.down)
+			.h(lowerSpan)
+			.arc('se')
+			.v(-(this.down - Diagram.ARC_RADIUS*2))
+			.arc('wn')
+			.addTo(this);
+
+		// Items
+		for(const [i, item] of enumerate(this.items)) {
+			// input track
+			if(i === 0) {
+				new Path(x,y)
+					.h(Diagram.ARC_RADIUS)
+					.addTo(this);
+				x += Diagram.ARC_RADIUS;
+			} else {
+				new Path(x, y - this.up)
+					.arc('ne')
+					.v(this.up - Diagram.ARC_RADIUS*2)
+					.arc('ws')
+					.addTo(this);
+				x += Diagram.ARC_RADIUS*2;
+			}
+
+			// item
+			var itemWidth = item.width + (item.needsSpace?20:0);
+			item.format(x, y, itemWidth).addTo(this);
+			x += itemWidth;
+
+			// output track
+			if(i === this.items.length-1) {
+				if(item.height === 0) {
+					new Path(x,y)
+						.h(Diagram.ARC_RADIUS)
+						.addTo(this);
+				} else {
+					new Path(x,y+item.height)
+					.arc('se')
+					.addTo(this);
+				}
+			} else {
+				new Path(x, y+item.height)
+					.arc('ne')
+					.v(this.down - item.height - Diagram.ARC_RADIUS*2)
+					.arc('ws')
+					.addTo(this);
+			}
+		}
+		return this;
+	}
+
+
 	function MultipleChoice(normal, type, items) {
 		if(!(this instanceof MultipleChoice)) return new MultipleChoice(normal, type, [].slice.call(arguments,2));
 		FakeSVG.call(this, 'g');
@@ -1037,12 +1288,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, HorizontalChoice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'HorizontalChoice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
