@@ -32,7 +32,7 @@ The containers:
 * Sequence(children) - like simple concatenation in a regex
 
     ![Sequence('1', '2', '3')](images/rr-sequence.png "Sequence('1', '2', '3')")
-* Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally
+* Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
 
     ![Stack('1', '2', '3')](images/rr-stack.png "Stack('1', '2', '3')")
 * OptionalSequence(children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
@@ -44,7 +44,11 @@ The containers:
 * MultipleChoice(index, type, children) - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either "any" (1+ branches can be taken) or "all" (all branches must be taken).
 
     ![MultipleChoice(1, 'all', '1', '2', '3')](images/rr-multchoice.png "MultipleChoice(1, 'all', '1', '2', '3')")
+* HorizontalChoice(children) - Identical to Choice, but the items are stacked horizontally rather than vertically. There's no "straight-line" choice, so it just takes a list of children. Best used when a simple Choice would be too tall; instead, you can break up the items into a HorizontalChoice of Choices of an appropriate height.
+
+	![HorizontalChoice(Choice(0,'1','2','3','4'), '4', Choice(3, '1', '2', '3', '4'))](images/rr-horizontalchoice.png "HorizontalChoice(Choice(0,'1','2','3','4'), '4', Choice(3, '1', '2', '3', '4'))")
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
+
 
     ![Optional('foo'), Optional('bar', 'skip'))](images/rr-optional.png "Optional('foo'), Optional('bar', 'skip'))")
 * OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
