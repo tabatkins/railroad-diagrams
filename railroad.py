@@ -11,7 +11,7 @@ DEBUG = False # if true, writes some debug information into attributes
 VS = 8 # minimum vertical separation between things. For a 3px stroke, must be at least 4
 AR = 10 # radius of arcs
 DIAGRAM_CLASS = 'railroad-diagram' # class to put on the root <svg>
-STROKE_ODD_PIXEL_LENGTH = true # is the stroke width an odd (1px, 3px, etc) pixel length?
+STROKE_ODD_PIXEL_LENGTH = True # is the stroke width an odd (1px, 3px, etc) pixel length?
 INTERNAL_ALIGNMENT = 'center' # how to align items when they have extra space. left/right/center
 CHAR_WIDTH = 8.5 # width of each monospace character. play until you find the right value for your font
 COMMENT_CHAR_WIDTH = 7 # comments are in smaller text by default
@@ -235,8 +235,12 @@ class Diagram(DiagramItem):
         # Accepts a type=[simple|complex] kwarg
         DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
         self.type = kwargs.get("type", "simple")
+        self.items = [wrapString(item) for item in items]
+        if items and not isinstance(items[0], Start):
+        	self.items.insert(0, Start(self.type))
+        if items and not isinstance(items[-1], End):
+        	self.items.append(End(self.type))
         self.css = kwargs.get("css", DEFAULT_STYLE)
-        self.items = [Start(self.type)] + [wrapString(item) for item in items] + [End(self.type)]
         if self.css:
             self.items.insert(0, Style(self.css))
         self.up = 0
@@ -278,7 +282,7 @@ class Diagram(DiagramItem):
         x = paddingLeft
         y = paddingTop + self.up
         g = DiagramItem('g')
-        if TRANSLATE_HALF_PIXEL:
+        if STROKE_ODD_PIXEL_LENGTH:
             g.attrs['transform'] = 'translate(.5 .5)'
         for item in self.items:
             if item.needsSpace:
@@ -873,23 +877,30 @@ def ZeroOrMore(item, repeat=None, skip=False):
 
 
 class Start(DiagramItem):
-    def __init__(self, type="simple"):
-        DiagramItem.__init__(self, 'path')
-        self.width = 20
+    def __init__(self, type="simple", label=None):
+        DiagramItem.__init__(self, 'g')
+        if label:
+        	self.width = max(20, len(label) * CHAR_WIDTH + 10)
+        else:
+        	self.width = 20
         self.up = 10
         self.down = 10
         self.type = type
+        self.label = label
         addDebug(self)
 
     def format(self, x, y, _width):
-        if self.type == "simple":
-            self.attrs['d'] = 'M {0} {1} v 20 m 10 -20 v 20 m -10 -10 h 20.5'.format(x, y - 10)
-        elif self.type == "complex":
-            self.attrs['d'] = 'M {0} {1} v 20 m 0 -10 h 20.5'
-        return self
+		path = Path(x, y-10)
+		if self.type == "complex":
+			path.down(20).m(0, -10).right(self.width).addTo(self)
+		else:
+			path.down(20).m(10, -20).down(20).m(-10, -10).right(self.width).addTo(self)
+		if self.label:
+			DiagramItem('text', attrs={"x":x, "y":y-15, "style":"text-anchor:start"}, text=self.label).addTo(self);
+		return self;
 
     def __repr__(self):
-        return 'Start(type=%r)' % self.type
+        return 'Start(type=%r, label=%r)' % (self.type, self.label)
 
 
 class End(DiagramItem):
