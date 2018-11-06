@@ -702,7 +702,12 @@ export class HorizontalChoice extends FakeSVG {
 			max(middles, x=>x.height+Math.max(x.down+Options.VS, Options.AR*2)),
 			last.height + last.down + Options.VS
 		);
+		if(first.height < this._lowerTrack) {
+			// Make sure there's at least 2*AR room between first exit and lower track
+			this._lowerTrack = Math.max(this._lowerTrack, first.height + Options.AR*2);
+		}
 		this.down = Math.max(this._lowerTrack, first.height + first.down);
+
 
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -773,6 +778,21 @@ export class HorizontalChoice extends FakeSVG {
 					new Path(x,y+item.height)
 					.arc('se')
 					.addTo(this);
+				}
+			} else if(i === 0 && item.height > this._lowerTrack) {
+				// Needs to arc up to meet the lower track, not down.
+				if(item.height - this._lowerTrack >= Options.AR*2) {
+					new Path(x, y+item.height)
+						.arc('se')
+						.v(this._lowerTrack - item.height + Options.AR*2)
+						.arc('wn')
+						.addTo(this);
+				} else {
+					// Not enough space to fit two arcs
+					// so just bail and draw a straight line for now.
+					new Path(x, y+item.height)
+						.l(Options.AR*2, this._lowerTrack - item.height)
+						.addTo(this);
 				}
 			} else {
 				new Path(x, y+item.height)

@@ -752,6 +752,10 @@ At runtime, these constants can be found on the Diagram class.
 			max(middles, x=>x.height+Math.max(x.down+Diagram.VERTICAL_SEPARATION, Diagram.ARC_RADIUS*2)),
 			last.height + last.down + Diagram.VERTICAL_SEPARATION
 		);
+		if(first.height < this._lowerTrack) {
+			// Make sure there's at least 2*AR room between first exit and lower track
+			this._lowerTrack = Math.max(this._lowerTrack, first.height + Diagram.ARC_RADIUS*2);
+		}
 		this.down = Math.max(this._lowerTrack, first.height + first.down);
 
 		if(Diagram.DEBUG) {
@@ -824,6 +828,21 @@ At runtime, these constants can be found on the Diagram class.
 					new Path(x,y+item.height)
 					.arc('se')
 					.addTo(this);
+				}
+			} else if(i === 0 && item.height > this._lowerTrack) {
+				// Needs to arc up to meet the lower track, not down.
+				if(item.height - this._lowerTrack >= Diagram.ARC_RADIUS*2) {
+					new Path(x, y+item.height)
+						.arc('se')
+						.v(this._lowerTrack - item.height + Diagram.ARC_RADIUS*2)
+						.arc('wn')
+						.addTo(this);
+				} else {
+					// Not enough space to fit two arcs
+					// so just bail and draw a straight line for now.
+					new Path(x, y+item.height)
+						.l(Diagram.ARC_RADIUS*2, this._lowerTrack - item.height)
+						.addTo(this);
 				}
 			} else {
 				new Path(x, y+item.height)
