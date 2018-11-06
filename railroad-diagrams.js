@@ -220,8 +220,12 @@ At runtime, these constants can be found on the Diagram class.
 		if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 		FakeSVG.call(this, 'svg', {class: Diagram.DIAGRAM_CLASS});
 		this.items = items.map(wrapString);
-		this.items.unshift(new Start);
-		this.items.push(new End);
+		if(!(this.items[0] instanceof Start)) {
+			this.items.unshift(new Start());
+		}
+		if(!(this.items[this.items.length-1] instanceof End)) {
+			this.items.push(new End());
+		}
 		this.up = this.down = this.height = this.width = 0;
 		for(var i = 0; i < this.items.length; i++) {
 			var item = this.items[i];
@@ -286,7 +290,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 		return this.$super.toString.call(this);
 	}
-	Diagram.DEBUG = true;
+	Diagram.DEBUG = false;
 
 	function ComplexDiagram() {
 		var diagram = new Diagram([].slice.call(arguments));
@@ -1024,14 +1028,18 @@ At runtime, these constants can be found on the Diagram class.
 		return Optional(OneOrMore(item, rep), skip);
 	}
 
-	function Start(type) {
-		if(!(this instanceof Start)) return new Start();
-		FakeSVG.call(this, 'path');
+	function Start(type, label) {
+		if(!(this instanceof Start)) return new Start(type, label);
+		FakeSVG.call(this, 'g');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
 		this.type = type || "simple";
+		this.label = label;
+		if(label) {
+			this.width = Math.max(20, label.length * Diagram.CHAR_WIDTH + 10);
+		}
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "start"
@@ -1039,16 +1047,28 @@ At runtime, these constants can be found on the Diagram class.
 	}
 	subclassOf(Start, FakeSVG);
 	Start.prototype.format = function(x,y) {
+		let path = new Path(x, y-10);
 		if (this.type === "complex") {
-			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 0 -10 h 20.5';
+			path.down(20)
+				.m(0, -10)
+				.right(this.width)
+				.addTo(this);
 		} else {
-			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
+			path.down(20)
+				.m(10, -20)
+				.down(20)
+				.m(-10, -10)
+				.right(this.width)
+				.addTo(this);
+		}
+		if(this.label) {
+			new FakeSVG('text', {x:x, y:y-15, style:"text-anchor:start"}, this.label).addTo(this);
 		}
 		return this;
 	}
 
 	function End(type) {
-		if(!(this instanceof End)) return new End();
+		if(!(this instanceof End)) return new End(type);
 		FakeSVG.call(this, 'path');
 		this.width = 20;
 		this.height = 0;
@@ -1075,7 +1095,7 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 8 + 20; /* Assume that each char is .5em, and that the em is 16px */
+		this.width = text.length * Diagram.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1107,7 +1127,7 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 8 + 20;
+		this.width = text.length * Diagram.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1139,7 +1159,7 @@ At runtime, these constants can be found on the Diagram class.
 		FakeSVG.call(this, 'g');
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 7 + 10;
+		this.width = text.length * Diagram.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1237,6 +1257,8 @@ At runtime, these constants can be found on the Diagram class.
 	ARC_RADIUS: 10,
 	DIAGRAM_CLASS: 'railroad-diagram',
 	STROKE_ODD_PIXEL_LENGTH: true,
-	INTERNAL_ALIGNMENT: 'center'
+	INTERNAL_ALIGNMENT: 'center',
+	CHAR_WIDTH: 8.5, // width of each monospace character. play until you find the right value for your font
+	COMMENT_CHAR_WIDTH: 7, // comments are in smaller text by default
 	}
 );

@@ -33,6 +33,7 @@ The leaves:
 * NonTerminal(text, href) - represents an instruction or another production. The 'href' attribute is optional, and creates a hyperlink with the given destination.
 * Comment(text, href) - a comment. The 'href' attribute is optional, and creates a hyperlink with the given destination.
 * Skip() - an empty line
+* Start(type, label) and End(type) - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a Start() explicitly (as the first child of the Diagram!). The "type" attribute takes either "simple" (the default) or "complex", a la Diagram() and ComplexDiagram(). All arguments are optional.
 
 The containers:
 * Sequence(children) - like simple concatenation in a regex.

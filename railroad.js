@@ -25,6 +25,8 @@ export const Options = {
 	DIAGRAM_CLASS: 'railroad-diagram', // class to put on the root <svg>
 	STROKE_ODD_PIXEL_LENGTH: true, // is the stroke width an odd (1px, 3px, etc) pixel length?
 	INTERNAL_ALIGNMENT: 'center', // how to align items when they have extra space. left/right/center
+	CHAR_WIDTH: 8.5, // width of each monospace character. play until you find the right value for your font
+	COMMENT_CHAR_WIDTH: 7, // comments are in smaller text by default
 };
 
 
@@ -166,8 +168,12 @@ export class Diagram extends FakeSVG {
 	constructor(...items) {
 		super('svg', {class: Options.DIAGRAM_CLASS});
 		this.items = items.map(wrapString);
-		this.items.unshift(new Start());
-		this.items.push(new End());
+		if(!(this.items[0] instanceof Start)) {
+			this.items.unshift(new Start());
+		}
+		if(!(this.items[this.items.length-1] instanceof End)) {
+			this.items.push(new End());
+		}
 		this.up = this.down = this.height = this.width = 0;
 		for(const item of this.items) {
 			this.width += item.width + (item.needsSpace?20:0);
@@ -994,23 +1000,39 @@ funcs.ZeroOrMore = (...args)=>new ZeroOrMore(...args);
 
 
 export class Start extends FakeSVG {
-	constructor(type) {
-		super('path');
+	constructor(type, label) {
+		super('g');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
 		this.type = type || "simple";
+		this.label = label;
+		if(label) {
+			this.width = Math.max(20, label.length * Options.CHAR_WIDTH + 10);
+		}
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "start";
 		}
 	}
 	format(x,y) {
+		let path = new Path(x, y-10);
 		if (this.type === "complex") {
-			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 0 -10 h 20.5';
+			path.down(20)
+				.m(0, -10)
+				.right(this.width)
+				.addTo(this);
 		} else {
-			this.attrs.d = 'M '+x+' '+(y-10)+' v 20 m 10 -20 v 20 m -10 -10 h 20.5';
+			path.down(20)
+				.m(10, -20)
+				.down(20)
+				.m(-10, -10)
+				.right(this.width)
+				.addTo(this);
+		}
+		if(this.label) {
+			new FakeSVG('text', {x:x, y:y-15, style:"text-anchor:start"}, this.label).addTo(this);
 		}
 		return this;
 	}
@@ -1048,7 +1070,7 @@ export class Terminal extends FakeSVG {
 		super('g', {'class': 'terminal'});
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 8 + 20; /* Assume that each char is .5em, and that the em is 16px */
+		this.width = text.length * Options.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1082,7 +1104,7 @@ export class NonTerminal extends FakeSVG {
 		super('g', {'class': 'non-terminal'});
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 8 + 20;
+		this.width = text.length * Options.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1116,7 +1138,7 @@ export class Comment extends FakeSVG {
 		super('g');
 		this.text = text;
 		this.href = href;
-		this.width = text.length * 7 + 10;
+		this.width = text.length * Options.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
