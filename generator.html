@@ -23,18 +23,25 @@ const find = document.querySelector.bind(document);
 
 find('.input').addEventListener('input', e=>process(e.target.value), false);
 document.addEventListener('DOMContentLoaded', initialProcess, false);
-window.addEventListener('hashchange', initialProcess, false);
+window.addEventListener('hashchange', hashProcess, false);
 
 function initialProcess() {
 	if(location.hash && location.hash.length > 1) {
 		const code = decodeURIComponent(location.hash.substr(1));
 		const input = find('.input');
-		if(code != input.value) {
+		input.textContent = code;
+	}
+	process();
+}
+
+function hashProcess() {
+	if(location.hash && location.hash.length > 1) {
+		const code = decodeURIComponent(location.hash.substr(1));
+		const input = find('.input');
+		if(input.value != code) {
 			input.textContent = code;
 			process(code);
 		}
-	} else {
-		process();
 	}
 }
 
