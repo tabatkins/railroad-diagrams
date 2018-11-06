@@ -165,8 +165,8 @@ export class Diagram extends FakeSVG {
 	constructor(...items) {
 		super('svg', {class: Options.DIAGRAM_CLASS});
 		this.items = items.map(wrapString);
-		this.items.unshift(new Start);
-		this.items.push(new End);
+		this.items.unshift(new Start());
+		this.items.push(new End());
 		this.up = this.down = this.height = this.width = 0;
 		for(const item of this.items) {
 			this.width += item.width + (item.needsSpace?20:0);
@@ -1158,6 +1158,33 @@ export class Skip extends FakeSVG {
 	}
 }
 funcs.Skip = (...args)=>new Skip(...args);
+
+
+export class Block extends FakeSVG {
+	constructor({width=50, up=15, height=25, down=15, needsSpace=true}={}) {
+		super('g');
+		this.width = width;
+		this.height = height;
+		this.up = up;
+		this.down = down;
+		this.needsSpace = true;
+		if(Options.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "block"
+		}
+	}
+	format(x, y, width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		new Path(x,y).h(gaps[0]).addTo(this);
+		new Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		new FakeSVG('rect', {x:x, y:y-this.up, width:this.width, height:this.up+this.height+this.down}).addTo(this);
+		return this;
+	}
+}
+funcs.Block = (...args)=>new Block(...args);
 
 
 function unnull(...args) {

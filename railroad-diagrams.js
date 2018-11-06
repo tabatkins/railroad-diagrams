@@ -1183,6 +1183,32 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
+
+	function Block({width=50, up=15, height=25, down=15, needsSpace=true}={}) {
+		if(!(this instanceof Block)) return new Block({width, up, height, down, needsSpace});
+		FakeSVG.call(this, 'g');
+		this.width = width;
+		this.height = height;
+		this.up = up;
+		this.down = down;
+		this.needsSpace = true;
+		if(Diagram.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "block"
+		}
+	}
+	subclassOf(Block, FakeSVG);
+	Block.prototype.format = function(x, y, width) {
+		// Hook up the two sides if this is narrower than its stated width.
+		var gaps = determineGaps(width, this.width);
+		new Path(x,y).h(gaps[0]).addTo(this);
+		new Path(x+gaps[0]+this.width,y).h(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		new FakeSVG('rect', {x:x, y:y-this.up, width:this.width, height:this.up+this.height+this.down}).addTo(this);
+		return this;
+	}
+
 	var root;
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
@@ -1198,12 +1224,12 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, HorizontalChoice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip];
+	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, HorizontalChoice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip, Block];
 	/*
 	These are the names that the internal classes are exported as.
 	If you would like different names, adjust them here.
 	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'HorizontalChoice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip']
+	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'HorizontalChoice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip', 'Block']
 		.forEach(function(e,i) { root[e] = temp[i]; });
 }).call(this,
 	{
