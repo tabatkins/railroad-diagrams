@@ -673,13 +673,11 @@ export class HorizontalChoice extends FakeSVG {
 			return new Sequence(items);
 		}
 		this.items = items.map(wrapString);
-		const allButFirst = this.items.slice(1);
 		const allButLast = this.items.slice(0, -1);
 		const middles = this.items.slice(1, -1);
 		const first = this.items[0];
 		const last = this.items[this.items.length - 1];
 		this.needsSpace = false;
-		this.up = this.down = this.height = this.width = 0;
 
 		this.width = Options.AR; // starting track
 		this.width += Options.AR*2 * (this.items.length-1); // inbetween tracks
