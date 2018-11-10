@@ -826,6 +826,141 @@ class MultipleChoice(DiagramItem):
 		return self
 
 
+class HorizontalChoice(DiagramItem):
+	def __new__(cls, *items):
+		if len(items) <= 1:
+			return Sequence(*items)
+		else:
+			return super(HorizontalChoice, cls).__new__(cls)
+
+	def __init__(self, *items):
+		DiagramItem.__init__(self, 'g')
+		self.items = [wrapString(item) for item in items]
+		allButLast = self.items[:-1]
+		middles = self.items[1:-1]
+		first = self.items[0]
+		last = self.items[-1]
+		self.needsSpace = False
+
+		self.width = (AR # starting track
+			+ AR*2 * (len(self.items)-1) # inbetween tracks
+			+ sum(x.width + (20 if x.needsSpace else 0) for x in self.items) #items
+			+ (AR if last.height > 0 else 0) # needs space to curve up
+			+ AR) #ending track
+
+		# Always exits at entrance height
+		self.height = 0
+
+		# All but the last have a track running above them
+		self._upperTrack = max(
+			AR*2,
+			VS,
+			max(x.up for x in allButLast) + VS
+		)
+		self.up = max(self._upperTrack, last.up)
+
+		# All but the first have a track running below them
+		# Last either straight-lines or curves up, so has different calculation
+		self._lowerTrack = max(
+			VS,
+			max(x.height+max(x.down+VS, AR*2) for x in middles) if middles else 0,
+			last.height + last.down + VS
+		)
+		if first.height < self._lowerTrack:
+			# Make sure there's at least 2*AR room between first exit and lower track
+			self._lowerTrack = max(self._lowerTrack, first.height + AR*2)
+		self.down = max(self._lowerTrack, first.height + first.down)
+
+		addDebug(self)
+
+	def format(self, x, y, width):
+		# Hook up the two sides if self is narrower than its stated width.
+		leftGap, rightGap = determineGaps(width, self.width)
+		Path(x, y).h(leftGap).addTo(self)
+		Path(x + leftGap + self.width, y + self.height).h(rightGap).addTo(self)
+		x += leftGap
+
+		first = self.items[0]
+		last = self.items[-1]
+
+		# upper track
+		upperSpan = (sum(x.width+(20 if x.needsSpace else 0) for x in self.items[:-1])
+			+ (len(self.items) - 2) * AR*2
+			- AR)
+		(Path(x,y)
+			.arc('se')
+			.up(self._upperTrack - AR*2)
+			.arc('wn')
+			.h(upperSpan)
+			.addTo(self))
+
+		# lower track
+		lowerSpan = (sum(x.width+(20 if x.needsSpace else 0) for x in self.items[1:])
+			+ (len(self.items) - 2) * AR*2
+			+ (AR if last.height > 0 else 0)
+			- AR)
+		lowerStart = x + AR + first.width+(20 if first.needsSpace else 0) + AR*2
+		(Path(lowerStart, y+self._lowerTrack)
+			.h(lowerSpan)
+			.arc('se')
+			.up(self._lowerTrack - AR*2)
+			.arc('wn')
+			.addTo(self))
+
+		# Items
+		for [i, item] in enumerate(self.items):
+			# input track
+			if i == 0:
+				(Path(x,y)
+					.h(AR)
+					.addTo(self))
+				x += AR
+			else:
+				(Path(x, y - self._upperTrack)
+					.arc('ne')
+					.v(self._upperTrack - AR*2)
+					.arc('ws')
+					.addTo(self))
+				x += AR*2
+
+			# item
+			itemWidth = item.width + (20 if item.needsSpace else 0)
+			item.format(x, y, itemWidth).addTo(self)
+			x += itemWidth
+
+			# output track
+			if i == len(self.items)-1:
+				if item.height == 0:
+					(Path(x,y)
+						.h(AR)
+						.addTo(self))
+				else:
+					(Path(x,y+item.height)
+						.arc('se')
+						.addTo(self))
+			elif i == 0 and item.height > self._lowerTrack:
+				# Needs to arc up to meet the lower track, not down.
+				if item.height - self._lowerTrack >= AR*2:
+					(Path(x, y+item.height)
+						.arc('se')
+						.v(self._lowerTrack - item.height + AR*2)
+						.arc('wn')
+						.addTo(self))
+				else:
+					# Not enough space to fit two arcs
+					# so just bail and draw a straight line for now.
+					(Path(x, y+item.height)
+						.l(AR*2, self._lowerTrack - item.height)
+						.addTo(self))
+			else:
+				(Path(x, y+item.height)
+					.arc('ne')
+					.v(self._lowerTrack - item.height - AR*2)
+					.arc('ws')
+					.addTo(self))
+		return self
+
+
 def Optional(item, skip=False):
 	return Choice(0 if skip else 1, Skip(), item)
 
