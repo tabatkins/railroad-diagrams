@@ -1066,10 +1066,11 @@ funcs.End = (...args)=>new End(...args);
 
 
 export class Terminal extends FakeSVG {
-	constructor(text, href) {
+	constructor(text, {href, title}={}) {
 		super('g', {'class': 'terminal'});
 		this.text = text;
 		this.href = href;
+		this.title = title;
 		this.width = text.length * Options.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.height = 0;
 		this.up = 11;
@@ -1093,6 +1094,8 @@ export class Terminal extends FakeSVG {
 			new FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, [this.title]).addTo(this);
 		return this;
 	}
 }
@@ -1100,10 +1103,11 @@ funcs.Terminal = (...args)=>new Terminal(...args);
 
 
 export class NonTerminal extends FakeSVG {
-	constructor(text, href) {
+	constructor(text, {href, title}={}) {
 		super('g', {'class': 'non-terminal'});
 		this.text = text;
 		this.href = href;
+		this.title = title;
 		this.width = text.length * Options.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
@@ -1127,6 +1131,8 @@ export class NonTerminal extends FakeSVG {
 			new FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, [this.title]).addTo(this);
 		return this;
 	}
 }
@@ -1134,10 +1140,11 @@ funcs.NonTerminal = (...args)=>new NonTerminal(...args);
 
 
 export class Comment extends FakeSVG {
-	constructor(text, href) {
+	constructor(text, {href, title}={}) {
 		super('g');
 		this.text = text;
 		this.href = href;
+		this.title = title;
 		this.width = text.length * Options.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
@@ -1160,6 +1167,8 @@ export class Comment extends FakeSVG {
 			new FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, this.title).addTo(this);
 		return this;
 	}
 }

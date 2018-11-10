@@ -1090,12 +1090,13 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Terminal(text, href) {
-		if(!(this instanceof Terminal)) return new Terminal(text, href);
+	function Terminal(text, {href, title}={}) {
+		if(!(this instanceof Terminal)) return new Terminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
 		this.href = href;
-		this.width = text.length * Diagram.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
+		this.title = title;
+		this.width = text.length * Diagram.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1119,14 +1120,17 @@ At runtime, these constants can be found on the Diagram class.
 			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, this.title).addTo(this);
 		return this;
 	}
 
-	function NonTerminal(text, href) {
-		if(!(this instanceof NonTerminal)) return new NonTerminal(text, href);
+	function NonTerminal(text, {href, title}) {
+		if(!(this instanceof NonTerminal)) return new NonTerminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
 		this.href = href;
+		this.title = title;
 		this.width = text.length * Diagram.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
@@ -1151,14 +1155,17 @@ At runtime, these constants can be found on the Diagram class.
 			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, this.title).addTo(this);
 		return this;
 	}
 
-	function Comment(text, href) {
-		if(!(this instanceof Comment)) return new Comment(text, href);
+	function Comment(text, {href, title}) {
+		if(!(this instanceof Comment)) return new Comment(text, {href, title});
 		FakeSVG.call(this, 'g');
 		this.text = text;
 		this.href = href;
+		this.title = title;
 		this.width = text.length * Diagram.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
@@ -1182,6 +1189,8 @@ At runtime, these constants can be found on the Diagram class.
 			FakeSVG('a', {'xlink:href': this.href}, [text]).addTo(this);
 		else
 			text.addTo(this);
+		if(this.title)
+			new FakeSVG('title', {}, this.title).addTo(this);
 		return this;
 	}
 

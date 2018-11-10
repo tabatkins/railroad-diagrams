@@ -1060,10 +1060,11 @@ class End(DiagramItem):
 
 
 class Terminal(DiagramItem):
-	def __init__(self, text, href=None):
+	def __init__(self, text, href=None, title=None):
 		DiagramItem.__init__(self, 'g', {'class': 'terminal'})
 		self.text = text
 		self.href = href
+		self.title = title
 		self.width = len(text) * CHAR_WIDTH + 20
 		self.up = 11
 		self.down = 11
@@ -1071,7 +1072,7 @@ class Terminal(DiagramItem):
 		addDebug(self)
 
 	def __repr__(self):
-		return 'Terminal(%r, href=%r)' % (self.text, self.href)
+		return 'Terminal(%r, href=%r, title=%r)' % (self.text, self.href, self.title)
 
 	def format(self, x, y, width):
 		leftGap, rightGap = determineGaps(width, self.width)
@@ -1088,14 +1089,17 @@ class Terminal(DiagramItem):
 			text.addTo(a)
 		else:
 			text.addTo(self)
+		if self.title is not None:
+			DiagramItem('title', {}, self.title).addTo(self)
 		return self
 
 
 class NonTerminal(DiagramItem):
-	def __init__(self, text, href=None):
+	def __init__(self, text, href=None, title=None):
 		DiagramItem.__init__(self, 'g', {'class': 'non-terminal'})
 		self.text = text
 		self.href = href
+		self.title = title
 		self.width = len(text) * CHAR_WIDTH + 20
 		self.up = 11
 		self.down = 11
@@ -1103,7 +1107,7 @@ class NonTerminal(DiagramItem):
 		addDebug(self)
 
 	def __repr__(self):
-		return 'NonTerminal(%r, href=%r)' % (self.text, self.href)
+		return 'NonTerminal(%r, href=%r, title=%r)' % (self.text, self.href, self.title)
 
 	def format(self, x, y, width):
 		leftGap, rightGap = determineGaps(width, self.width)
@@ -1120,19 +1124,25 @@ class NonTerminal(DiagramItem):
 			text.addTo(a)
 		else:
 			text.addTo(self)
+		if self.title is not None:
+			DiagramItem('title', {}, self.title).addTo(self)
 		return self
 
 
 class Comment(DiagramItem):
-	def __init__(self, text, href=None):
+	def __init__(self, text, href=None, title=None):
 		DiagramItem.__init__(self, 'g')
 		self.text = text
 		self.href = href
+		self.title = title
 		self.width = len(text) * COMMENT_CHAR_WIDTH + 10
 		self.up = 11
 		self.down = 11
 		self.needsSpace = True
 		addDebug(self)
+
+	def __repr__(self):
+		return 'Comment(%r, href=%r, title=%r)' % (self.text, self.href, self.title)
 
 	def format(self, x, y, width):
 		leftGap, rightGap = determineGaps(width, self.width)
@@ -1147,6 +1157,8 @@ class Comment(DiagramItem):
 			text.addTo(a)
 		else:
 			text.addTo(self)
+		if self.title is not None:
+			DiagramItem('title', {}, self.title).addTo(self)
 		return self
 
 
