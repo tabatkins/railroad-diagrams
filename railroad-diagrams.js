@@ -1160,7 +1160,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Comment(text, {href, title}) {
+	function Comment(text, {href, title}={}) {
 		if(!(this instanceof Comment)) return new Comment(text, {href, title});
 		FakeSVG.call(this, 'g');
 		this.text = text;
