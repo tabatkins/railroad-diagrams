@@ -1125,7 +1125,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function NonTerminal(text, {href, title}) {
+	function NonTerminal(text, {href, title}={}) {
 		if(!(this instanceof NonTerminal)) return new NonTerminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
