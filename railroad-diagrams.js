@@ -15,15 +15,16 @@ I would appreciate attribution, but that is not required by the license.
 
 /*
 This file uses a module pattern to avoid leaking names into the global scope.
-The only accidental leakage is the name "temp".
-The exported names can be found at the bottom of this file;
-simply change the names in the array of strings to change what they are called in your application.
+Should be compatible with AMD, CommonJS, and plain ol' browser JS.
 
 As well, several configuration constants are passed into the module function at the bottom of this file.
-At runtime, these constants can be found on the Diagram class.
+At runtime, these constants can be found on the Diagram class,
+and can be changed before creating a Diagram.
 */
 
 (function(options) {
+	var funcs = {};
+
 	function subclassOf(baseClass, superClass) {
 		baseClass.prototype = Object.create(superClass.prototype);
 		baseClass.prototype.$super = superClass.prototype;
@@ -65,7 +66,7 @@ At runtime, these constants can be found on the Diagram class.
 		}
 	}
 
-	function SVG(name, attrs, text) {
+	var SVG = funcs.SVG = function SVG(name, attrs, text) {
 		attrs = attrs || {};
 		text = text || '';
 		var el = document.createElementNS("http://www.w3.org/2000/svg",name);
@@ -79,7 +80,7 @@ At runtime, these constants can be found on the Diagram class.
 		return el;
 	}
 
-	function FakeSVG(tagName, attrs, text){
+	var FakeSVG = funcs.FakeSVG = function FakeSVG(tagName, attrs, text){
 		if(!(this instanceof FakeSVG)) return new FakeSVG(tagName, attrs, text);
 		if(text) this.children = text;
 		else this.children = [];
@@ -136,7 +137,7 @@ At runtime, these constants can be found on the Diagram class.
 		return str;
 	}
 
-	function Path(x,y) {
+	var Path = funcs.Path = function Path(x,y) {
 		if(!(this instanceof Path)) return new Path(x,y);
 		FakeSVG.call(this, 'path');
 		this.attrs.d = "M"+x+' '+y;
@@ -216,7 +217,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Diagram(items) {
+	var Diagram = funcs.Diagram = function Diagram(items) {
 		if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
 		FakeSVG.call(this, 'svg', {class: Diagram.DIAGRAM_CLASS});
 		this.items = items.map(wrapString);
@@ -292,7 +293,7 @@ At runtime, these constants can be found on the Diagram class.
 	}
 	Diagram.DEBUG = false;
 
-	function ComplexDiagram() {
+	var ComplexDiagram = funcs.ComplexDiagram = function ComplexDiagram() {
 		var diagram = new Diagram([].slice.call(arguments));
 		var items = diagram.items;
 		items.shift();
@@ -303,7 +304,7 @@ At runtime, these constants can be found on the Diagram class.
 		return diagram;
 	}
 
-	function Sequence(items) {
+	var Sequence = funcs.Sequence = function Sequence(items) {
 		if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
 		this.items = items.map(wrapString);
@@ -349,7 +350,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Stack(items) {
+	var Stack = funcs.Stack = function Stack(items) {
 		if(!(this instanceof Stack)) return new Stack([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
 		if( items.length === 0 ) {
@@ -423,7 +424,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function OptionalSequence(items) {
+	var OptionalSequence = funcs.OptionalSequence = function OptionalSequence(items) {
 		if(!(this instanceof OptionalSequence)) return new OptionalSequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
 		if( items.length === 0 ) {
@@ -544,7 +545,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function AlternatingSequence(items) {
+	var AlternatingSequence = funcs.AlternatingSequence = function AlternatingSequence(items) {
 		if(!(this instanceof AlternatingSequence)) return new AlternatingSequence([].slice.call(arguments));
 		FakeSVG.call(this, 'g');
 		if( items.length === 1 ) {
@@ -627,7 +628,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Choice(normal, items) {
+	var Choice = funcs.Choice = function Choice(normal, items) {
 		if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
 		FakeSVG.call(this, 'g');
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
@@ -716,7 +717,7 @@ At runtime, these constants can be found on the Diagram class.
 	}
 
 
-	function HorizontalChoice(items) {
+	var HorizontalChoice = funcs.HorizontalChoice = function HorizontalChoice(items) {
 		if(!(this instanceof HorizontalChoice)) return new HorizontalChoice([].slice.call(arguments));
 		if( items.length === 0 ) {
 			throw new RangeError("HorizontalChoice() must have at least one child.");
@@ -867,7 +868,7 @@ At runtime, these constants can be found on the Diagram class.
 	}
 
 
-	function MultipleChoice(normal, type, items) {
+	var MultipleChoice = funcs.MultipleChoice = function MultipleChoice(normal, type, items) {
 		if(!(this instanceof MultipleChoice)) return new MultipleChoice(normal, type, [].slice.call(arguments,2));
 		FakeSVG.call(this, 'g');
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
@@ -977,7 +978,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	};
 
-	function Optional(item, skip) {
+	var Optional = funcs.Optional = function Optional(item, skip) {
 		if( skip === undefined )
 			return Choice(1, Skip(), item);
 		else if ( skip === "skip" )
@@ -986,7 +987,7 @@ At runtime, these constants can be found on the Diagram class.
 			throw "Unknown value for Optional()'s 'skip' argument.";
 	}
 
-	function OneOrMore(item, rep) {
+	var OneOrMore = funcs.OneOrMore = function OneOrMore(item, rep) {
 		if(!(this instanceof OneOrMore)) return new OneOrMore(item, rep);
 		FakeSVG.call(this, 'g');
 		rep = rep || (new Skip);
@@ -1024,11 +1025,11 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function ZeroOrMore(item, rep, skip) {
+	var ZeroOrMore = funcs.ZeroOrMore = function ZeroOrMore(item, rep, skip) {
 		return Optional(OneOrMore(item, rep), skip);
 	}
 
-	function Start(type, label) {
+	var Start = funcs.Start = function Start(type, label) {
 		if(!(this instanceof Start)) return new Start(type, label);
 		FakeSVG.call(this, 'g');
 		this.width = 20;
@@ -1067,7 +1068,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function End(type) {
+	var End = funcs.End = function End(type) {
 		if(!(this instanceof End)) return new End(type);
 		FakeSVG.call(this, 'path');
 		this.width = 20;
@@ -1090,7 +1091,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Terminal(text, {href, title}={}) {
+	var Terminal = funcs.Terminal = function Terminal(text, {href, title}={}) {
 		if(!(this instanceof Terminal)) return new Terminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
 		this.text = text;
@@ -1125,7 +1126,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function NonTerminal(text, {href, title}={}) {
+	var NonTerminal = funcs.NonTerminal = function NonTerminal(text, {href, title}={}) {
 		if(!(this instanceof NonTerminal)) return new NonTerminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
 		this.text = text;
@@ -1160,7 +1161,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Comment(text, {href, title}={}) {
+	var Comment = funcs.Comment = function Comment(text, {href, title}={}) {
 		if(!(this instanceof Comment)) return new Comment(text, {href, title});
 		FakeSVG.call(this, 'g');
 		this.text = text;
@@ -1194,7 +1195,7 @@ At runtime, these constants can be found on the Diagram class.
 		return this;
 	}
 
-	function Skip() {
+	var Skip = funcs.Skip = function Skip() {
 		if(!(this instanceof Skip)) return new Skip();
 		FakeSVG.call(this, 'g');
 		this.width = 0;
@@ -1213,7 +1214,7 @@ At runtime, these constants can be found on the Diagram class.
 	}
 
 
-	function Block({width=50, up=15, height=25, down=15, needsSpace=true}={}) {
+	var Block = funcs.Block = function Block({width=50, up=15, height=25, down=15, needsSpace=true}={}) {
 		if(!(this instanceof Block)) return new Block({width, up, height, down, needsSpace});
 		FakeSVG.call(this, 'g');
 		this.width = width;
@@ -1253,13 +1254,9 @@ At runtime, these constants can be found on the Diagram class.
 		root = this;
 	}
 
-	var temp = [Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, AlternatingSequence, Choice, HorizontalChoice, MultipleChoice, Optional, OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip, Block, Start, End];
-	/*
-	These are the names that the internal classes are exported as.
-	If you would like different names, adjust them here.
-	*/
-	['Diagram', 'ComplexDiagram', 'Sequence', 'Stack', 'OptionalSequence', 'AlternatingSequence', 'Choice', 'HorizontalChoice', 'MultipleChoice', 'Optional', 'OneOrMore', 'ZeroOrMore', 'Terminal', 'NonTerminal', 'Comment', 'Skip', 'Block', 'Start', 'End']
-		.forEach(function(e,i) { root[e] = temp[i]; });
+	for(var name in funcs) {
+		root[name] = funcs[name];
+	}
 }).call(this,
 	{
 	VERTICAL_SEPARATION: 8,
