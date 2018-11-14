@@ -298,8 +298,8 @@ and can be changed before creating a Diagram.
 		var items = diagram.items;
 		items.shift();
 		items.pop();
-		items.unshift(new Start("complex"));
-		items.push(new End("complex"));
+		items.unshift(new Start({type:"complex"}));
+		items.push(new End({type:"complex"}));
 		diagram.items = items;
 		return diagram;
 	}
@@ -1029,14 +1029,14 @@ and can be changed before creating a Diagram.
 		return Optional(OneOrMore(item, rep), skip);
 	}
 
-	var Start = funcs.Start = function Start(type, label) {
-		if(!(this instanceof Start)) return new Start(type, label);
+	var Start = funcs.Start = function Start({type="simple", label}={}) {
+		if(!(this instanceof Start)) return new Start({type, label});
 		FakeSVG.call(this, 'g');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
-		this.type = type || "simple";
+		this.type = type;
 		this.label = label;
 		if(label) {
 			this.width = Math.max(20, label.length * Diagram.CHAR_WIDTH + 10);
@@ -1068,14 +1068,14 @@ and can be changed before creating a Diagram.
 		return this;
 	}
 
-	var End = funcs.End = function End(type) {
-		if(!(this instanceof End)) return new End(type);
+	var End = funcs.End = function End({type="simple"}={}) {
+		if(!(this instanceof End)) return new End({type});
 		FakeSVG.call(this, 'path');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
-		this.type = type || "simple";
+		this.type = type;
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
 			this.attrs['data-type'] = "end"

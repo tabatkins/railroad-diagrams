@@ -240,8 +240,8 @@ funcs.Diagram = (...args)=>new Diagram(...args);
 export class ComplexDiagram extends FakeSVG {
 	constructor(...items) {
 		var diagram = new Diagram(...items);
-		diagram.items[0] = new Start("complex");
-		diagram.items[diagram.items.length-1] = new End("complex");
+		diagram.items[0] = new Start({type:"complex"});
+		diagram.items[diagram.items.length-1] = new End({type:"complex"});
 		return diagram;
 	}
 }
@@ -1000,13 +1000,13 @@ funcs.ZeroOrMore = (...args)=>new ZeroOrMore(...args);
 
 
 export class Start extends FakeSVG {
-	constructor(type, label) {
+	constructor({type="simple", label}={}) {
 		super('g');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
-		this.type = type || "simple";
+		this.type = type;
 		this.label = label;
 		if(label) {
 			this.width = Math.max(20, label.length * Options.CHAR_WIDTH + 10);
@@ -1041,13 +1041,13 @@ funcs.Start = (...args)=>new Start(...args);
 
 
 export class End extends FakeSVG {
-	constructor(type) {
+	constructor({type="simple"}={}) {
 		super('path');
 		this.width = 20;
 		this.height = 0;
 		this.up = 10;
 		this.down = 10;
-		this.type = type || "simple";
+		this.type = type;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "end";
