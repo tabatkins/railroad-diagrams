@@ -1007,9 +1007,9 @@ export class Start extends FakeSVG {
 		this.up = 10;
 		this.down = 10;
 		this.type = type;
-		this.label = label;
 		if(label) {
-			this.width = Math.max(20, label.length * Options.CHAR_WIDTH + 10);
+			this.label = ""+label;
+			this.width = Math.max(20, this.label.length * Options.CHAR_WIDTH + 10);
 		}
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
@@ -1068,10 +1068,10 @@ funcs.End = (...args)=>new End(...args);
 export class Terminal extends FakeSVG {
 	constructor(text, {href, title}={}) {
 		super('g', {'class': 'terminal'});
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Options.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
+		this.width = this.text.length * Options.CHAR_WIDTH + 20; /* Assume that each char is .5em, and that the em is 16px */
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1105,10 +1105,10 @@ funcs.Terminal = (...args)=>new Terminal(...args);
 export class NonTerminal extends FakeSVG {
 	constructor(text, {href, title}={}) {
 		super('g', {'class': 'non-terminal'});
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Options.CHAR_WIDTH + 20;
+		this.width = this.text.length * Options.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1142,10 +1142,10 @@ funcs.NonTerminal = (...args)=>new NonTerminal(...args);
 export class Comment extends FakeSVG {
 	constructor(text, {href, title}={}) {
 		super('g');
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Options.COMMENT_CHAR_WIDTH + 10;
+		this.width = this.text.length * Options.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1239,7 +1239,7 @@ function determineGaps(outer, inner) {
 }
 
 function wrapString(value) {
-	return ((typeof value) == 'string') ? new Terminal(value) : value;
+		return value instanceof FakeSVG ? value : new Terminal(""+value);
 }
 
 function sum(iter, func) {

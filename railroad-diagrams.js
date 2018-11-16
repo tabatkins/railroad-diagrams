@@ -45,7 +45,7 @@ and can be changed before creating a Diagram.
 	}
 
 	function wrapString(value) {
-		return ((typeof value) == 'string') ? new Terminal(value) : value;
+		return value instanceof FakeSVG ? value : new Terminal(""+value);
 	}
 
 	function sum(iter, func) {
@@ -1037,9 +1037,9 @@ and can be changed before creating a Diagram.
 		this.up = 10;
 		this.down = 10;
 		this.type = type;
-		this.label = label;
-		if(label) {
-			this.width = Math.max(20, label.length * Diagram.CHAR_WIDTH + 10);
+		if(label != undefined) {
+			this.label = ""+label;
+			this.width = Math.max(20, this.label.length * Diagram.CHAR_WIDTH + 10);
 		}
 		if(Diagram.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down
@@ -1094,10 +1094,10 @@ and can be changed before creating a Diagram.
 	var Terminal = funcs.Terminal = function Terminal(text, {href, title}={}) {
 		if(!(this instanceof Terminal)) return new Terminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'terminal'});
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Diagram.CHAR_WIDTH + 20;
+		this.width = this.text.length * Diagram.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1129,10 +1129,10 @@ and can be changed before creating a Diagram.
 	var NonTerminal = funcs.NonTerminal = function NonTerminal(text, {href, title}={}) {
 		if(!(this instanceof NonTerminal)) return new NonTerminal(text, {href, title});
 		FakeSVG.call(this, 'g', {'class': 'non-terminal'});
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Diagram.CHAR_WIDTH + 20;
+		this.width = this.text.length * Diagram.CHAR_WIDTH + 20;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
@@ -1164,10 +1164,10 @@ and can be changed before creating a Diagram.
 	var Comment = funcs.Comment = function Comment(text, {href, title}={}) {
 		if(!(this instanceof Comment)) return new Comment(text, {href, title});
 		FakeSVG.call(this, 'g');
-		this.text = text;
+		this.text = ""+text;
 		this.href = href;
 		this.title = title;
-		this.width = text.length * Diagram.COMMENT_CHAR_WIDTH + 10;
+		this.width = this.text.length * Diagram.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
 		this.up = 11;
 		this.down = 11;
