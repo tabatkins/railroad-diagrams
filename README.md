@@ -104,6 +104,14 @@ The main difference from the JS port is how you extract the string from the Diag
 
 As well, if you want a "complex" diagram, pass `type="complex"` to the `Diagram` constructor, rather than using a separate `ComplexDiagram()` constructor like in the JS port.
 
+To **install** the python port, clone this project and `pip install` it.
+
+```shell
+~/> git clone https://github.com/tabatkins/railroad-diagrams.git
+~/> cd railroad-diagrams/
+~/railroad-diagrams/> python3 -m pip install .
+```
+
 License
 -------
 

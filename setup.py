@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(
     name='railroad-diagrams',
-    py_modules=['railroad_diagrams'],
+    py_modules=['railroad'],
     version='0.0.1',
     description='Generate SVG railroad syntax diagrams.',
     author='Tab Atkins',
