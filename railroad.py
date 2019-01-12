@@ -1052,7 +1052,7 @@ class End(DiagramItem):
 		if self.type == "simple":
 			self.attrs['d'] = 'M {0} {1} h 20 m -10 -10 v 20 m 10 -20 v 20'.format(x, y)
 		elif self.type == "complex":
-			self.attrs['d'] = 'M {0} {1} h 20 m 0 -10 v 20'
+			self.attrs['d'] = 'M {0} {1} h 20 m 0 -10 v 20'.format(x, y)
 		return self
 
 	def __repr__(self):
