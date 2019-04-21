@@ -9,6 +9,7 @@ svg.railroad-diagram path {
 svg.railroad-diagram text {
     font: bold 14px monospace;
     text-anchor: middle;
+    white-space: pre;
 }
 svg.railroad-diagram text.diagram-text {
     font-size: 12px;
