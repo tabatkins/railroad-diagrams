@@ -86,6 +86,11 @@ and can be changed before creating a Diagram.
 		else this.children = [];
 		this.tagName = tagName;
 		this.attrs = unnull(attrs, {});
+		if (tagName === "svg") {
+			// Add namespace for svg so that some browers (e.g. Chrome) can show svg directly,
+			// but not show the source of svg file.
+			this.attrs.xmlns = "http://www.w3.org/2000/svg";
+		}
 		return this;
 	};
 	FakeSVG.prototype.format = function(x, y, width) {
