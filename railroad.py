@@ -1083,7 +1083,7 @@ class Terminal(DiagramItem):
 
 		DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
 							 'height': self.up + self.down, 'rx': 10, 'ry': 10}).addTo(self)
-		text = DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text)
+		text = DiagramItem('text', {'x': x + leftGap + self.width / 2, 'y': y + 4}, self.text)
 		if self.href is not None:
 			a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
 			text.addTo(a)
@@ -1118,7 +1118,7 @@ class NonTerminal(DiagramItem):
 
 		DiagramItem('rect', {'x': x + leftGap, 'y': y - 11, 'width': self.width,
 							 'height': self.up + self.down}).addTo(self)
-		text = DiagramItem('text', {'x': x + width / 2, 'y': y + 4}, self.text)
+		text = DiagramItem('text', {'x': x + leftGap + self.width / 2, 'y': y + 4}, self.text)
 		if self.href is not None:
 			a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
 			text.addTo(a)
@@ -1151,7 +1151,7 @@ class Comment(DiagramItem):
 		Path(x, y).h(leftGap).addTo(self)
 		Path(x + leftGap + self.width, y).h(rightGap).addTo(self)
 
-		text = DiagramItem('text', {'x': x + width / 2, 'y': y + 5, 'class': 'comment'}, self.text)
+		text = DiagramItem('text', {'x': x + leftGap + self.width / 2, 'y': y + 5, 'class': 'comment'}, self.text)
 		if self.href is not None:
 			a = DiagramItem('a', {'xlink:href':self.href}, text).addTo(self)
 			text.addTo(a)
