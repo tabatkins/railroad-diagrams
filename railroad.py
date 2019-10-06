@@ -19,7 +19,7 @@ COMMENT_CHAR_WIDTH = 7 # comments are in smaller text by default
 
 def e(text):
 	import re
-	return re.sub(r"[*_\`\[\]<&]", lambda c: "&#{0}".format(ord(c.group(0))), unicode(text))
+	return re.sub(r"[*_\`\[\]<&]", lambda c: "&#{0};".format(ord(c.group(0))), unicode(text))
 
 def determineGaps(outer, inner):
 	diff = outer - inner
