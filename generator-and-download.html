@@ -55,7 +55,7 @@
     Choice(0,
       NonTerminal('name char'),
 			NonTerminal('escape'))))</textarea>
-			
+
 <div class="aaaa">
 	<input type="button" class="btn js-download-svg" value="Download SVG">
 </div>
@@ -66,11 +66,9 @@
 <script src="railroad-diagrams.js"></script>
 <script>
 const find = document.querySelector.bind(document);
-
 find('.input').addEventListener('input', e=>process(e.target.value), false);
 document.addEventListener('DOMContentLoaded', initialProcess, false);
 window.addEventListener('hashchange', hashProcess, false);
-
 function initialProcess() {
 	if(location.hash && location.hash.length > 1) {
 		const code = decodeURIComponent(location.hash.substr(1));
@@ -79,7 +77,6 @@ function initialProcess() {
 	}
 	process();
 }
-
 function hashProcess() {
 	if(location.hash && location.hash.length > 1) {
 		const code = decodeURIComponent(location.hash.substr(1));
@@ -90,7 +87,6 @@ function hashProcess() {
 		}
 	}
 }
-
 function process(input) {
 	if(!input) input = find('.input').value;
 	try {
@@ -100,18 +96,15 @@ function process(input) {
 		find('.output-text').textContent = "Invalid input.\n" + e
 		throw e;
 	}
-	console.info(result);
 	find('.output-image').innerHTML = '';
 	result.addTo(find('.output-image'));
 	find('.output-text').textContent = result;
 }
-
-
 find(".js-download-svg").addEventListener("click", function(e) {
 	var content = find(".output-text").value;
 	var svgRule = find("#svg-rule");
 	content = content.replace(/^(<svg[^\r\n<>]+>[\r\n])/, "$1" + svgRule.outerHTML + "\n");
-	console.info(content);
+	content += `\n\n<!-- Railroad Diagram Source -->\n<!--\n${find(".input").value}\n-->`
 	var blob = new Blob([content]);
 	Object.assign(document.createElement("a"), {
 		download: "railroad-diagram.svg",
