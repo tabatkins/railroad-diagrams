@@ -104,7 +104,7 @@ find(".js-download-svg").addEventListener("click", function(e) {
 	var content = find(".output-text").value;
 	var svgRule = find("#svg-rule");
 	content = content.replace(/^(<svg[^\r\n<>]+>[\r\n])/, "$1" + svgRule.outerHTML + "\n");
-	content += `\n\n<!-- Railroad Diagram Source -->\n<!--\n${find(".input").value}\n-->`
+	content += `\n\n<!-- Railroad Diagram Source -->\n<!--\n${find(".input").value}\n-->`;
 	var blob = new Blob([content]);
 	Object.assign(document.createElement("a"), {
 		download: "railroad-diagram.svg",
