@@ -219,7 +219,7 @@ class Style(DiagramItem):
 		self.needsSpace = False
 
 	def __repr__(self):
-		return 'Style(%r)' % css
+		return 'Style(%r)' % self.css
 
 	def format(self, x, y, width):
 		return self
