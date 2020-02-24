@@ -84,16 +84,6 @@ class DiagramItem(object):
 		return not (self == other)
 
 
-class DiagramSingleContainer(DiagramItem):
-	def __init__(self, name, item, attrs=None, text=None):
-		DiagramItem.__init__(self, name, attrs, text)
-		self.item = wrapString(item)
-
-	def walk(self, cb):
-		cb(self)
-		self.item.walk(cb)
-
-
 class DiagramMultiContainer(DiagramItem):
 	def __init__(self, name, items, attrs=None, text=None):
 		DiagramItem.__init__(self, name, attrs, text)
@@ -981,9 +971,10 @@ def Optional(item, skip=False):
 	return Choice(0 if skip else 1, Skip(), item)
 
 
-class OneOrMore(DiagramSingleContainer):
+class OneOrMore(DiagramItem):
 	def __init__(self, item, repeat=None):
-		DiagramSingleContainer.__init__(self, 'g', item)
+		DiagramItem.__init__(self, 'g')
+		self.item = wrapString(item)
 		repeat = repeat or Skip()
 		self.rep = wrapString(repeat)
 		self.width = max(self.item.width, self.rep.width) + AR * 2
