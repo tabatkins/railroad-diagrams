@@ -136,6 +136,9 @@ and can be changed before creating a Diagram.
 		str += '</' + this.tagName + '>\n';
 		return str;
 	}
+	FakeSVG.prototype.walk = function(cb) {
+		cb(this);
+	}
 
 	var Path = funcs.Path = function Path(x,y) {
 		if(!(this instanceof Path)) return new Path(x,y);
@@ -217,10 +220,21 @@ and can be changed before creating a Diagram.
 		return this;
 	}
 
+
+	var DiagramMultiContainer = funcs.DiagramMultiContainer = function DiagramMultiContainer(tagName, items, attrs, text) {
+		FakeSVG.call(this, tagName, attrs, text);
+		this.items = items.map(wrapString);
+	}
+	subclassOf(DiagramMultiContainer, FakeSVG);
+	DiagramMultiContainer.prototype.walk = function(cb) {
+		cb(this);
+		this.items.forEach(x=>w.walk(cb));
+	}
+
+
 	var Diagram = funcs.Diagram = function Diagram(items) {
 		if(!(this instanceof Diagram)) return new Diagram([].slice.call(arguments));
-		FakeSVG.call(this, 'svg', {class: Diagram.DIAGRAM_CLASS});
-		this.items = items.map(wrapString);
+		DiagramMultiContainer.call(this, 'svg', items, {class: Diagram.DIAGRAM_CLASS});
 		if(!(this.items[0] instanceof Start)) {
 			this.items.unshift(new Start());
 		}
@@ -237,7 +251,7 @@ and can be changed before creating a Diagram.
 		}
 		this.formatted = false;
 	}
-	subclassOf(Diagram, FakeSVG);
+	subclassOf(Diagram, DiagramMultiContainer);
 	for(var option in options) {
 		Diagram[option] = options[option];
 	}
@@ -306,8 +320,7 @@ and can be changed before creating a Diagram.
 
 	var Sequence = funcs.Sequence = function Sequence(items) {
 		if(!(this instanceof Sequence)) return new Sequence([].slice.call(arguments));
-		FakeSVG.call(this, 'g');
-		this.items = items.map(wrapString);
+		DiagramMultiContainer.call(this, 'g', items);
 		var numberOfItems = this.items.length;
 		this.needsSpace = true;
 		this.up = this.down = this.height = this.width = 0;
@@ -325,7 +338,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "sequence"
 		}
 	}
-	subclassOf(Sequence, FakeSVG);
+	subclassOf(Sequence, DiagramMultiContainer);
 	Sequence.prototype.format = function(x,y,width) {
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
@@ -352,11 +365,10 @@ and can be changed before creating a Diagram.
 
 	var Stack = funcs.Stack = function Stack(items) {
 		if(!(this instanceof Stack)) return new Stack([].slice.call(arguments));
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 		if( items.length === 0 ) {
 			throw new RangeError("Stack() must have at least one child.");
 		}
-		this.items = items.map(wrapString);
 		this.width = Math.max.apply(null, this.items.map(function(e) { return e.width + (e.needsSpace?20:0); }));
 		//if(this.items[0].needsSpace) this.width -= 10;
 		//if(this.items[this.items.length-1].needsSpace) this.width -= 10;
@@ -384,7 +396,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "stack"
 		}
 	}
-	subclassOf(Stack, FakeSVG);
+	subclassOf(Stack, DiagramMultiContainer);
 	Stack.prototype.format = function(x,y,width) {
 		var gaps = determineGaps(width, this.width);
 		Path(x,y).h(gaps[0]).addTo(this);
@@ -426,7 +438,7 @@ and can be changed before creating a Diagram.
 
 	var OptionalSequence = funcs.OptionalSequence = function OptionalSequence(items) {
 		if(!(this instanceof OptionalSequence)) return new OptionalSequence([].slice.call(arguments));
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 		if( items.length === 0 ) {
 			throw new RangeError("OptionalSequence() must have at least one child.");
 		}
@@ -434,7 +446,6 @@ and can be changed before creating a Diagram.
 			return new Sequence(items);
 		}
 		var arc = Diagram.ARC_RADIUS;
-		this.items = items.map(wrapString);
 		this.needsSpace = false;
 		this.width = 0;
 		this.up = 0;
@@ -460,7 +471,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "optseq"
 		}
 	}
-	subclassOf(OptionalSequence, FakeSVG);
+	subclassOf(OptionalSequence, DiagramMultiContainer);
 	OptionalSequence.prototype.format = function(x, y, width) {
 		var arc = Diagram.ARC_RADIUS;
 		var gaps = determineGaps(width, this.width);
@@ -547,14 +558,13 @@ and can be changed before creating a Diagram.
 
 	var AlternatingSequence = funcs.AlternatingSequence = function AlternatingSequence(items) {
 		if(!(this instanceof AlternatingSequence)) return new AlternatingSequence([].slice.call(arguments));
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 		if( items.length === 1 ) {
 			return new Sequence(items);
 		}
 		if( items.length !== 2 ) {
 			throw new RangeError("AlternatingSequence() must have one or two children.");
 		}
-		this.items = items.map(wrapString);
 		this.needsSpace = false;
 
 		const arc = Diagram.ARC_RADIUS;
@@ -585,7 +595,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "altseq"
 		}
 	}
-	subclassOf(AlternatingSequence, FakeSVG);
+	subclassOf(AlternatingSequence, DiagramMultiContainer);
 	AlternatingSequence.prototype.format = function(x, y, width) {
 		const arc = Diagram.ARC_RADIUS;
 		const gaps = determineGaps(width, this.width);
@@ -630,7 +640,7 @@ and can be changed before creating a Diagram.
 
 	var Choice = funcs.Choice = function Choice(normal, items) {
 		if(!(this instanceof Choice)) return new Choice(normal, [].slice.call(arguments,1));
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
 			throw new TypeError("The first argument of Choice() must be an integer.");
 		} else if(normal < 0 || normal >= items.length) {
@@ -640,7 +650,6 @@ and can be changed before creating a Diagram.
 		}
 		var first = 0;
 		var last = items.length - 1;
-		this.items = items.map(wrapString);
 		this.width = Math.max.apply(null, this.items.map(function(el){return el.width})) + Diagram.ARC_RADIUS*4;
 		this.height = this.items[normal].height;
 		this.up = this.items[first].up;
@@ -661,7 +670,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "choice"
 		}
 	}
-	subclassOf(Choice, FakeSVG);
+	subclassOf(Choice, DiagramMultiContainer);
 	Choice.prototype.format = function(x,y,width) {
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
@@ -725,9 +734,8 @@ and can be changed before creating a Diagram.
 		if( items.length === 1) {
 			return new Sequence(items);
 		}
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 
-		this.items = items.map(wrapString);
 		const allButLast = this.items.slice(0, -1);
 		const middles = this.items.slice(1, -1);
 		const first = this.items[0];
@@ -769,7 +777,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "horizontalchoice"
 		}
 	}
-	subclassOf(HorizontalChoice, FakeSVG);
+	subclassOf(HorizontalChoice, DiagramMultiContainer);
 	HorizontalChoice.prototype.format = function(x,y,width) {
 		// Hook up the two sides if this is narrower than its stated width.
 		var gaps = determineGaps(width, this.width);
@@ -870,7 +878,7 @@ and can be changed before creating a Diagram.
 
 	var MultipleChoice = funcs.MultipleChoice = function MultipleChoice(normal, type, items) {
 		if(!(this instanceof MultipleChoice)) return new MultipleChoice(normal, type, [].slice.call(arguments,2));
-		FakeSVG.call(this, 'g');
+		DiagramMultiContainer.call(this, 'g', items);
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
 			throw new TypeError("The first argument of MultipleChoice() must be an integer.");
 		} else if(normal < 0 || normal >= items.length) {
@@ -884,7 +892,6 @@ and can be changed before creating a Diagram.
 			this.type = type;
 		}
 		this.needsSpace = true;
-		this.items = items.map(wrapString);
 		this.innerWidth = max(this.items, function(x){return x.width});
 		this.width = 30 + Diagram.ARC_RADIUS + this.innerWidth + Diagram.ARC_RADIUS + 20;
 		this.up = this.items[0].up;
@@ -906,7 +913,7 @@ and can be changed before creating a Diagram.
 			this.attrs['data-type'] = "multiplechoice"
 		}
 	}
-	subclassOf(MultipleChoice, FakeSVG);
+	subclassOf(MultipleChoice, DiagramMultiContainer);
 	MultipleChoice.prototype.format = function(x, y, width) {
 		var gaps = determineGaps(width, this.width);
 		Path(x, y).right(gaps[0]).addTo(this);
@@ -1023,6 +1030,11 @@ and can be changed before creating a Diagram.
 		Path(x+this.width-Diagram.ARC_RADIUS, y+distanceFromY+this.rep.height).arc('se').up(distanceFromY-Diagram.ARC_RADIUS*2+this.rep.height-this.item.height).arc('en').addTo(this);
 
 		return this;
+	}
+	OneOrMore.prototype.walk = function(cb) {
+		cb(this);
+		this.item.walk(cb);
+		this.rep.walk(cb);
 	}
 
 	var ZeroOrMore = funcs.ZeroOrMore = function ZeroOrMore(item, rep, skip) {
