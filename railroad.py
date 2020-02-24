@@ -74,11 +74,25 @@ class DiagramItem(object):
 				write(e(child))
 		write(u'</{0}>'.format(self.name))
 
+	def walk(self, cb):
+		cb(self)
+
 	def __eq__(self, other):
 		return type(self) == type(other) and self.__dict__ == other.__dict__
 
 	def __ne__(self, other):
 		return not (self == other)
+
+
+class DiagramMultiContainer(DiagramItem):
+	def __init__(self, name, items, attrs=None, text=None):
+		DiagramItem.__init__(self, name, attrs, text)
+		self.items = [wrapString(item) for item in items]
+
+	def walk(self, cb):
+		cb(self)
+		for item in self.items:
+			item.walk(cb)
 
 
 class Path(DiagramItem):
@@ -230,12 +244,11 @@ class Style(DiagramItem):
 		write(u'<style>{cdata}</style>'.format(cdata=cdata))
 
 
-class Diagram(DiagramItem):
+class Diagram(DiagramMultiContainer):
 	def __init__(self, *items, **kwargs):
 		# Accepts a type=[simple|complex] kwarg
-		DiagramItem.__init__(self, 'svg', {'class': DIAGRAM_CLASS})
+		DiagramMultiContainer.__init__(self, 'svg', items, {'class': DIAGRAM_CLASS})
 		self.type = kwargs.get("type", "simple")
-		self.items = [wrapString(item) for item in items]
 		if items and not isinstance(items[0], Start):
 			self.items.insert(0, Start(self.type))
 		if items and not isinstance(items[-1], End):
@@ -329,10 +342,9 @@ class Diagram(DiagramItem):
 		}
 
 
-class Sequence(DiagramItem):
+class Sequence(DiagramMultiContainer):
 	def __init__(self, *items):
-		DiagramItem.__init__(self, 'g')
-		self.items = [wrapString(item) for item in items]
+		DiagramMultiContainer.__init__(self, 'g', items)
 		self.needsSpace = True
 		self.up = 0
 		self.down = 0
@@ -371,10 +383,9 @@ class Sequence(DiagramItem):
 		return self
 
 
-class Stack(DiagramItem):
+class Stack(DiagramMultiContainer):
 	def __init__(self, *items):
-		DiagramItem.__init__(self, 'g')
-		self.items = [wrapString(item) for item in items]
+		DiagramMultiContainer.__init__(self, 'g', items)
 		self.needsSpace = True
 		self.width = max(item.width + (20 if item.needsSpace else 0) for item in self.items)
 		# pretty sure that space calc is totes wrong
@@ -426,7 +437,7 @@ class Stack(DiagramItem):
 		return self
 
 
-class OptionalSequence(DiagramItem):
+class OptionalSequence(DiagramMultiContainer):
 	def __new__(cls, *items):
 		if len(items) <= 1:
 			return Sequence(*items)
@@ -434,8 +445,7 @@ class OptionalSequence(DiagramItem):
 			return super(OptionalSequence, cls).__new__(cls)
 
 	def __init__(self, *items):
-		DiagramItem.__init__(self, 'g')
-		self.items = [wrapString(item) for item in items]
+		DiagramMultiContainer.__init__(self, 'g', items)
 		self.needsSpace = False
 		self.width = 0
 		self.up = 0
@@ -535,7 +545,7 @@ class OptionalSequence(DiagramItem):
 					.addTo(self))
 		return self
 
-class AlternatingSequence(DiagramItem):
+class AlternatingSequence(DiagramMultiContainer):
 	def __new__(cls, *items):
 		if len(items) == 2:
 			return super(AlternatingSequence, cls).__new__(cls)
@@ -543,8 +553,7 @@ class AlternatingSequence(DiagramItem):
 			raise Exception("AlternatingSequence takes exactly two arguments got " + len(items))
 
 	def __init__(self, *items):
-		DiagramItem.__init__(self, 'g')
-		self.items = [wrapString(item) for item in items]
+		DiagramMultiContainer.__init__(self, 'g', items)
 		self.needsSpace = False
 
 		arc = AR
@@ -615,12 +624,11 @@ class AlternatingSequence(DiagramItem):
 		return self
 
 
-class Choice(DiagramItem):
+class Choice(DiagramMultiContainer):
 	def __init__(self, default, *items):
-		DiagramItem.__init__(self, 'g')
+		DiagramMultiContainer.__init__(self, 'g', items)
 		assert default < len(items)
 		self.default = default
-		self.items = [wrapString(item) for item in items]
 		self.width = AR * 4 + max(item.width for item in self.items)
 		self.up = self.items[0].up
 		self.down = self.items[-1].down
@@ -704,15 +712,14 @@ class Choice(DiagramItem):
 		return self
 
 
-class MultipleChoice(DiagramItem):
+class MultipleChoice(DiagramMultiContainer):
 	def __init__(self, default, type, *items):
-		DiagramItem.__init__(self, 'g')
+		DiagramMultiContainer.__init__(self, 'g', items)
 		assert 0 <= default < len(items)
 		assert type in ["any", "all"]
 		self.default = default
 		self.type = type
 		self.needsSpace = True
-		self.items = [wrapString(item) for item in items]
 		self.innerWidth = max(item.width for item in self.items)
 		self.width = 30 + AR + self.innerWidth + AR + 20
 		self.up = self.items[0].up
@@ -826,7 +833,7 @@ class MultipleChoice(DiagramItem):
 		return self
 
 
-class HorizontalChoice(DiagramItem):
+class HorizontalChoice(DiagramMultiContainer):
 	def __new__(cls, *items):
 		if len(items) <= 1:
 			return Sequence(*items)
@@ -834,8 +841,7 @@ class HorizontalChoice(DiagramItem):
 			return super(HorizontalChoice, cls).__new__(cls)
 
 	def __init__(self, *items):
-		DiagramItem.__init__(self, 'g')
-		self.items = [wrapString(item) for item in items]
+		DiagramMultiContainer.__init__(self, 'g', items)
 		allButLast = self.items[:-1]
 		middles = self.items[1:-1]
 		first = self.items[0]
@@ -968,8 +974,8 @@ def Optional(item, skip=False):
 class OneOrMore(DiagramItem):
 	def __init__(self, item, repeat=None):
 		DiagramItem.__init__(self, 'g')
-		repeat = repeat or Skip()
 		self.item = wrapString(item)
+		repeat = repeat or Skip()
 		self.rep = wrapString(repeat)
 		self.width = max(self.item.width, self.rep.width) + AR * 2
 		self.height = self.item.height
@@ -1002,6 +1008,11 @@ class OneOrMore(DiagramItem):
 			.up(distanceFromY - AR * 2 + self.rep.height - self.item.height).arc('en').addTo(self)
 
 		return self
+
+	def walk(self, cb):
+		cb(self)
+		self.item.walk(cb)
+		self.rep.walk(cb)
 
 	def __repr__(self):
 		return 'OneOrMore(%r, repeat=%r)' % (self.item, self.rep)

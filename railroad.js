@@ -79,6 +79,9 @@ export class FakeSVG {
 		str += '</' + this.tagName + '>\n';
 		return str;
 	}
+	walk(cb) {
+		cb(this);
+	}
 }
 
 
@@ -164,10 +167,21 @@ export class Path extends FakeSVG {
 }
 
 
-export class Diagram extends FakeSVG {
-	constructor(...items) {
-		super('svg', {class: Options.DIAGRAM_CLASS});
+export class DiagramMultiContainer extends FakeSVG {
+	constructor(tagName, items, attrs, text) {
+		super(tagName, attrs, text);
 		this.items = items.map(wrapString);
+	}
+	walk(cb) {
+		cb(this);
+		this.items.forEach(x=>x.walk(cb));
+	}
+}
+
+
+export class Diagram extends DiagramMultiContainer {
+	constructor(...items) {
+		super('svg', items, {class: Options.DIAGRAM_CLASS});
 		if(!(this.items[0] instanceof Start)) {
 			this.items.unshift(new Start());
 		}
@@ -248,10 +262,9 @@ export class ComplexDiagram extends FakeSVG {
 funcs.ComplexDiagram = (...args)=>new ComplexDiagram(...args);
 
 
-export class Sequence extends FakeSVG {
+export class Sequence extends DiagramMultiContainer {
 	constructor(...items) {
-		super('g');
-		this.items = items.map(wrapString);
+		super('g', items);
 		var numberOfItems = this.items.length;
 		this.needsSpace = true;
 		this.up = this.down = this.height = this.width = 0;
@@ -296,13 +309,12 @@ export class Sequence extends FakeSVG {
 funcs.Sequence = (...args)=>new Sequence(...args);
 
 
-export class Stack extends FakeSVG {
+export class Stack extends DiagramMultiContainer {
 	constructor(...items) {
-		super('g');
+		super('g', items);
 		if( items.length === 0 ) {
 			throw new RangeError("Stack() must have at least one child.");
 		}
-		this.items = items.map(wrapString);
 		this.width = Math.max.apply(null, this.items.map(function(e) { return e.width + (e.needsSpace?20:0); }));
 		//if(this.items[0].needsSpace) this.width -= 10;
 		//if(this.items[this.items.length-1].needsSpace) this.width -= 10;
@@ -372,9 +384,9 @@ export class Stack extends FakeSVG {
 funcs.Stack = (...args)=>new Stack(...args);
 
 
-export class OptionalSequence extends FakeSVG {
+export class OptionalSequence extends DiagramMultiContainer {
 	constructor(...items) {
-		super('g');
+		super('g', items);
 		if( items.length === 0 ) {
 			throw new RangeError("OptionalSequence() must have at least one child.");
 		}
@@ -382,7 +394,6 @@ export class OptionalSequence extends FakeSVG {
 			return new Sequence(items);
 		}
 		var arc = Options.AR;
-		this.items = items.map(wrapString);
 		this.needsSpace = false;
 		this.width = 0;
 		this.up = 0;
@@ -495,16 +506,15 @@ export class OptionalSequence extends FakeSVG {
 funcs.OptionalSequence = (...args)=>new OptionalSequence(...args);
 
 
-export class AlternatingSequence extends FakeSVG {
+export class AlternatingSequence extends DiagramMultiContainer {
 	constructor(...items) {
-		super('g');
+		super('g', items);
 		if( items.length === 1 ) {
 			return new Sequence(items);
 		}
 		if( items.length !== 2 ) {
 			throw new RangeError("AlternatingSequence() must have one or two children.");
 		}
-		this.items = items.map(wrapString);
 		this.needsSpace = false;
 
 		const arc = Options.AR;
@@ -580,9 +590,9 @@ export class AlternatingSequence extends FakeSVG {
 funcs.AlternatingSequence = (...args)=>new AlternatingSequence(...args);
 
 
-export class Choice extends FakeSVG {
+export class Choice extends DiagramMultiContainer {
 	constructor(normal, ...items) {
-		super('g');
+		super('g', items);
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
 			throw new TypeError("The first argument of Choice() must be an integer.");
 		} else if(normal < 0 || normal >= items.length) {
@@ -592,7 +602,6 @@ export class Choice extends FakeSVG {
 		}
 		var first = 0;
 		var last = items.length - 1;
-		this.items = items.map(wrapString);
 		this.width = Math.max.apply(null, this.items.map(function(el){return el.width})) + Options.AR*4;
 		this.height = this.items[normal].height;
 		this.up = this.items[first].up;
@@ -672,16 +681,15 @@ export class Choice extends FakeSVG {
 funcs.Choice = (...args)=>new Choice(...args);
 
 
-export class HorizontalChoice extends FakeSVG {
+export class HorizontalChoice extends DiagramMultiContainer {
 	constructor(...items) {
-		super('g');
+		super('g', items);
 		if( items.length === 0 ) {
 			throw new RangeError("HorizontalChoice() must have at least one child.");
 		}
 		if( items.length === 1) {
 			return new Sequence(items);
 		}
-		this.items = items.map(wrapString);
 		const allButLast = this.items.slice(0, -1);
 		const middles = this.items.slice(1, -1);
 		const first = this.items[0];
@@ -824,9 +832,9 @@ export class HorizontalChoice extends FakeSVG {
 funcs.HorizontalChoice = (...args)=>new HorizontalChoice(...args);
 
 
-export class MultipleChoice extends FakeSVG {
+export class MultipleChoice extends DiagramMultiContainer {
 	constructor(normal, type, ...items) {
-		super('g');
+		super('g', items);
 		if( typeof normal !== "number" || normal !== Math.floor(normal) ) {
 			throw new TypeError("The first argument of MultipleChoice() must be an integer.");
 		} else if(normal < 0 || normal >= items.length) {
@@ -840,7 +848,6 @@ export class MultipleChoice extends FakeSVG {
 			this.type = type;
 		}
 		this.needsSpace = true;
-		this.items = items.map(wrapString);
 		this.innerWidth = max(this.items, function(x){return x.width});
 		this.width = 30 + Options.AR + this.innerWidth + Options.AR + 20;
 		this.up = this.items[0].up;
@@ -986,6 +993,11 @@ export class OneOrMore extends FakeSVG {
 		new Path(x+this.width-Options.AR, y+distanceFromY+this.rep.height).arc('se').up(distanceFromY-Options.AR*2+this.rep.height-this.item.height).arc('en').addTo(this);
 
 		return this;
+	}
+	walk(cb) {
+		cb(this);
+		this.item.walk(cb);
+		this.rep.walk(cb);
 	}
 }
 funcs.OneOrMore = (...args)=>new OneOrMore(...args);
