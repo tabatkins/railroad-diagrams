@@ -74,6 +74,9 @@ class DiagramItem(object):
 				write(e(child))
 		write(u'</{0}>'.format(self.name))
 
+	def walk(self, cb):
+		cb(self)
+
 	def __eq__(self, other):
 		return type(self) == type(other) and self.__dict__ == other.__dict__
 
@@ -86,11 +89,20 @@ class DiagramSingleContainer(DiagramItem):
 		DiagramItem.__init__(self, name, attrs, text)
 		self.item = wrapString(item)
 
+	def walk(self, cb):
+		cb(self)
+		self.item.walk(cb)
+
 
 class DiagramMultiContainer(DiagramItem):
 	def __init__(self, name, items, attrs=None, text=None):
 		DiagramItem.__init__(self, name, attrs, text)
 		self.items = [wrapString(item) for item in items]
+
+	def walk(self, cb):
+		cb(self)
+		for item in self.items:
+			item.walk(cb)
 
 
 class Path(DiagramItem):
@@ -1006,6 +1018,11 @@ class OneOrMore(DiagramSingleContainer):
 
 		return self
 
+	def walk(self, cb):
+		cb(self)
+		self.item.walk(cb)
+		self.rep.walk(cb)
+
 	def __repr__(self):
 		return 'OneOrMore(%r, repeat=%r)' % (self.item, self.rep)
 
@@ -1179,15 +1196,6 @@ class Skip(DiagramItem):
 
 	def __repr__(self):
 		return 'Skip()'
-
-
-def walk_railroad(obj, callback_fn):
-	callback_fn(obj)
-	if isinstance(obj, DiagramSingleContainer):
-		walk_railroad(obj.item, callback_fn)
-	elif isinstance(obj, DiagramMultiContainer):
-		for item in obj.items:
-			walk_railroad(item, callback_fn)
 
 
 if __name__ == '__main__':
