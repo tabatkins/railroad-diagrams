@@ -17,8 +17,28 @@ There are several railroad-diagram generators out there, but none of them had th
 Details
 -------
 
-To use the library, just include the js and css files, and then call the Diagram() function.
-Its arguments are the components of the diagram (Diagram is a special form of Sequence).
+To use the library,
+include `railroad.css` in your page,
+and import the `railroad.js` module in your script,
+then call the Diagram() function.
+Its arguments are the components of the diagram
+(Diagram is a special form of Sequence).
+
+The constructors for each node are named exports in the module;
+the default export is an object of same-named functions that just call the constructors,
+so you can construct diagrams without having to spam `new` all over the place:
+
+```js
+// Use the constructors
+import {Diagram, Choice} from "./railroad.js";
+const d = new Diagram("foo", new Choice(0, "bar", "baz"));
+
+// Or use the functions that call the constructors for you
+import rr from "./railroad.js";
+const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
+```
+
+(For Python, see [Python Port](#python-port).)
 
 Alternately, you can call ComplexDiagram();
 it's identical to Diagram(),
@@ -36,39 +56,42 @@ The leaves:
 * Start(type, label) and End(type) - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a Start() explicitly (as the first child of the Diagram!). The "type" attribute takes either "simple" (the default) or "complex", a la Diagram() and ComplexDiagram(). All arguments are optional.
 
 The containers:
-* Sequence(children) - like simple concatenation in a regex.
+* Sequence(...children) - like simple concatenation in a regex.
 
     ![Sequence('1', '2', '3')](images/rr-sequence.png "Sequence('1', '2', '3')")
+
 * Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
 
     ![Stack('1', '2', '3')](images/rr-stack.png "Stack('1', '2', '3')")
-* OptionalSequence(children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
+
+* OptionalSequence(...children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
 
     ![OptionalSequence('1', '2', '3')](images/rr-optseq.png "OptionalSequence('1', '2', '3')")
-* Choice(index, children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
+
+* Choice(index, ...children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 
     ![Choice(1, '1', '2', '3')](images/rr-choice.png "Choice(1, '1', '2', '3')")
-* MultipleChoice(index, type, children) - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either "any" (1+ branches can be taken) or "all" (all branches must be taken).
+
+* MultipleChoice(index, type, ...children) - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either "any" (1+ branches can be taken) or "all" (all branches must be taken).
 
     ![MultipleChoice(1, 'all', '1', '2', '3')](images/rr-multchoice.png "MultipleChoice(1, 'all', '1', '2', '3')")
-* HorizontalChoice(children) - Identical to Choice, but the items are stacked horizontally rather than vertically. There's no "straight-line" choice, so it just takes a list of children. Best used when a simple Choice would be too tall; instead, you can break up the items into a HorizontalChoice of Choices of an appropriate height.
+
+* HorizontalChoice(...children) - Identical to Choice, but the items are stacked horizontally rather than vertically. There's no "straight-line" choice, so it just takes a list of children. Best used when a simple Choice would be too tall; instead, you can break up the items into a HorizontalChoice of Choices of an appropriate height.
 
 	![HorizontalChoice(Choice(0,'1','2','3','4'), '4', Choice(3, '1', '2', '3', '4'))](images/rr-horizontalchoice.png "HorizontalChoice(Choice(0,'1','2','3','4'), '4', Choice(3, '1', '2', '3', '4'))")
+
 * Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
 
 
     ![Optional('foo'), Optional('bar', 'skip'))](images/rr-optional.png "Optional('foo'), Optional('bar', 'skip'))")
-* OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions.
+
+* OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions (usually a `Comment()`)
 
     ![OneOrMore('foo', Comment('bar'))](images/rr-oneormore.png "OneOrMore('foo', Comment('bar'))")
-* ZeroOrMore(child, repeat, skip) - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat))`.  The optional `skip` parameter is identical to Optional().
+
+* ZeroOrMore(child, repeat, skip) - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat), skip)`.  Both `repeat` (same as in `OneOrMore()`) and `skip` (same as in `Optional()`) are optional.
 
     ![ZeroOrMore('foo', Comment('bar'))](images/rr-zeroormore.png "ZeroOrMore('foo', Comment('bar'))")
-
-For convenience, each component can be called with or without `new`.
-If called without `new`,
-the container components become n-ary;
-that is, you can say either `new Sequence([A, B])` or just `Sequence(A,B)`.
 
 After constructing a Diagram, call `.format(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).
 
@@ -111,6 +134,8 @@ To **install** the python port, clone this project and `pip install` it.
 ~/> cd railroad-diagrams/
 ~/railroad-diagrams/> python3 -m pip install .
 ```
+
+...or just include the `railroad.py` file directly in your project.
 
 License
 -------
