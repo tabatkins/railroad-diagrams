@@ -1,7 +1,7 @@
 Railroad-diagram Generator
 ==========================
 
-![](images/rr-title.png "Diagram(Stack('Generate', 'some'), OneOrMore(NonTerminal('railroad diagrams'), Comment('and more')))")
+<a href="images/rr-title.svg"><img src="images/rr-title.svg" alt="Diagram(Stack('Generate', 'some'), OneOrMore(NonTerminal('railroad diagrams'), Comment('and more')))" title="Diagram(Stack('Generate', 'some'), OneOrMore(NonTerminal('railroad diagrams'), Comment('and more')))" style="width: 100%; max-width: 100%;"></a>
 
 This is a small library for generating railroad diagrams
 (like what [JSON.org](http://json.org) uses)
