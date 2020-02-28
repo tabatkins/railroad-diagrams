@@ -29,6 +29,50 @@ export const Options = {
 	COMMENT_CHAR_WIDTH: 7, // comments are in smaller text by default
 };
 
+export const defaultCSS = `
+	svg {
+		background-color: hsl(30,20%,95%);
+	}
+	path {
+		stroke-width: 3;
+		stroke: black;
+		fill: rgba(0,0,0,0);
+	}
+	text {
+		font: bold 14px monospace;
+		text-anchor: middle;
+		white-space: pre;
+	}
+	text.diagram-text {
+		font-size: 12px;
+	}
+	text.diagram-arrow {
+		font-size: 16px;
+	}
+	text.label {
+		text-anchor: start;
+	}
+	text.comment {
+		font: italic 12px monospace;
+	}
+	g.non-terminal text {
+		/*font-style: italic;*/
+	}
+	rect {
+		stroke-width: 3;
+		stroke: black;
+		fill: hsl(120,100%,90%);
+	}
+	path.diagram-text {
+		stroke-width: 3;
+		stroke: black;
+		fill: white;
+		cursor: help;
+	}
+	g.diagram-text:hover path.diagram-text {
+		fill: #eee;
+	}`;
+
 
 export class FakeSVG {
 	constructor(tagName, attrs, text) {
@@ -236,15 +280,23 @@ export class Diagram extends DiagramMultiContainer {
 		return super.addTo.call(this, parent);
 	}
 	toSVG() {
-		if (!this.formatted) {
+		if(!this.formatted) {
 			this.format();
 		}
 		return super.toSVG.call(this);
 	}
 	toString() {
-		if (!this.formatted) {
+		if(!this.formatted) {
 			this.format();
 		}
+		return super.toString.call(this);
+	}
+	toStandalone(style) {
+		if(!this.formatted) {
+			this.format();
+		}
+		const s = new FakeSVG('style', {}, style || defaultCSS).addTo(this);
+		this.attrs.xmlns = "http://www.w3.org/2000/svg";
 		return super.toString.call(this);
 	}
 }
