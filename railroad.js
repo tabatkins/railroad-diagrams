@@ -601,7 +601,6 @@ export class AlternatingSequence extends DiagramMultiContainer {
 		const arc = Options.AR;
 		const gaps = determineGaps(width, this.width);
 		new Path(x,y).right(gaps[0]).addTo(this);
-		console.log(gaps);
 		x += gaps[0];
 		new Path(x+this.width, y).right(gaps[1]).addTo(this);
 		// bounding box
