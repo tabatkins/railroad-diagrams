@@ -89,6 +89,10 @@ The containers:
 
     ![OneOrMore('foo', Comment('bar'))](images/rr-oneormore.svg "OneOrMore('foo', Comment('bar'))")
 
+* AlternatingSequence(option1, option2) - similar to a OneOrMore, where you must alternate between the two choices, but allows you to start and end with either element. (OneOrMore requires you to start and end with the "child" node.)
+
+    ![AlternatingSequence('foo', 'bar')](images/rr-alternatingsequence.svg "AlternatingSequence('foo', 'bar')")
+
 * ZeroOrMore(child, repeat, skip) - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat), skip)`.  Both `repeat` (same as in `OneOrMore()`) and `skip` (same as in `Optional()`) are optional.
 
     ![ZeroOrMore('foo', Comment('bar')), ZeroOrMore('foo', Comment('bar'), 'skip')](images/rr-zeroormore.svg "ZeroOrMore('foo', Comment('bar')), ZeroOrMore('foo', Comment('bar'), 'skip')")
