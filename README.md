@@ -85,7 +85,7 @@ The containers:
 
     ![Optional('foo'), Optional('bar', 'skip')](images/rr-optional.svg "Optional('foo'), Optional('bar', 'skip')")
 
-* OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions (usually a `Comment()`)
+* OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions (usually a `Comment()`, but sometimes things like `","`, etc.)
 
     ![OneOrMore('foo', Comment('bar'))](images/rr-oneormore.svg "OneOrMore('foo', Comment('bar'))")
 
