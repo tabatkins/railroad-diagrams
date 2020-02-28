@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="198.5" height="122" viewBox="0 0 198.5 122">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 51v20m10 -20v20m-10 -10h20"></path>
+</g>
+<path d="M40 61h10"></path>
+<g>
+<path d="M50 61h0"></path>
+<path d="M148.5 61h0"></path>
+<path d="M80 61v-20a10 10 0 0 1 10 -10"></path>
+<g class="terminal">
+<path d="M90 31h0"></path>
+<path d="M118.5 31h0"></path>
+<rect x="90" y="20" width="28.5" height="22" rx="10" ry="10"></rect>
+<text x="104.25" y="35">1</text>
+</g>
+<path d="M118.5 31a10 10 0 0 1 10 10v10"></path>
+<path d="M80 61h10"></path>
+<g class="terminal">
+<path d="M90 61h0"></path>
+<path d="M118.5 61h0"></path>
+<rect x="90" y="50" width="28.5" height="22" rx="10" ry="10"></rect>
+<text x="104.25" y="65">2</text>
+</g>
+<path d="M118.5 61h10"></path>
+<path d="M80 61v20a10 10 0 0 0 10 10"></path>
+<g class="terminal">
+<path d="M90 91h0"></path>
+<path d="M118.5 91h0"></path>
+<rect x="90" y="80" width="28.5" height="22" rx="10" ry="10"></rect>
+<text x="104.25" y="95">3</text>
+</g>
+<path d="M118.5 91a10 10 0 0 0 10 -10v-20"></path>
+<g class="diagram-text">
+<title>take all branches, once each, in any order</title>
+<path d="M 80 51 h -26 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 26 z" class="diagram-text"></path>
+<text x="65" y="65" class="diagram-text">all</text>
+<path d="M 128.5 51 h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z" class="diagram-text"></path>
+<path d="M 135.5 59 a 4 4 0 1 0 6 -1 m 2.75 -1 h -4 v 4 m 0 -3 h 2" style="stroke-width: 1.75"></path>
+</g>
+</g>
+<path d="M148.5 61h10"></path>
+<path d="M 158.5 61 h 20 m -10 -10 v 20 m 10 -20 v 20"></path>
+</g>
+<style>
+svg {
+    background-color: hsl(30,20%,95%);
+}
+path {
+    stroke-width: 3;
+    stroke: black;
+    fill: rgba(0,0,0,0);
+}
+text {
+    font: bold 14px monospace;
+    text-anchor: middle;
+    white-space: pre;
+}
+text.diagram-text {
+    font-size: 12px;
+}
+text.diagram-arrow {
+    font-size: 16px;
+}
+text.label {
+    text-anchor: start;
+}
+text.comment {
+    font: italic 12px monospace;
+}
+g.non-terminal text {
+    /*font-style: italic;*/
+}
+rect {
+    stroke-width: 3;
+    stroke: black;
+    fill: hsl(120,100%,90%);
+}
+path.diagram-text {
+    stroke-width: 3;
+    stroke: black;
+    fill: white;
+    cursor: help;
+}
+g.diagram-text:hover path.diagram-text {
+    fill: #eee;
+}
+</style>
+</svg>
