@@ -295,9 +295,12 @@ export class Diagram extends DiagramMultiContainer {
 		if(!this.formatted) {
 			this.format();
 		}
-		const s = new FakeSVG('style', {}, style || defaultCSS).addTo(this);
+		const s = new FakeSVG('style', {}, style || defaultCSS);
+		this.children.push(s);
 		this.attrs.xmlns = "http://www.w3.org/2000/svg";
-		return super.toString.call(this);
+		const result = super.toString.call(this);
+		this.children.pop();
+		delete this.attrs.xmlns;
 	}
 }
 funcs.Diagram = (...args)=>new Diagram(...args);
