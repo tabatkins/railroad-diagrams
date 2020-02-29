@@ -301,6 +301,7 @@ export class Diagram extends DiagramMultiContainer {
 		const result = super.toString.call(this);
 		this.children.pop();
 		delete this.attrs.xmlns;
+		return result;
 	}
 }
 funcs.Diagram = (...args)=>new Diagram(...args);
