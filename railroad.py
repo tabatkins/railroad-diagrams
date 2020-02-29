@@ -247,7 +247,12 @@ class Style(DiagramItem):
 class Diagram(DiagramMultiContainer):
 	def __init__(self, *items, **kwargs):
 		# Accepts a type=[simple|complex] kwarg
-		DiagramMultiContainer.__init__(self, 'svg', items, {'class': DIAGRAM_CLASS})
+		DiagramMultiContainer.__init__(
+			self,
+			'svg',
+			items,
+			{'class': DIAGRAM_CLASS, 'xmlns': "http://www.w3.org/2000/svg"}
+		)
 		self.type = kwargs.get("type", "simple")
 		if items and not isinstance(items[0], Start):
 			self.items.insert(0, Start(self.type))
