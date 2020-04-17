@@ -221,6 +221,11 @@ DEFAULT_STYLE = '''\
 		stroke:black;
 		fill:hsl(120,100%,90%);
 	}
+	svg.railroad-diagram rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
 '''
 
 
@@ -1031,10 +1036,10 @@ def ZeroOrMore(item, repeat=None, skip=False):
 
 
 class Group(DiagramItem):
-	__init__(self, item, label):
+	def __init__(self, item, label):
 		DiagramItem.__init__(self, 'g')
 		self.item = wrapString(item)
-		if isinstance(label, FakeSVG):
+		if isinstance(label, DiagramItem):
 			self.label = label
 		elif label:
 			self.label = Comment(label)
@@ -1054,7 +1059,7 @@ class Group(DiagramItem):
 		self.needsSpace = True
 		addDebug(self)
 
-	format(self, x, y, width)
+	def format(self, x, y, width):
 		leftGap, rightGap = determineGaps(width, self.width)
 		Path(x,y).h(leftGap).addTo(self)
 		Path(x+leftGap+self.width,y+self.height).h(rightGap).addTo(self)
@@ -1079,7 +1084,7 @@ class Group(DiagramItem):
 
 		return self
 
-	walk(self, cb):
+	def walk(self, cb):
 		cb(self)
 		self.item.walk(cb)
 		self.label.walk(cb)
@@ -1209,8 +1214,8 @@ class Comment(DiagramItem):
 		self.href = href
 		self.title = title
 		self.width = len(text) * COMMENT_CHAR_WIDTH + 10
-		self.up = 11
-		self.down = 11
+		self.up = 8
+		self.down = 8
 		self.needsSpace = True
 		addDebug(self)
 
@@ -1259,5 +1264,5 @@ if __name__ == '__main__':
 
 	import sys
 	sys.stdout.write("<!doctype html><title>Test</title><body>")
-	exec(open('css-example.py-js').read())
+	exec(open('test.py').read())
 	sys.stdout.write('</body></html>')

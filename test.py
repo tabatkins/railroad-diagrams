@@ -1,5 +1,3 @@
-"This is a polyglot Python/JavaScript file.";
-
 add('comment', Diagram(
 	'/*',
 	ZeroOrMore(
@@ -205,3 +203,14 @@ add('SQL', Diagram(
 			)),
 			Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
 		))))
+
+add('Group example',
+	Diagram(
+		"foo",
+		ZeroOrMore(
+			Group(
+				Stack('foo', 'bar'),
+				'label')
+			),
+		"bar"),
+	)
