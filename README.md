@@ -14,8 +14,10 @@ There are several railroad-diagram generators out there, but none of them had th
 
 [Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
-Details
--------
+(For Python, see [the Python README](https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/README-py.md).)
+
+Diagrams
+--------
 
 To use the library,
 include `railroad.css` in your page,
@@ -38,13 +40,24 @@ import rr from "./railroad.js";
 const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
 ```
 
-(For Python, see [Python Port](#python-port).)
-
 Alternately, you can call ComplexDiagram();
 it's identical to Diagram(),
 but has slightly different start/end shapes,
 same as what JSON.org does to distinguish between "leaf" types like number (ordinary Diagram())
 and "container" types like Array (ComplexDiagram()).
+
+The Diagram class also has a few methods:
+
+* `.walk(cb)` calls the cb function on the diagram, then on its child nodes, recursing down the tree. This is a "pre-order depth-first" traversal, if you're into that sort of thing - the first child's children are visited before the diagram's second child. (In other words, the same order you encounter their constructors in the code that created the diagram.) Use this if you want to, say, sanitize things in the diagram.
+* `.format(...paddings)` "formats" the Diagram to make it ready for output. Pass it 0-4 paddings, interpreted just like the CSS `padding` property, to give it some "breathing room" around its box; these default to `20` if not specified. This is automatically called by the output functions if you don't do so yourself, so if the default paddings suffice, there's no need to worry about this.
+* `.toString()` outputs the SVG of the diagram as a string, ready to be put into your HTML. This is *not* a standalone SVG file; it's intended to be embedded into HTML.
+* `.toStandalone()` outputs the SVG of the diagram as a string, but this *is* a standalone SVG file.
+* `.toSVG()` outputs the diagram as an actual `<svg>` DOM element, ready for appending into a document.
+* `.addTo(parent?)` directly appends the diagram, as an `<svg>` element, to the specified parent element. If you omit the parent element, it instead appends to the script element it's being called from, so you can easily insert a diagram into your document by just dropping a tiny inline `<script>` that just calls `new Diagram(...).addTo()` where you want the diagram to show up.
+
+
+Components
+----------
 
 Components are either leaves or containers.
 
@@ -60,7 +73,7 @@ The containers:
 
     ![Sequence('1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-sequence.svg?sanitize=true "Sequence('1', '2', '3')")
 
-* Stack(children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
+* Stack(...children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
 
     ![Stack('1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-stack.svg?sanitize=true "Stack('1', '2', '3')")
 
@@ -108,42 +121,27 @@ The result can either be `.toString()`'d for the markup, or `.toSVG()`'d for an 
 Options
 -------
 
-There are a few options you can tweak, with the defaults at the bottom of the file, and the live values hanging off of the `Diagram` object.  Just tweak either until the diagram looks like what you want.
+There are a few options you can tweak,
+in an `Options` object exported from the module.
+Just tweak either until the diagram looks like what you want.
 You can also change the CSS file - feel free to tweak to your heart's content.
 Note, though, that if you change the text sizes in the CSS,
-you'll have to go adjust the metrics for the leaf nodes as well.
+you'll have to go adjust the options specifying the text metrics as well.
 
-* VERTICAL_SEPARATION - sets the minimum amount of vertical separation between two items.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width.
-* ARC_RADIUS - the radius of the arcs used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for.
-* DIAGRAM_CLASS - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet.
-* STROKE_ODD_PIXEL_LENGTH - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `false`.
-* INTERNAL_ALIGNMENT - when some branches of a container are narrower than others, this determines how they're aligned in the extra space.  Defaults to "center", but can be set to "left" or "right".
+* `Options.VS` - sets the minimum amount of vertical separation between two items, in CSS px.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width. Defaults to `8`.
+* `Options.AR` - the radius of the arcs, in CSS px, used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for. Defaults to `10`.
+* `Options.DIAGRAM_CLASS` - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet. Defaults to `"railroad-diagram"`.
+* `Options.STROKE_ODD_PIXEL_LENGTH` - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `False`.
+* `Options.INTERNAL_ALIGNMENT` - when some branches of a container are narrower than others, this determines how they're aligned in the extra space.  Defaults to `"center"`, but can be set to `"left"` or `"right"`.
+* `Options.CHAR_WIDTH` - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
+* `Options.COMMENT_CHAR_WIDTH` - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
+* `Options.DEBUG` - if `true`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `false`.
 
 Caveats
 -------
 
 SVG can't actually respond to the sizes of content; in particular, there's no way to make SVG adjust sizing/positioning based on the length of some text.  Instead, I guess at some font metrics, which mostly work as long as you're using a fairly standard monospace font.  This works pretty well, but long text inside of a construct might eventually overflow the construct.
 
-Python Port
------------
-
-In addition to the canonical JS version, the library now exists as a Python library as well.
-
-Using it is basically identical.  The config variables are globals in the file, and so may be adjusted either manually or via tweaking from inside your program.
-
-The main difference from the JS port is how you extract the string from the Diagram.  You'll find a `writeSvg(writerFunc)` method on `Diagram`, which takes a callback of one argument and passes it the string form of the diagram.  For example, it can be used like `Diagram(...).writeSvg(sys.stdout.write)` to write to stdout.  **Note**: the callback will be called multiple times as it builds up the string, not just once with the whole thing.  If you need it all at once, consider something like a `StringIO` as an easy way to collect it into a single string.
-
-As well, if you want a "complex" diagram, pass `type="complex"` to the `Diagram` constructor, rather than using a separate `ComplexDiagram()` constructor like in the JS port.
-
-To **install** the python port, clone this project and `pip install` it.
-
-```shell
-~/> git clone https://github.com/tabatkins/railroad-diagrams.git
-~/> cd railroad-diagrams/
-~/railroad-diagrams/> python3 -m pip install .
-```
-
-...or just include the `railroad.py` file directly in your project.
 
 License
 -------
