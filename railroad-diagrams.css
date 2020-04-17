@@ -31,6 +31,11 @@ svg.railroad-diagram rect {
     stroke: black;
     fill: hsl(120,100%,90%);
 }
+svg.railroad-diagram rect.group-box {
+    stroke: gray;
+    stroke-dasharray: 10 5;
+    fill: none;
+}
 svg.railroad-diagram path.diagram-text {
     stroke-width: 3;
     stroke: black;
