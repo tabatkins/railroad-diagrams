@@ -1104,7 +1104,7 @@ export class Group extends FakeSVG {
 		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
 		x += gaps[0];
 
-		new SVG('rect', {
+		new FakeSVG('rect', {
 			x,
 			y:y+this.boxUp,
 			width:this.width,
@@ -1121,6 +1121,8 @@ export class Group extends FakeSVG {
 				y+this.boxUp+Options.VS+this.label.down+this.label.height,
 				this.width).addTo(this);
 		}
+
+		return this;
 	}
 	walk(cb) {
 		cb(this);
