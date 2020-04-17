@@ -1028,6 +1028,63 @@ def ZeroOrMore(item, repeat=None, skip=False):
 	return result
 
 
+
+
+class Group(DiagramItem):
+	__init__(self, item, label):
+		DiagramItem.__init__(self, 'g')
+		self.item = wrapString(item)
+		if isinstance(label, FakeSVG):
+			self.label = label
+		elif label:
+			self.label = Comment(label)
+		else:
+			self.label = None
+
+		self.width = max(
+			self.item.width + (20 if self.item.needsSpace else 0),
+			self.label.width if self.label else 0,
+			AR*2)
+		self.height = self.item.height
+		self.boxUp = max(self.item.up + VS, AR)
+		self.up = self.boxUp
+		if self.label:
+			self.up += self.label.up + self.label.height + self.label.down
+		self.down = max(self.item.down + VS, AR)
+		self.needsSpace = True
+		addDebug(self)
+
+	format(self, x, y, width)
+		leftGap, rightGap = determineGaps(width, self.width)
+		Path(x,y).h(leftGap).addTo(self)
+		Path(x+leftGap+self.width,y+self.height).h(rightGap).addTo(self)
+		x += leftGap
+
+		DiagramItem('rect', {
+			"x":x,
+			"y":y-self.boxUp,
+			"width":self.width,
+			"height":self.boxUp + self.height + self.down,
+			"rx": AR,
+			"ry": AR,
+			'class':'group-box',
+		}).addTo(self)
+
+		self.item.format(x,y,self.width).addTo(self)
+		if self.label:
+			self.label.format(
+				x,
+				y-(self.boxUp+self.label.down+self.label.height),
+				self.label.width).addTo(self)
+
+		return self
+
+	walk(self, cb):
+		cb(self)
+		self.item.walk(cb)
+		self.label.walk(cb)
+
+
 class Start(DiagramItem):
 	def __init__(self, type="simple", label=None):
 		DiagramItem.__init__(self, 'g')
