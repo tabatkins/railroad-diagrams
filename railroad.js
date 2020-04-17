@@ -1106,7 +1106,7 @@ export class Group extends FakeSVG {
 
 		new FakeSVG('rect', {
 			x,
-			y:y+this.boxUp,
+			y:y-this.boxUp,
 			width:this.width,
 			height:this.boxUp + this.height + this.down,
 			rx: Options.AR,
