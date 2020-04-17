@@ -1118,8 +1118,8 @@ export class Group extends FakeSVG {
 		if(this.label) {
 			this.label.format(
 				x,
-				y-(this.boxUp+Options.VS+this.label.down+this.label.height),
-				this.width).addTo(this);
+				y-(this.boxUp+this.label.down+this.label.height),
+				this.label.width).addTo(this);
 		}
 
 		return this;
