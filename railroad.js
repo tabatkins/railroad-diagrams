@@ -1089,7 +1089,7 @@ export class Group extends FakeSVG {
 		this.height = this.item.height;
 		this.boxUp = this.up = Math.max(this.item.up + Options.VS, Options.AR);
 		if(this.label) {
-			this.up += Options.VS + this.label.up + this.label.height + this.label.down;
+			this.up += this.label.up + this.label.height + this.label.down;
 		}
 		this.down = Math.max(this.item.down + Options.VS, Options.AR);
 		this.needsSpace = true;
