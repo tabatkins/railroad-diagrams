@@ -1281,8 +1281,8 @@ export class Comment extends FakeSVG {
 		this.title = title;
 		this.width = this.text.length * Options.COMMENT_CHAR_WIDTH + 10;
 		this.height = 0;
-		this.up = 11;
-		this.down = 11;
+		this.up = 8;
+		this.down = 8;
 		this.needsSpace = true;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
