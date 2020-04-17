@@ -1079,7 +1079,7 @@ export class Group extends FakeSVG {
 			label instanceof FakeSVG
 			  ? label
 			: label
-			  ? new Comment(lable)
+			  ? new Comment(label)
 			  : undefined;
 
 		this.width = Math.max(
