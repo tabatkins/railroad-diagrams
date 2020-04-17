@@ -20,6 +20,7 @@
 <script type=module>
 import rr, * as rrClass from "./railroad.js";
 Object.assign(window, rr);
+window.rrOptions = rrClass.Options;
 console.log(rr);
 
 const find = document.querySelector.bind(document);
