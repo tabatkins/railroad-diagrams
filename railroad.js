@@ -63,6 +63,11 @@ export const defaultCSS = `
 		stroke: black;
 		fill: hsl(120,100%,90%);
 	}
+	rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
 	path.diagram-text {
 		stroke-width: 3;
 		stroke: black;
@@ -1064,6 +1069,66 @@ export class ZeroOrMore extends FakeSVG {
 	}
 }
 funcs.ZeroOrMore = (...args)=>new ZeroOrMore(...args);
+
+
+export class Group extends FakeSVG {
+	constructor(item, label) {
+		super('g');
+		this.item = wrapString(item);
+		this.label =
+			label instanceof FakeSVG
+			  ? label
+			: label
+			  ? new Comment(lable)
+			  : undefined;
+
+		this.width = Math.max(
+			this.item.width + this.item.needsSpace?20:0,
+			this.label ? this.label.width : 0,
+			Options.AR*2);
+		this.height = this.item.height;
+		this.boxUp = this.up = Math.max(this.item.up + Options.VS, Options.AR);
+		if(this.label) {
+			this.up += Options.VS + this.label.up + this.label.height + this.label.down;
+		}
+		this.down = Math.max(this.item.down + Options.VS, Options.AR);
+		this.needsSpace = true;
+		if(Options.DEBUG) {
+			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
+			this.attrs['data-type'] = "group";
+		}
+	}
+	format(x, y, width) {
+		var gaps = determineGaps(width, this.width);
+		new Path(x,y).h(gaps[0]).addTo(this);
+		new Path(x+gaps[0]+this.width,y+this.height).h(gaps[1]).addTo(this);
+		x += gaps[0];
+
+		new SVG('rect', {
+			x,
+			y:y+this.boxUp,
+			width:this.width,
+			height:this.boxUp + this.height + this.down,
+			rx: Options.AR,
+			ry: Options.AR,
+			'class':'group-box',
+		}).addTo(this);
+
+		this.item.format(x,y,this.width).addTo(this);
+		if(this.label) {
+			this.label.format(
+				x,
+				y+this.boxUp+Options.VS+this.label.down+this.label.height,
+				this.width).addTo(this);
+		}
+	}
+	walk(cb) {
+		cb(this);
+		this.item.walk(cb);
+		this.label.walk(cb);
+	}
+}
+funcs.Group = (...args)=>new Group(...args);
 
 
 export class Start extends FakeSVG {
