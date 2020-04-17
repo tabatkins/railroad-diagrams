@@ -1,9 +1,19 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+with open("semver.txt", "r") as fh:
+    semver = fh.read().strip()
+
 setup(
     name='railroad-diagrams',
     py_modules=['railroad'],
-    version='0.0.1',
-    description='Generate SVG railroad syntax diagrams.',
+    version=semver,
+    description='Generate SVG railroad syntax diagrams, like on JSON.org.',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    packages=find_packages(),
+    include_package_data=True,
     author='Tab Atkins',
     author_email='jackalmage@gmail.com',
     url='https://github.com/tabatkins/railroad-diagrams',
