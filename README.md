@@ -14,7 +14,7 @@ There are several railroad-diagram generators out there, but none of them had th
 
 [Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
-(For Python, see [the Python README](https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/README-py.md).)
+(For Python, see [the Python README](https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/README-py.md), or just `pip install railroad-diagrams`.)
 
 Diagrams
 --------
