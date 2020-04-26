@@ -26,7 +26,7 @@
   },
   "main": "lib/index.js",
   "browser": "lib/index.umd.js",
-  "module": "railroad.js",
+  "module": "lib/index.mjs",
   "keywords": [
     "railroad",
     "syntax",

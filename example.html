@@ -14,7 +14,13 @@ script {
 }
 </style>
 <link rel='stylesheet' href='railroad-diagrams.css'>
-<script src='railroad-diagrams.js'></script>
+<script src="lib/index.umd.js"></script>
+<script>
+	const rr = railroadDiagrams.default;
+	for (const method in railroadDiagrams.default) {
+		window[method] = rr[method];
+	}
+</script>
 <body>
 
 <!--

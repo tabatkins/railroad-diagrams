@@ -20,8 +20,8 @@ Diagrams
 --------
 
 To use the library,
-include `railroad.css` in your page,
-and import the `railroad.js` module in your script,
+include `railroad-diagrams.css` in your page,
+and import the `./railroad-diagrams/lib/index.mjs` module in your script,
 then call the Diagram() function.
 Its arguments are the components of the diagram
 (Diagram is a special form of Sequence).
@@ -32,20 +32,21 @@ so you can construct diagrams without having to spam `new` all over the place:
 
 ```js
 // Use the constructors
-import {Diagram, Choice} from "./railroad.js";
+import {Diagram, Choice} from "./railroad-diagrams/lib/index.mjs";
 const d = new Diagram("foo", new Choice(0, "bar", "baz"));
 
 // Or use the functions that call the constructors for you
-import rr from "./railroad.js";
+import rr from "./railroad-diagrams/lib/index.mjs";
 const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
 
 // Or use the JSON serialization of the diagram
-import {Diagram} from "./railroad.js";
+import {Diagram} from "./railroad-diagrams/lib/index.mjs";
 const d = Diagram.fromJSON([
   { type: 'Terminal', text: 'foo' }.
   { type: 'Choice', normalIndex: 0, options: [
       { type: 'Terminal', text: 'bar' }, { type: 'Terminal', text: 'baz' }
-  ] } ]);
+    ] }
+]);
 ```
 
 Alternately, you can call ComplexDiagram();
