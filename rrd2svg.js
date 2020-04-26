@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join, extname } from 'path';
 import { safeLoad } from 'js-yaml';
-import { Diagram, Options } from 'railroad-diagrams';
+import rr, { Diagram, Options } from 'railroad-diagrams';
 
 const args = process.argv;
 let standalone = true;
@@ -9,21 +9,21 @@ let verbose = false;
 let source, inputType;
 
 function usage () {
-  console.log(`Generates railroad diagrams from JSON or YAML to SVG.
+  console.log(`Generates railroad diagrams from JSON, YAML or JavaScript to SVG.
 
 Usage: rrd2svg [option...] [file]
 
 Options:
   --[no]-standalone  add stylesheet to the SVG element. defaults to true
   --[no]-debug       add sizing data into the SVG element. defaults to false
-  -i|--input <type>  input type is json or yaml. defaults to json
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
   -v|--verbose       print error stacktrace
   -V|--version       print version number
   -h|--help          print usage instructions
 
 If no file name is provided, standard input will be read. If no input type
 is provided, it will be inferred from the file extension: ".json" -> json,
-".yaml" or ".yml" -> yaml.
+".yaml" or ".yml" -> yaml, ".js" -> javascript.
   
 Examples:
   cat foo.yaml | rrd2svg -i yaml
@@ -50,7 +50,7 @@ for (let i = 2, l = args.length; i < l; ++i) {
         continue;
       case 'i': case 'input':
         inputType = args[++i];
-        if (inputType !== 'json' && inputType !== 'yaml') {
+        if (inputType !== 'json' && inputType !== 'yaml' && inputType !== 'javascript') {
           console.error(`Invalid input type: "${inputType}".`);
           process.exit(2);
         }
@@ -76,21 +76,37 @@ for (let i = 2, l = args.length; i < l; ++i) {
     switch (ext) {
       case '.json': inputType = 'json'; break;
       case '.yml': case '.yaml': inputType = 'yaml'; break;
+      case '.js': inputType = 'javascript';
     }
   }
 }
 
 function run () {
   try {
-    const json = inputType === 'yaml'
-      ? safeLoad(source.code) : JSON.parse(source.code);
-    const diagram = Diagram.fromJSON(json);
+    let diagram;
+    switch (inputType) {
+      case 'javascript':
+        diagram = fromJavaScript(source.code); break;
+      case 'yaml':
+        diagram = Diagram.fromJSON(safeLoad(source.code)); break;
+      case 'json':
+      default:
+        diagram = Diagram.fromJSON(JSON.parse(source.code));
+    }
     console.log(diagram[standalone ? 'toStandalone' : 'toString']());
   } catch (error) {
     console.error(`${source.name}: ${error.message}`);
     if (verbose) console.log(error.stack);
     process.exitCode = 1;
   }
+}
+
+function fromJavaScript (input) {
+  global.rr = rr;
+  const diagramFunctions = `const { ${Object.keys(rr).join(', ')} } = rr;`;
+  const createDiagram = new Function(`${diagramFunctions}
+return ${input}`);
+  return createDiagram();
 }
 
 if (source) {

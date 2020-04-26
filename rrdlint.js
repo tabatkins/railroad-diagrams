@@ -2,7 +2,7 @@ import globSync from 'tiny-glob/sync';
 import { readFileSync } from 'fs';
 import { join, extname } from 'path';
 import { safeLoad } from 'js-yaml';
-import { Diagram } from 'railroad-diagrams';
+import rr, { Diagram } from 'railroad-diagrams';
 
 const args = process.argv;
 let verbose = false;
@@ -10,19 +10,19 @@ const patterns = [];
 let forcedInputType;
 
 function usage () {
-  console.log(`Checks the syntax of railroad diagrams in JSON or YAML.
+  console.log(`Checks the syntax of railroad diagrams in JSON, YAML or JavaScript.
 
-Usage: rrdlint [option...] [pattern ...]
+Usage: rrdlint [option...] [pattern...]
 
 Options:
-  -i|--input <type>  input type is json or yaml. defaults to json
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
   -v|--verbose       print checked file names and error stacktrace
   -V|--version       print version number
   -h|--help          print usage instructions
 
 If no file name pattern is provided, standard input will be read.
 If no input type is provided, it will be inferred from the file extension:
-".json" -> json, ".yaml" or ".yml" -> yaml.
+".json" -> json, ".yaml" or ".yml" -> yaml, ".js" -> javascript.
     
 Examples:
   cat foo.yaml | rrdlint -i yaml
@@ -42,7 +42,7 @@ for (let i = 2, l = args.length; i < l; ++i) {
         continue;
       case 'i': case 'input':
         forcedInputType = args[++i];
-        if (forcedInputType !== 'json' && forcedInputType !== 'yaml') {
+        if (forcedInputType !== 'json' && forcedInputType !== 'yaml' && forcedInputType !== 'javascript') {
           console.error(`Invalid input type: "${forcedInputType}".`);
           process.exit(2);
         }
@@ -71,6 +71,7 @@ if (patterns.length) {
         switch (ext) {
           case '.json': inputType = 'json'; break;
           case '.yml': case '.yaml': inputType = 'yaml'; break;
+          case '.js': inputType = 'javascript';
         }
       } else {
         inputType = forcedInputType;
@@ -82,15 +83,29 @@ if (patterns.length) {
 
 function run (source, inputType) {
   try {
-    const json = inputType === 'yaml'
-      ? safeLoad(source.code) : JSON.parse(source.code);
-    Diagram.fromJSON(json);
+    switch (inputType) {
+      case 'javascript':
+        fromJavaScript(source.code); break;
+      case 'yaml':
+        Diagram.fromJSON(safeLoad(source.code)); break;
+      case 'json':
+      default:
+        Diagram.fromJSON(JSON.parse(source.code));
+    }
     if (verbose) console.log(`${source.name}: OK`);
   } catch (error) {
     console.error(`${source.name}: ${error.message}`);
     if (verbose) console.log(error.stack);
     process.exitCode = 1;
   }
+}
+
+function fromJavaScript (input) {
+  global.rr = rr;
+  const diagramFunctions = `const { ${Object.keys(rr).join(', ')} } = rr;`;
+  const createDiagram = new Function(`${diagramFunctions}
+${input}`);
+  createDiagram();
 }
 
 if (!patterns.length) {
