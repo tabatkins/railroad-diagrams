@@ -303,6 +303,7 @@ export class Diagram extends DiagramMultiContainer {
 		const s = new FakeSVG('style', {}, style || defaultCSS);
 		this.children.push(s);
 		this.attrs.xmlns = "http://www.w3.org/2000/svg";
+		this.attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
 		const result = super.toString.call(this);
 		this.children.pop();
 		delete this.attrs.xmlns;
