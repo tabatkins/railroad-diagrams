@@ -3,6 +3,7 @@ secrets.json
 .idea
 *.iml
 *.pyc
+node_modules
 /dist
 /build
 test.html

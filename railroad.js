@@ -86,7 +86,7 @@ export class FakeSVG {
 		this.tagName = tagName;
 		this.attrs = unnull(attrs, {});
 	}
-	format(x, y, width) {
+	format(/*x, y, width*/) {
 		// Virtual
 	}
 	addTo(parent) {
@@ -337,7 +337,7 @@ export class Sequence extends DiagramMultiContainer {
 		var numberOfItems = this.items.length;
 		this.needsSpace = true;
 		this.up = this.down = this.height = this.width = 0;
-		for(var i = 0; i < this.items.length; i++) {
+		for(var i = 0; i < numberOfItems; i++) {
 			var item = this.items[i];
 			this.width += item.width + (item.needsSpace?20:0);
 			this.up = Math.max(this.up, item.up - this.height);
@@ -345,7 +345,7 @@ export class Sequence extends DiagramMultiContainer {
 			this.down = Math.max(this.down - item.height, item.down);
 		}
 		if(this.items[0].needsSpace) this.width -= 10;
-		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
+		if(this.items[numberOfItems-1].needsSpace) this.width -= 10;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "sequence";
@@ -1085,10 +1085,10 @@ export class Group extends FakeSVG {
 		this.item = wrapString(item);
 		this.label =
 			label instanceof FakeSVG
-			  ? label
-			: label
-			  ? new Comment(label)
-			  : undefined;
+				? label
+				: label
+					? new Comment(label)
+					: undefined;
 
 		this.width = Math.max(
 			this.item.width + (this.item.needsSpace?20:0),
@@ -1345,7 +1345,7 @@ export class Block extends FakeSVG {
 		this.height = height;
 		this.up = up;
 		this.down = down;
-		this.needsSpace = true;
+		this.needsSpace = needsSpace;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "block";
@@ -1410,7 +1410,7 @@ function SVG(name, attrs, text) {
 
 function escapeString(string) {
 	// Escape markdown and HTML special characters
-	return string.replace(/[*_\`\[\]<&]/g, function(charString) {
+	return string.replace(/[*_`[\]<&]/g, function(charString) {
 		return '&#' + charString.charCodeAt(0) + ';';
 	});
 }
