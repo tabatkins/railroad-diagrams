@@ -308,8 +308,12 @@ export class Diagram extends DiagramMultiContainer {
 		delete this.attrs.xmlns;
 		return result;
 	}
+	static fromJSON(input = []) {
+		return diagramFromJSON(Diagram, input);
+	}
 }
 funcs.Diagram = (...args)=>new Diagram(...args);
+funcs.Diagram.fromJSON = Diagram.fromJSON;
 
 
 export class ComplexDiagram extends FakeSVG {
@@ -319,8 +323,12 @@ export class ComplexDiagram extends FakeSVG {
 		diagram.items[diagram.items.length-1] = new End({type:"complex"});
 		return diagram;
 	}
+	static fromJSON(input = []) {
+		return diagramFromJSON(ComplexDiagram, input);
+	}
 }
 funcs.ComplexDiagram = (...args)=>new ComplexDiagram(...args);
+funcs.ComplexDiagram.fromJSON = ComplexDiagram.fromJSON;
 
 
 export class Sequence extends DiagramMultiContainer {
@@ -1413,4 +1421,85 @@ function* enumerate(iter) {
 		yield [count, x];
 		count++;
 	}
+}
+
+function diagramFromJSON(Diagram, input) {
+	if (!input) return new Diagram();
+	// Wrap an array of nodes in the diagram type decided by the parent
+	// class of the calling static fromJSON method.
+	if (Array.isArray(input)) {
+		return new Diagram(...input.map(nodeFromJSON));
+	}
+	// Retain the diagram type specified in the input regardless the parent
+	// class of the calling static fromJSON method.
+	switch (input.type) {
+		case 'Diagram':
+		case 'ComplexDiagram':
+			return nodeFromJSON(input);
+	}
+	// Wrap the single node in the diagram type decided by the parent
+	// class of the calling static fromJSON method.
+	return new Diagram(nodeFromJSON(input));
+}
+
+const classes = {
+	Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, HorizontalChoice,
+	AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore,
+	Group, Start, End, Terminal, NonTerminal, Comment, Skip
+}
+
+function nodeFromJSON(node) {
+	if (!node) return;
+	const Node = classes[node.type];
+	switch (Node) {
+		case Diagram:
+		case ComplexDiagram:
+		case Sequence:
+		case Stack:
+		case OptionalSequence:
+		case HorizontalChoice:
+			return new Node(...itemsFromJSON(node.items));
+
+		case AlternatingSequence:
+			return new Node(nodeFromJSON(node.option1), nodeFromJSON(node.option2));
+
+		case Choice:
+			return new Node(node.normalIndex || 0, ...itemsFromJSON(node.options));
+
+		case MultipleChoice:
+			return new Node(node.normalIndex || 0, node.choiceType,
+				...itemsFromJSON(node.options));
+
+		case Optional:
+			return new Node(nodeFromJSON(node.item), node.skip && 'skip');
+
+		case OneOrMore:
+			return new Node(nodeFromJSON(node.item), nodeFromJSON(node.repeat));
+
+		case ZeroOrMore:
+			return new Node(nodeFromJSON(node.item), nodeFromJSON(node.repeat),
+				node.skip && 'skip');
+
+		case Group:
+			return new Node(nodeFromJSON(node.item), node.label);
+
+		case Start:
+			return new Node(node.startType, node.label);
+
+		case End:
+			return new Node(node.endType);
+
+		case Terminal:
+		case NonTerminal:
+		case Comment:
+			return new Node(node.text, { href: node.href, title: node.title });
+
+		case Skip:
+			return new Node();
+	}
+	throw new Error(`Unknown node type: "${node.type}".`)
+}
+
+function itemsFromJSON(items) {
+	return items ? items.map(nodeFromJSON) : [];
 }
