@@ -1,0 +1,180 @@
+type:	Stack
+items:
+  -
+    type: Sequence
+    items:
+      -
+        type: Terminal
+        text: SELECT
+      -
+        type: Optional
+        item:
+          type: Terminal
+          text: DISTINCT
+        skip: true
+      -
+        type:	Choice
+        options:
+          -
+            type: Terminal
+            text: "*"
+          -
+            type: OneOrMore
+            item:
+              type: Sequence
+              items:
+                -
+                  type: NonTerminal
+                  text: expression
+                -
+                  type: Optional
+                  item:
+                    type: Sequence
+                    items:
+                      -
+                        type: Terminal
+                        text: AS
+                      -
+                        type: NonTerminal
+                        text: output_name
+            repeat:
+              type: Terminal
+              text: ","
+      -
+        type: Terminal
+        text: FROM
+      -
+        type: OneOrMore
+        item:
+          type: NonTerminal
+          text: from_item
+        repeat:
+          type: Terminal
+          text: ","
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: WHERE
+            -
+              type: NonTerminal
+              text: condition
+  -
+    type: Sequence
+    items:
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: GROUP BY
+            -
+              type: NonTerminal
+              text: expression
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: HAVING
+            -
+              type: NonTerminal
+              text: condition
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Choice
+              options:
+                -
+                  type: Terminal
+                  text: UNION
+                -
+                  type: Terminal
+                  text: INTERSECT
+                -
+                  type: Terminal
+                  text: EXCEPT
+            -
+              type: Optional
+              item:
+                type: Terminal
+                text: ALL
+            -
+              type: NonTerminal
+              text: select
+  -
+    type: Sequence
+    items:
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: ORDER BY
+            -
+              type: OneOrMore
+              item:
+                type: Sequence
+                items:
+                  -
+                    type: NonTerminal
+                    text: expression
+                  -
+                    type: Choice
+                    options:
+                      -
+                        type: Skip
+                      -
+                        type: Terminal
+                        text: ASC
+                      -
+                        type: Terminal
+                        text: DESC
+            -
+              type: Terminal
+              text: ","
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: LIMIT
+            -
+              type: Choice
+              options:
+                -
+                  type: NonTerminal
+                  text: count
+                -
+                  type: Terminal
+                  text: ALL
+      -
+        type: Optional
+        item:
+          type: Sequence
+          items:
+            -
+              type: Terminal
+              text: OFFSET
+            -
+              type: NonTerminal
+              text: start
+            -
+              type: Optional
+              itemL:
+                type: Terminal
+                text: ROWS

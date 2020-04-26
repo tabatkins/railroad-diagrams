@@ -1,0 +1,30 @@
+type: ComplexDiagram
+items:
+  -
+    type: Choice
+    options:
+      -
+        type: Skip
+      -
+        type: Terminal
+        text: "-"
+  -
+    type: Choice
+    options:
+      -
+        type: NonTerminal
+        text: name-start char
+      -
+        type: NonTerminal
+        text: escape
+  -
+    type: ZeroOrMore
+    item:
+      type: Choice
+      options:
+        -
+          type: NonTerminal
+          text: name char
+        -
+          type: NonTerminal
+          text: escape

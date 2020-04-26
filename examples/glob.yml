@@ -1,0 +1,9 @@
+type: AlternatingSequence
+option1:
+  type: OneOrMore
+  item:
+    type: NonTerminal
+    text: alphanumeric
+option2:
+  type: Terminal
+  text: "*"

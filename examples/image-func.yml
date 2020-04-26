@@ -1,0 +1,29 @@
+-
+  type: Optional
+  item:
+    type: Sequence
+    items:
+      -
+        type: Choice
+        options:
+          -
+            type: Terminal
+            text: ltr
+          -
+            type: Terminal
+            text: rtl
+-
+  type: OptionalSequence
+  items:
+    -
+      type: Choice
+      options:
+        -
+          type: NonTerminal
+          text: <url>
+        -
+          type: NonTerminal
+          text: <string>
+    -
+      type: NonTerminal
+      text: <color>

@@ -16,10 +16,17 @@
     "node": ">=6"
   },
   "files": [
-    "railroad-diagrams.js",
+    "bin",
+    "lib",
     "railroad-diagrams.css"
   ],
-  "main": "railroad-diagrams.js",
+  "bin": {
+    "rrd2svg": "bin/rrd2svg",
+    "rrdlint": "bin/rrdlint"
+  },
+  "main": "lib/index.js",
+  "browser": "lib/index.umd.js",
+  "module": "railroad.js",
   "keywords": [
     "railroad",
     "syntax",
@@ -28,9 +35,22 @@
     "svg"
   ],
   "scripts": {
-    "test": "eslint railroad.js"
+    "benchmark": "node -r esm benchmark",
+    "prepare": "rollup -c rollup.config.js",
+    "start": "rollup -c rollup.config.js -w",
+    "pretest": "eslint rollup.config.js railroad.js rrd2svg.js rrdlint.js benchmark/*.js",
+    "test": "node bin/rrdlint -v examples/* && node bin/rrd2svg examples/ident.yml"
+  },
+  "dependencies": {
+    "js-yaml": "3.13.1",
+    "tiny-glob": "0.2.6"
   },
   "devDependencies": {
-    "eslint": "6.8.0"
+    "benchmark": "2.1.4",
+    "eslint": "6.8.0",
+    "esm": "3.2.25",
+    "rollup": "2.7.2",
+    "rollup-plugin-cleanup": "3.1.1",
+    "rollup-plugin-terser": "5.3.0"
   }
 }

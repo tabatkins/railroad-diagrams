@@ -1,0 +1,80 @@
+-
+  type:	Choice
+  options:
+    -
+      type: Terminal
+      text: u
+    -
+      type: Terminal
+      text: U
+-
+  type:	Choice
+  options:
+    -
+      type: Terminal
+      text: r
+    -
+      type: Terminal
+      text: R
+-
+  type:	Choice
+  options:
+    -
+      type: Terminal
+      text: l
+    -
+      type: Terminal
+      text: L
+-
+  type: Terminal
+  text: (
+-
+  type:	Choice
+  normalIndex: 1
+  options:
+    -
+      type: Optional
+      item:
+        type: NonTerminal
+        text: WS
+    -
+      type: Sequence
+      items:
+        -
+          type: Optional
+          item:
+            type: NonTerminal
+            text: WS
+        -
+          type: NonTerminal
+          text: STRING
+          href: "#string:"
+        -
+          type: Optional
+          item:
+            type: NonTerminal
+            text: WS
+    -
+      type: Sequence
+      items:
+        -
+          type: Optional
+          item:
+            type: NonTerminal
+            text: WS
+        -
+          type: OneOrMore
+          item:
+            type: Choice
+            options:
+              -
+                type: NonTerminal
+                text: not " ' ( ) WS or NPC
+              -
+                type: NonTerminal
+                text: escape
+        -
+          type: Optional
+          item:
+            type: NonTerminal
+            text: WS

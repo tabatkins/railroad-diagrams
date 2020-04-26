@@ -12,7 +12,7 @@ in a form that is more readable than using regular expressions or BNF.
 They can easily represent any context-free grammar, and some more powerful grammars.
 There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted, so I wrote my own.
 
-[Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
+There's an online dingus for [JavaScript](https://tabatkins.github.io/railroad-diagrams/generator.html), [JSON]((https://tabatkins.github.io/railroad-diagrams/generator-json.html)) or [YAML](https://tabatkins.github.io/railroad-diagrams/generator-yaml.html) input for you to play with and get SVG code from!
 
 (For Python, see [the Python README](https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/README-py.md), or just `pip install railroad-diagrams`.)
 
@@ -62,6 +62,49 @@ The Diagram class also has a few methods:
 * `.toStandalone()` outputs the SVG of the diagram as a string, but this *is* a standalone SVG file.
 * `.toSVG()` outputs the diagram as an actual `<svg>` DOM element, ready for appending into a document.
 * `.addTo(parent?)` directly appends the diagram, as an `<svg>` element, to the specified parent element. If you omit the parent element, it instead appends to the script element it's being called from, so you can easily insert a diagram into your document by just dropping a tiny inline `<script>` that just calls `new Diagram(...).addTo()` where you want the diagram to show up.
+
+CDN
+---
+
+You can include a specific version of this library on a plain web page using the service provided by `unpkg`:
+
+```html
+<link rel="stylesheet"
+      href="https://unpkg.com/railroad-diagrams@1.2.0/railroad-diagrams.css">
+<script src="https://unpkg.com/railroad-diagrams@1.2.0/lib/index.umd.min.js"></script>
+```
+
+Node.js
+-------
+
+You can install the library using the Node.js 6 or newer. For example, with `npm` or `yarn`:
+
+```
+npm i railroad-diagrams
+yarn add railroad-diagrams
+```
+
+Exports of the library can be consumed in ESM modules similarly as it is documented for the web pages above:
+
+```js
+// Use the constructors os the static Diagram.fromJSON
+import {Diagram, Choice} from "railroad-diagrams";
+
+// Or use the functions that call the constructors for you
+import rr from "railroad-diagrams";
+```
+
+Exports of the library can be consumed in CJS modules too:
+
+```js
+// Use the constructors os the static Diagram.fromJSON
+const {Diagram, Choice} = require("railroad-diagrams");
+
+// Or use the functions that call the constructors for you
+const rr = require("railroad-diagrams").default;
+```
+
+Make sure, that you do not call methods `addTo` and `toSVG`, which work inly in the web browser. You can generate an SVG by `toString` or `toStandalone`.
 
 Components
 ----------
@@ -177,6 +220,19 @@ The JSON serialization can be a single object or an array of objects in the form
 ```
 
 If the diagram input should be edited manually, using YAML instead of JSON will make maintenance easier. YAML can be converted to JSON before calling `fromJSON`.
+
+Performance
+-----------
+
+The difference between using constructors or functions to create diagram nodes is negligible. Parsing the JSON serialization is only a little slower. Results from generating a all example diagrams using Node.js 12 on Macbook Pro 2018 with i7 2,6 GHz:
+
+```
+Creating 17 diagrams...
+  using functions x 29,989 ops/sec ±0.56% (95 runs sampled)
+  using constructors x 30,651 ops/sec ±0.28% (97 runs sampled)
+  using fromJSON x 23,038 ops/sec ±0.50% (95 runs sampled)
+The fastest one was using constructors.
+```
 
 Caveats
 -------

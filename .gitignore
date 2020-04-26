@@ -4,6 +4,8 @@ secrets.json
 *.iml
 *.pyc
 node_modules
+/bin
+/lib
 /dist
 /build
 test.html

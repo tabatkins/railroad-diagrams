@@ -1,0 +1,18 @@
+type: MultipleChoice
+choiceType: any
+options:
+  -
+    type: OneOrMore
+    item:
+      type: Choice
+      normalIndex: 1
+      options:
+        -
+          type: Terminal
+          text: row
+        -
+          type: Terminal
+          text: column
+  -
+    type: Terminal
+    text: dense

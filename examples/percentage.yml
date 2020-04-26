@@ -1,0 +1,7 @@
+-
+  type: NonTerminal
+  text: NUMBER
+  href: "#number"
+-
+  type: Terminal
+  text: "%"
