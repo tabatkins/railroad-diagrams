@@ -107,6 +107,56 @@ const rr = require("railroad-diagrams").default;
 
 Make sure, that you do not call methods `addTo` and `toSVG`, which work inly in the web browser. You can generate an SVG by `toString` or `toStandalone`.
 
+Command-line Tools
+------------------
+
+If you install the library using the Node.js 6 or newer globally:
+
+```
+npm i -g railroad-diagrams
+```
+
+You will be able to execute the following command line tools:
+
+* `rrdlint` - checks the syntax of railroad diagrams in JSON, YAML or JavaScript.
+* `rrd2svg` - generates railroad diagrams from JSON, YAML or JavaScript to SVG.
+
+```
+$ rrdlint -h
+Usage: rrdlint [option...] [pattern...]
+
+Options:
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
+  -v|--verbose       print checked file names and error stacktrace
+  -V|--version       print version number
+  -h|--help          print usage instructions
+
+Examples:
+  cat foo.yaml | rrdlint -i yaml
+  rrdlint diagrams/*
+```
+
+```
+$ rrd2svg -h
+Usage: rrd2svg [option...] [file]
+
+Options:
+  --[no]-standalone  add stylesheet to the SVG element. defaults to true
+  --[no]-debug       add sizing data into the SVG element. defaults to false
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
+  -v|--verbose       print error stacktrace
+  -V|--version       print version number
+  -h|--help          print usage instructions
+
+Examples:
+  cat foo.yaml | rrd2svg -i yaml
+  rrd2svg foo.json
+```
+
+If no file name or file name pattern is provided, standard input will be read.
+If no input type is provided, it will be inferred from the file extension:
+".json" -> json, ".yaml" or ".yml" -> yaml, ".js" -> javascript.
+
 Components
 ----------
 

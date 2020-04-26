@@ -1,0 +1,62 @@
+.TH rrd2svg "1" "April 26, 2020" "" "rrd2svg manual"
+
+.SH NAME
+rrd2svg - railroad diagrams generator.
+
+.SH SYNOPSIS
+.B rrd2svg
+[--[no]-standalone] [--[no]-debug] [-i|--input
+.I name
+]
+.RS
+[-v|--verbose] [-V|--version] [-h|--help]
+[
+.I file
+]
+.RE
+
+.SH DESCRIPTION
+.B
+rrd2svg generates railroad diagrams from JSON, YAML or JavaScript to SVG.
+
+.SH OPTIONS
+.B
+.IP "--[no]-standalone"
+add stylesheet to the SVG element. defaults to true
+.B
+.IP "--[no]-debug"
+add sizing data into the SVG element. defaults to false
+.B
+.IP "-i|--input type"
+read input from json, yaml or javascript. defaults to json
+.B
+.IP "-v|--verbose"
+print error stacktrace
+.B
+.IP "-V, --version"
+print version number
+.B
+.IP "-h, --help"
+print usage instructions
+
+.RE
+If no file name is provided, standard input will be read. If no input type
+is provided, it will be inferred from the file extension: ".json" -> json,
+".yaml" or ".yml" -> yaml, ".js" -> javascript.
+
+.SH EXAMPLES
+.B
+.IP "cat foo.yaml | rrd2svg -i yaml"
+Generate a diagram from the standard input.
+.B
+.IP "rrd2svg foo.json"
+Generate a diagram from a file.
+
+.SH BUGS
+rrd2svg's bug tracker is located at <https://github.com/tabatkins/railroad-diagrams/issues>
+
+.SH DOCUMENTATION
+See the website for documentation <https://github.com/tabatkins/railroad-diagrams/#readme>
+
+.SH AUTHOR
+Written by Tab Atkins <jackalmage@gmail.com>
