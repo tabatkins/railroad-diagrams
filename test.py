@@ -214,3 +214,12 @@ add('Group example',
 			),
 		"bar"),
 	)
+
+add('Class example',
+	Diagram(
+		"foo",
+		Terminal("blue", cls="blue"),
+		NonTerminal("blue", cls="blue"),
+		Comment("blue", cls="blue")
+		)
+	)

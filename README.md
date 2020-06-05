@@ -62,10 +62,28 @@ Components
 Components are either leaves or containers.
 
 The leaves:
-* Terminal(text, href) or a bare string - represents literal text. The 'href' attribute is optional, and creates a hyperlink with the given destination.
-* NonTerminal(text, href) - represents an instruction or another production. The 'href' attribute is optional, and creates a hyperlink with the given destination.
-* Comment(text, href) - a comment. The 'href' attribute is optional, and creates a hyperlink with the given destination.
+* Terminal(text, {href, title, cls}) or a bare string - represents literal text.
+
+    All the arguments in the options bag are optional:
+    * 'href' makes the text a hyperlink with the given URL
+    * 'title' adds an SVG `<title>` element to the element,
+        giving it "hover text"
+        and a description for screen-readers and other assistive tech
+    * 'cls' is additional classes to apply to the element,
+        beyond the default `'terminal'`
+
+* NonTerminal(text, {href, title, cls}) - represents an instruction or another production.
+
+    The optional arguments have the same meaning as for Terminal,
+    except that the default class is `'non-terminal'`.
+
+* Comment(text, {href, title, cls}) - a comment.
+
+    The optional arguments have the same meaning as for Terminal,
+    except that the default class is `'comment'`.
+
 * Skip() - an empty line
+
 * Start(type, label) and End(type) - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a Start() explicitly (as the first child of the Diagram!). The "type" attribute takes either "simple" (the default) or "complex", a la Diagram() and ComplexDiagram(). All arguments are optional.
 
 The containers:

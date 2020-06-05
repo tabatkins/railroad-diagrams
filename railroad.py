@@ -1138,11 +1138,12 @@ class End(DiagramItem):
 
 
 class Terminal(DiagramItem):
-	def __init__(self, text, href=None, title=None):
-		DiagramItem.__init__(self, 'g', {'class': 'terminal'})
+	def __init__(self, text, href=None, title=None, cls=""):
+		DiagramItem.__init__(self, 'g', {'class': ' '.join(['terminal', cls])})
 		self.text = text
 		self.href = href
 		self.title = title
+		self.cls = cls
 		self.width = len(text) * CHAR_WIDTH + 20
 		self.up = 11
 		self.down = 11
@@ -1173,11 +1174,12 @@ class Terminal(DiagramItem):
 
 
 class NonTerminal(DiagramItem):
-	def __init__(self, text, href=None, title=None):
-		DiagramItem.__init__(self, 'g', {'class': 'non-terminal'})
+	def __init__(self, text, href=None, title=None, cls=""):
+		DiagramItem.__init__(self, 'g', {'class': ' '.join(['non-terminal', cls])})
 		self.text = text
 		self.href = href
 		self.title = title
+		self.cls = cls
 		self.width = len(text) * CHAR_WIDTH + 20
 		self.up = 11
 		self.down = 11
@@ -1208,11 +1210,12 @@ class NonTerminal(DiagramItem):
 
 
 class Comment(DiagramItem):
-	def __init__(self, text, href=None, title=None):
-		DiagramItem.__init__(self, 'g')
+	def __init__(self, text, href=None, title=None, cls=""):
+		DiagramItem.__init__(self, 'g', {'class': ' '.join(['non-terminal', cls])})
 		self.text = text
 		self.href = href
 		self.title = title
+		self.cls = cls
 		self.width = len(text) * COMMENT_CHAR_WIDTH + 10
 		self.up = 8
 		self.down = 8
@@ -1265,4 +1268,9 @@ if __name__ == '__main__':
 	import sys
 	sys.stdout.write("<!doctype html><title>Test</title><body>")
 	exec(open('test.py').read())
+	sys.stdout.write('''
+		<style>
+		.blue text { fill: blue; }
+		</style>
+		''')
 	sys.stdout.write('</body></html>')
