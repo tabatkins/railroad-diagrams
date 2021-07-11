@@ -398,7 +398,7 @@ class Stack(DiagramMultiContainer):
 	def __init__(self, *items):
 		DiagramMultiContainer.__init__(self, 'g', items)
 		self.needsSpace = True
-		self.width = max(item.width + (20 if item.needsSpace else 0) for item in self.items)
+		self.width = max(item.width + (10 if item.needsSpace else 0) for item in self.items)
 		# pretty sure that space calc is totes wrong
 		if len(self.items) > 1:
 			self.width += AR*2
