@@ -468,7 +468,7 @@ class OptionalSequence(DiagramMultiContainer):
 			heightSoFar += item.height
 			if i > 0:
 				self.down = max(self.height + self.down, heightSoFar + max(AR*2, item.down + VS)) - self.height
-			itemWidth = item.width + (20 if item.needsSpace else 0)
+			itemWidth = item.width + (10 if item.needsSpace else 0)
 			if i == 0:
 				self.width += AR + max(itemWidth, AR)
 			else:
