@@ -38,6 +38,14 @@ const d = new Diagram("foo", new Choice(0, "bar", "baz"));
 // Or use the functions that call the constructors for you
 import rr from "./railroad.js";
 const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
+
+// Or use the JSON serialization of the diagram
+import {Diagram} from "./railroad.js";
+const d = Diagram.fromJSON([
+  { type: 'Terminal', text: 'foo' }.
+  { type: 'Choice', normalIndex: 0, options: [
+      { type: 'Terminal', text: 'bar' }, { type: 'Terminal', text: 'baz' }
+  ] } ]);
 ```
 
 Alternately, you can call ComplexDiagram();
@@ -54,7 +62,6 @@ The Diagram class also has a few methods:
 * `.toStandalone()` outputs the SVG of the diagram as a string, but this *is* a standalone SVG file.
 * `.toSVG()` outputs the diagram as an actual `<svg>` DOM element, ready for appending into a document.
 * `.addTo(parent?)` directly appends the diagram, as an `<svg>` element, to the specified parent element. If you omit the parent element, it instead appends to the script element it's being called from, so you can easily insert a diagram into your document by just dropping a tiny inline `<script>` that just calls `new Diagram(...).addTo()` where you want the diagram to show up.
-
 
 Components
 ----------
@@ -154,6 +161,40 @@ you'll have to go adjust the options specifying the text metrics as well.
 * `Options.CHAR_WIDTH` - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
 * `Options.COMMENT_CHAR_WIDTH` - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
 * `Options.DEBUG` - if `true`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `false`.
+
+JSON
+----
+
+Diagrams can be created from a JSON serialization using `Diagram.fromJSON(input)` or `ComplexDiagram.fromJSON(input)`. (If the JSON input starts with a `Diagram` or `ComplexDigram` node, it will be honoured and the parent class of `fromJSON` will not apply.)
+
+The JSON serialization can be a single object or an array of objects in the format `{ "type": "...", ...parameters }`, where `type` is a class name of a node and `parameters` are constructor arguments following more-or-less closely the naming conventions from the documentation above.
+
+```
+{ "type": "Diagram", "items" }
+{ "type": "ComplexDiagram", "items" }
+
+{ "type": "Terminal, "text", "href", "title" }
+{ "type": "NonTerminal", "text", "href", "title" }
+{ "type": "Comment", "text", "href", "title" }
+{ "type": "Skip" }
+{ "type": "Start", "startType", "label" }
+{ "type": "End", "endType" }
+
+{ "type": "Sequence", "items" }
+{ "type": "Stack", "items" }
+{ "type": "OptionalSequence", "items" }
+{ "type": "Sequence", "items" }
+{ "type": "Choice", "normalIndex", "options" }
+{ "type": "MultipleChoice", "normalIndex", "choiceType", "options" }
+{ "type": "HorizontalChoice", "options" }
+{ "type": "Optional", "item", "skip" }
+{ "type": "OneOrMore", "item", "repeat" }
+{ "type": "AlternatingSequence", "option1", "option2" }
+{ "type": "ZeroOrMore", "item", "repeat", "skip" }
+{ "type": "Group", "item", "label" }
+```
+
+If the diagram input should be edited manually, using YAML instead of JSON will make maintenance easier. YAML can be converted to JSON before calling `fromJSON`.
 
 Caveats
 -------
