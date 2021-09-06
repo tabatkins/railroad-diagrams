@@ -1,0 +1,81 @@
+-
+  type:	Choice
+  normalIndex: 1
+  options:
+    -
+      type: Terminal
+      text: +
+    -
+      type: Skip
+    -
+      type: Terminal
+      text: "-"
+-
+  type:	Choice
+  options:
+    -
+      type: Sequence
+      items:
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: digit
+        -
+          type: Terminal
+          text: .
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: digit
+    -
+      type: OneOrMore
+      item:
+        type: NonTerminal
+        text: digit
+    -
+      type: Sequence
+      items:
+        -
+          type: Terminal
+          text: .
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: digit
+-
+  type:	Choice
+  options:
+    -
+      type: Skip
+    -
+      type: Sequence
+      items:
+        -
+          type:	Choice
+          options:
+            -
+              type: Terminal
+              text: e
+            -
+              type: Terminal
+              text: E
+        -
+          type:	Choice
+          normalIndex: 1
+          options:
+            -
+              type: Terminal
+              text: +
+            -
+              type: Skip
+            -
+              type: Terminal
+              text: "-"
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: digit

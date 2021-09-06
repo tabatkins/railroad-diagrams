@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Draws railroad syntax diagrams from JavaScript input.">
-<title>Railroad Diagram Generator from JavaScript</title>
+<meta name="description" content="Draws railroad syntax diagrams from YAML input.">
+<title>Railroad Diagram Generator from YAML</title>
 <link href="railroad-diagrams.css" rel=stylesheet>
 
 <style>
@@ -36,17 +36,35 @@
 	}
 </style>
 	
-<h1>Railroad Diagram Generator from JavaScript</h1>
+<h1>Railroad Diagram Generator from YAML</h1>
 <main>
-<textarea class='input' aria-label='Input'>Diagram(
-  Optional('+', 'skip'),
-  Choice(0,
-    NonTerminal('name-start char'),
-    NonTerminal('escape')),
-  ZeroOrMore(
-    Choice(0,
-      NonTerminal('name char'),
-      NonTerminal('escape'))))</textarea>
+<textarea class='input' aria-label='Input'>-
+  type: Optional
+  item:
+    type: Terminal
+    text: +
+    skip: true
+-
+  type: Choice
+  options:
+    -
+      type: NonTerminal
+      text: name-start char
+    -
+      type: NonTerminal
+      text: escape
+-
+  type: ZeroOrMore
+  item:
+    type: Choice
+    options:
+      -
+        type: NonTerminal
+        text: name char
+      -
+        type: NonTerminal
+        text: escape
+</textarea>
 <div class='output-image'></div>
 <textarea class='output-text' aria-label='Output' readonly></textarea>
 <div class=info>
@@ -54,10 +72,9 @@
 </div>
 </main>
 
+<script src="https://unpkg.com/js-yaml@3.13.1/dist/js-yaml.min.js"></script>
 <script type=module>
-import rr, * as rrClass from "./lib/index.mjs";
-Object.assign(window, rr);
-window.rrOptions = rrClass.Options;
+import {Diagram} from "./lib/index.mjs";
 
 const find = document.querySelector.bind(document);
 
@@ -90,7 +107,7 @@ function process(input) {
 	if(!input) input = find('.input').value;
 	const standalone = find('#standalone').checked;
 	try {
-		var result = eval(input).format();
+		var result = Diagram.fromJSON(jsyaml.safeLoad(input)).format();
 		location.hash = "#" + encodeURIComponent(input);
 	} catch (e) {
 		find('.output-text').textContent = "Invalid input.\n" + e

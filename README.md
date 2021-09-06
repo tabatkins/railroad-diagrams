@@ -12,7 +12,7 @@ in a form that is more readable than using regular expressions or BNF.
 They can easily represent any context-free grammar, and some more powerful grammars.
 There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted, so I wrote my own.
 
-[Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
+There's an online dingus for [JavaScript](https://tabatkins.github.io/railroad-diagrams/generator.html), [JSON]((https://tabatkins.github.io/railroad-diagrams/generator-json.html)) or [YAML](https://tabatkins.github.io/railroad-diagrams/generator-yaml.html) input for you to play with and get SVG code from!
 
 (For Python, see [the Python README](https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/README-py.md), or just `pip install railroad-diagrams`.)
 
@@ -20,8 +20,8 @@ Diagrams
 --------
 
 To use the library,
-include `railroad.css` in your page,
-and import the `railroad.js` module in your script,
+include `railroad-diagrams.css` in your page,
+and import the `./railroad-diagrams/lib/index.mjs` module in your script,
 then call the Diagram() function.
 Its arguments are the components of the diagram
 (Diagram is a special form of Sequence).
@@ -32,12 +32,21 @@ so you can construct diagrams without having to spam `new` all over the place:
 
 ```js
 // Use the constructors
-import {Diagram, Choice} from "./railroad.js";
+import {Diagram, Choice} from "./railroad-diagrams/lib/index.mjs";
 const d = new Diagram("foo", new Choice(0, "bar", "baz"));
 
 // Or use the functions that call the constructors for you
-import rr from "./railroad.js";
+import rr from "./railroad-diagrams/lib/index.mjs";
 const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
+
+// Or use the JSON serialization of the diagram
+import {Diagram} from "./railroad-diagrams/lib/index.mjs";
+const d = Diagram.fromJSON([
+  { type: 'Terminal', text: 'foo' }.
+  { type: 'Choice', normalIndex: 0, options: [
+      { type: 'Terminal', text: 'bar' }, { type: 'Terminal', text: 'baz' }
+    ] }
+]);
 ```
 
 Alternately, you can call ComplexDiagram();
@@ -55,6 +64,98 @@ The Diagram class also has a few methods:
 * `.toSVG()` outputs the diagram as an actual `<svg>` DOM element, ready for appending into a document.
 * `.addTo(parent?)` directly appends the diagram, as an `<svg>` element, to the specified parent element. If you omit the parent element, it instead appends to the script element it's being called from, so you can easily insert a diagram into your document by just dropping a tiny inline `<script>` that just calls `new Diagram(...).addTo()` where you want the diagram to show up.
 
+CDN
+---
+
+You can include a specific version of this library on a plain web page using the service provided by `unpkg`:
+
+```html
+<link rel="stylesheet"
+      href="https://unpkg.com/railroad-diagrams@1.2.0/railroad-diagrams.css">
+<script src="https://unpkg.com/railroad-diagrams@1.2.0/lib/index.umd.min.js"></script>
+```
+
+Node.js
+-------
+
+You can install the library using the Node.js 6 or newer. For example, with `npm` or `yarn`:
+
+```
+npm i railroad-diagrams
+yarn add railroad-diagrams
+```
+
+Exports of the library can be consumed in ESM modules similarly as it is documented for the web pages above:
+
+```js
+// Use the constructors os the static Diagram.fromJSON
+import {Diagram, Choice} from "railroad-diagrams";
+
+// Or use the functions that call the constructors for you
+import rr from "railroad-diagrams";
+```
+
+Exports of the library can be consumed in CJS modules too:
+
+```js
+// Use the constructors os the static Diagram.fromJSON
+const {Diagram, Choice} = require("railroad-diagrams");
+
+// Or use the functions that call the constructors for you
+const rr = require("railroad-diagrams").default;
+```
+
+Make sure, that you do not call methods `addTo` and `toSVG`, which work inly in the web browser. You can generate an SVG by `toString` or `toStandalone`.
+
+Command-line Tools
+------------------
+
+If you install the library using the Node.js 6 or newer globally:
+
+```
+npm i -g railroad-diagrams
+```
+
+You will be able to execute the following command line tools:
+
+* `rrdlint` - checks the syntax of railroad diagrams in JSON, YAML or JavaScript.
+* `rrd2svg` - generates railroad diagrams from JSON, YAML or JavaScript to SVG.
+
+```
+$ rrdlint -h
+Usage: rrdlint [option...] [pattern...]
+
+Options:
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
+  -v|--verbose       print checked file names and error stacktrace
+  -V|--version       print version number
+  -h|--help          print usage instructions
+
+Examples:
+  cat foo.yaml | rrdlint -i yaml
+  rrdlint diagrams/*
+```
+
+```
+$ rrd2svg -h
+Usage: rrd2svg [option...] [file]
+
+Options:
+  --[no]-standalone  add stylesheet to the SVG element. defaults to true
+  --[no]-debug       add sizing data into the SVG element. defaults to false
+  -i|--input <type>  read input from json, yaml or javascript. defaults to json
+  -v|--verbose       print error stacktrace
+  -V|--version       print version number
+  -h|--help          print usage instructions
+
+Examples:
+  cat foo.yaml | rrd2svg -i yaml
+  rrd2svg foo.json
+```
+
+If no file name or file name pattern is provided, standard input will be read.
+If no input type is provided, it will be inferred from the file extension:
+".json" -> json, ".yaml" or ".yml" -> yaml, ".js" -> javascript.
 
 Components
 ----------
@@ -154,6 +255,53 @@ you'll have to go adjust the options specifying the text metrics as well.
 * `Options.CHAR_WIDTH` - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
 * `Options.COMMENT_CHAR_WIDTH` - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
 * `Options.DEBUG` - if `true`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `false`.
+
+JSON
+----
+
+Diagrams can be created from a JSON serialization using `Diagram.fromJSON(input)` or `ComplexDiagram.fromJSON(input)`. (If the JSON input starts with a `Diagram` or `ComplexDigram` node, it will be honoured and the parent class of `fromJSON` will not apply.)
+
+The JSON serialization can be a single object or an array of objects in the format `{ "type": "...", ...parameters }`, where `type` is a class name of a node and `parameters` are constructor arguments following more-or-less closely the naming conventions from the documentation above.
+
+```
+{ "type": "Diagram", "items" }
+{ "type": "ComplexDiagram", "items" }
+
+{ "type": "Terminal, "text", "href", "title" }
+{ "type": "NonTerminal", "text", "href", "title" }
+{ "type": "Comment", "text", "href", "title" }
+{ "type": "Skip" }
+{ "type": "Start", "startType", "label" }
+{ "type": "End", "endType" }
+
+{ "type": "Sequence", "items" }
+{ "type": "Stack", "items" }
+{ "type": "OptionalSequence", "items" }
+{ "type": "Sequence", "items" }
+{ "type": "Choice", "normalIndex", "options" }
+{ "type": "MultipleChoice", "normalIndex", "choiceType", "options" }
+{ "type": "HorizontalChoice", "options" }
+{ "type": "Optional", "item", "skip" }
+{ "type": "OneOrMore", "item", "repeat" }
+{ "type": "AlternatingSequence", "option1", "option2" }
+{ "type": "ZeroOrMore", "item", "repeat", "skip" }
+{ "type": "Group", "item", "label" }
+```
+
+If the diagram input should be edited manually, using YAML instead of JSON will make maintenance easier. YAML can be converted to JSON before calling `fromJSON`.
+
+Performance
+-----------
+
+The difference between using constructors or functions to create diagram nodes is negligible. Parsing the JSON serialization is only a little slower. Results from generating a all example diagrams using Node.js 12 on Macbook Pro 2018 with i7 2,6 GHz:
+
+```
+Creating 17 diagrams...
+  using functions x 29,989 ops/sec ±0.56% (95 runs sampled)
+  using constructors x 30,651 ops/sec ±0.28% (97 runs sampled)
+  using fromJSON x 23,038 ops/sec ±0.50% (95 runs sampled)
+The fastest one was using constructors.
+```
 
 Caveats
 -------

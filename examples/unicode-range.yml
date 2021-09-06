@@ -1,0 +1,67 @@
+-
+  type:	Choice
+  options:
+    -
+      type: Terminal
+      text: U
+    -
+      type: Terminal
+      text: u
+-
+  type: Terminal
+  text: +
+-
+  type:	Choice
+  options:
+    -
+      type: Sequence
+      items:
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: hex digit
+          repeat:
+            type: Comment
+            text: 1-6 times
+    -
+      type: Sequence
+      items:
+        -
+          type: ZeroOrMore
+          item:
+            type: NonTerminal
+            text: hex digit
+          repeat:
+            type: Comment
+            text: 1-5 times
+        -
+          type: OneOrMore
+          item:
+            type: Terminal
+            text: ?
+          repeat:
+            type: Comment
+            text: 1 to (6 - digits) times
+    -
+      type: Sequence
+      items:
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: hex digit
+          repeat:
+            type: Comment
+            text: 1-6 times
+        -
+          type: Terminal
+          text: "-"
+        -
+          type: OneOrMore
+          item:
+            type: NonTerminal
+            text: hex digit
+          repeat:
+            type: Comment
+            text: 1-6 times

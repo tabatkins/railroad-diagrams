@@ -1,0 +1,55 @@
+.TH rrdlint "1" "April 26, 2020" "" "rrdlint manual"
+
+.SH NAME
+rrdlint - syntax checker for railroad diagrams.
+
+.SH SYNOPSIS
+.B rrdlint
+[-i|--input
+.I name
+] [-v|--verbose] [-V|--version] [-h|--help]
+.RS
+[
+.I pattern...
+]
+.RE
+
+.SH DESCRIPTION
+.B
+rrdlint checks the syntax of railroad diagrams in JSON, YAML or JavaScript.
+
+.SH OPTIONS
+.B
+.IP "-i|--input type"
+read input from json, yaml or javascript. defaults to json
+.B
+.IP "-v|--verbose"
+print error stacktrace
+.B
+.IP "-V, --version"
+print version number
+.B
+.IP "-h, --help"
+print usage instructions
+
+.RE
+If no file name is provided, standard input will be read. If no input type
+is provided, it will be inferred from the file extension: ".json" -> json,
+".yaml" or ".yml" -> yaml, ".js" -> javascript.
+
+.SH EXAMPLES
+.B
+.IP "cat foo.yaml | rrdlint -i yaml"
+Check syntax of a diagram from the standard input.
+.B
+.IP "rrdlint diagrams/*"
+Check syntax of a diagrams from a directory.
+
+.SH BUGS
+rrdlint's bug tracker is located at <https://github.com/tabatkins/railroad-diagrams/issues>
+
+.SH DOCUMENTATION
+See the website for documentation <https://github.com/tabatkins/railroad-diagrams/#readme>
+
+.SH AUTHOR
+Written by Tab Atkins <jackalmage@gmail.com>

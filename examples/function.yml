@@ -1,0 +1,6 @@
+-
+  type: NonTerminal
+  text: IDENT
+-
+  type: NonTerminal
+  text: (

@@ -1,0 +1,6 @@
+-
+  type: Terminal
+  text: "@"
+-
+  type: NonTerminal
+  text: IDENT

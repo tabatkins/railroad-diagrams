@@ -1,0 +1,42 @@
+type:	Choice
+options:
+  -
+    type: Sequence
+    items:
+      -
+        type: Terminal
+        text: "\""
+      -
+        type: ZeroOrMore
+        item:
+          type: Choice
+          options:
+            -
+              type: NonTerminal
+              text: not " or \
+            -
+              type: NonTerminal
+              text: escape
+      -
+        type: Terminal
+        text: "\""
+  -
+    type: Sequence
+    items:
+      -
+        type: Terminal
+        text: "'"
+      -
+        type: ZeroOrMore
+        item:
+          type: Choice
+          options:
+            -
+              type: NonTerminal
+              text: not ' or \
+            -
+              type: NonTerminal
+              text: escape
+      -
+        type: Terminal
+        text: "'"
