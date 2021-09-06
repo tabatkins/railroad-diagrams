@@ -561,7 +561,7 @@ class AlternatingSequence(DiagramMultiContainer):
 		if len(items) == 2:
 			return super(AlternatingSequence, cls).__new__(cls)
 		else:
-			raise Exception("AlternatingSequence takes exactly two arguments got " + len(items))
+			raise Exception("AlternatingSequence takes exactly two arguments, but got {0} arguments.".format(len(items)))
 
 	def __init__(self, *items):
 		DiagramMultiContainer.__init__(self, 'g', items)
