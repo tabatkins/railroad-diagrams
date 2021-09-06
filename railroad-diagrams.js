@@ -118,13 +118,20 @@ and can be changed before creating a Diagram.
 		}
 		return el;
 	};
-	FakeSVG.prototype.toString = function() {
+	FakeSVG.prototype.toString = function(opt) {
+        opt=opt||{};
 		var str = '<' + this.tagName;
-		var group = this.tagName == "g" || this.tagName == "svg";
+        var group = this.tagName == "g" || this.tagName == "svg";
+        if(this.tagName == "svg" && opt.svgattr){
+            str += ' '+opt.svgattr;
+        }
 		for(var attr in this.attrs) {
 			str += ' ' + attr + '="' + (this.attrs[attr]+'').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"';
 		}
-		str += '>';
+        str += '>';
+        if(this.tagName == "svg" && opt.css){
+            str += '\n<style><![CDATA[\n'+opt.css+'\n]]></style>';
+        }
 		if(group) str += "\n";
 		if(typeof this.children == 'string') {
 			str += FakeSVG.prototype.escapeString(this.children);
@@ -299,11 +306,11 @@ and can be changed before creating a Diagram.
 		}
 		return this.$super.toSVG.call(this);
 	}
-	Diagram.prototype.toString = function() {
+	Diagram.prototype.toString = function(opt) {
 		if (!this.formatted) {
 			this.format();
 		}
-		return this.$super.toString.call(this);
+		return this.$super.toString.call(this,opt);
 	}
 	Diagram.DEBUG = false;
 
