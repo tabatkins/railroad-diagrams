@@ -86,7 +86,7 @@ export class FakeSVG {
 		this.tagName = tagName;
 		this.attrs = unnull(attrs, {});
 	}
-	format(x, y, width) {
+	format(/*x, y, width*/) {
 		// Virtual
 	}
 	addTo(parent) {
@@ -309,8 +309,12 @@ export class Diagram extends DiagramMultiContainer {
 		delete this.attrs.xmlns;
 		return result;
 	}
+	static fromJSON(input = []) {
+		return diagramFromJSON(Diagram, input);
+	}
 }
 funcs.Diagram = (...args)=>new Diagram(...args);
+funcs.Diagram.fromJSON = Diagram.fromJSON;
 
 
 export class ComplexDiagram extends FakeSVG {
@@ -320,8 +324,12 @@ export class ComplexDiagram extends FakeSVG {
 		diagram.items[diagram.items.length-1] = new End({type:"complex"});
 		return diagram;
 	}
+	static fromJSON(input = []) {
+		return diagramFromJSON(ComplexDiagram, input);
+	}
 }
 funcs.ComplexDiagram = (...args)=>new ComplexDiagram(...args);
+funcs.ComplexDiagram.fromJSON = ComplexDiagram.fromJSON;
 
 
 export class Sequence extends DiagramMultiContainer {
@@ -330,7 +338,7 @@ export class Sequence extends DiagramMultiContainer {
 		var numberOfItems = this.items.length;
 		this.needsSpace = true;
 		this.up = this.down = this.height = this.width = 0;
-		for(var i = 0; i < this.items.length; i++) {
+		for(var i = 0; i < numberOfItems; i++) {
 			var item = this.items[i];
 			this.width += item.width + (item.needsSpace?20:0);
 			this.up = Math.max(this.up, item.up - this.height);
@@ -338,7 +346,7 @@ export class Sequence extends DiagramMultiContainer {
 			this.down = Math.max(this.down - item.height, item.down);
 		}
 		if(this.items[0].needsSpace) this.width -= 10;
-		if(this.items[this.items.length-1].needsSpace) this.width -= 10;
+		if(this.items[numberOfItems-1].needsSpace) this.width -= 10;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "sequence";
@@ -1078,10 +1086,10 @@ export class Group extends FakeSVG {
 		this.item = wrapString(item);
 		this.label =
 			label instanceof FakeSVG
-			  ? label
-			: label
-			  ? new Comment(label)
-			  : undefined;
+				? label
+				: label
+					? new Comment(label)
+					: undefined;
 
 		this.width = Math.max(
 			this.item.width + (this.item.needsSpace?20:0),
@@ -1341,7 +1349,7 @@ export class Block extends FakeSVG {
 		this.height = height;
 		this.up = up;
 		this.down = down;
-		this.needsSpace = true;
+		this.needsSpace = needsSpace;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "block";
@@ -1406,7 +1414,7 @@ function SVG(name, attrs, text) {
 
 function escapeString(string) {
 	// Escape markdown and HTML special characters
-	return string.replace(/[*_\`\[\]<&]/g, function(charString) {
+	return string.replace(/[*_`[\]<&]/g, function(charString) {
 		return '&#' + charString.charCodeAt(0) + ';';
 	});
 }
@@ -1417,4 +1425,85 @@ function* enumerate(iter) {
 		yield [count, x];
 		count++;
 	}
+}
+
+function diagramFromJSON(Diagram, input) {
+	if (!input) return new Diagram();
+	// Wrap an array of nodes in the diagram type decided by the parent
+	// class of the calling static fromJSON method.
+	if (Array.isArray(input)) {
+		return new Diagram(...input.map(nodeFromJSON));
+	}
+	// Retain the diagram type specified in the input regardless the parent
+	// class of the calling static fromJSON method.
+	switch (input.type) {
+		case 'Diagram':
+		case 'ComplexDiagram':
+			return nodeFromJSON(input);
+	}
+	// Wrap the single node in the diagram type decided by the parent
+	// class of the calling static fromJSON method.
+	return new Diagram(nodeFromJSON(input));
+}
+
+const classes = {
+	Diagram, ComplexDiagram, Sequence, Stack, OptionalSequence, HorizontalChoice,
+	AlternatingSequence, Choice, MultipleChoice, Optional, OneOrMore, ZeroOrMore,
+	Group, Start, End, Terminal, NonTerminal, Comment, Skip
+}
+
+function nodeFromJSON(node) {
+	if (!node) return;
+	const Node = classes[node.type];
+	switch (Node) {
+		case Diagram:
+		case ComplexDiagram:
+		case Sequence:
+		case Stack:
+		case OptionalSequence:
+		case HorizontalChoice:
+			return new Node(...itemsFromJSON(node.items));
+
+		case AlternatingSequence:
+			return new Node(nodeFromJSON(node.option1), nodeFromJSON(node.option2));
+
+		case Choice:
+			return new Node(node.normalIndex || 0, ...itemsFromJSON(node.options));
+
+		case MultipleChoice:
+			return new Node(node.normalIndex || 0, node.choiceType,
+				...itemsFromJSON(node.options));
+
+		case Optional:
+			return new Node(nodeFromJSON(node.item), node.skip && 'skip');
+
+		case OneOrMore:
+			return new Node(nodeFromJSON(node.item), nodeFromJSON(node.repeat));
+
+		case ZeroOrMore:
+			return new Node(nodeFromJSON(node.item), nodeFromJSON(node.repeat),
+				node.skip && 'skip');
+
+		case Group:
+			return new Node(nodeFromJSON(node.item), node.label);
+
+		case Start:
+			return new Node(node.startType, node.label);
+
+		case End:
+			return new Node(node.endType);
+
+		case Terminal:
+		case NonTerminal:
+		case Comment:
+			return new Node(node.text, { href: node.href, title: node.title });
+
+		case Skip:
+			return new Node();
+	}
+	throw new Error(`Unknown node type: "${node.type}".`)
+}
+
+function itemsFromJSON(items) {
+	return items ? items.map(nodeFromJSON) : [];
 }

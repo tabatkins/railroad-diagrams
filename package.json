@@ -2,11 +2,24 @@
   "name": "railroad-diagrams",
   "version": "1.1.0",
   "description": "A small JS+SVG library for drawing railroad syntax diagrams.",
-  "main": "railroad-diagrams.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/tabatkins/railroad-diagrams.git"
   },
+  "author": "Tab Atkins Jr.",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/tabatkins/railroad-diagrams/issues"
+  },
+  "homepage": "https://github.com/tabatkins/railroad-diagrams",
+  "engines": {
+    "node": ">=6"
+  },
+  "files": [
+    "railroad-diagrams.js",
+    "railroad-diagrams.css"
+  ],
+  "main": "railroad-diagrams.js",
   "keywords": [
     "railroad",
     "syntax",
@@ -14,10 +27,10 @@
     "grammar",
     "svg"
   ],
-  "author": "Tab Atkins Jr.",
-  "license": "CC0-1.0",
-  "bugs": {
-    "url": "https://github.com/tabatkins/railroad-diagrams/issues"
+  "scripts": {
+    "test": "eslint railroad.js"
   },
-  "homepage": "https://github.com/tabatkins/railroad-diagrams"
+  "devDependencies": {
+    "eslint": "6.8.0"
+  }
 }
