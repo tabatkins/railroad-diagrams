@@ -1,21 +1,14 @@
-Railroad-Diagram Generator
-==========================
-
-<a href="https://github.com/tabatkins/railroad-diagrams/blob/gh-pages/images/rr-title.svg"><img src="https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-title.svg?sanitize=true" alt="Diagram(Stack('Generate', 'some'), OneOrMore(NonTerminal('railroad diagrams'), Comment('and more')))" title="Diagram(Stack('Generate', 'some'), OneOrMore(NonTerminal('railroad diagrams'), Comment('and more')))" width=10000></a>
+Railroad-Diagram Generator, Python Version
+==========================================
 
 This is a small library for generating railroad diagrams
 (like what [JSON.org](http://json.org) uses)
 using SVG, with both JS and Python ports.
-
-Railroad diagrams are a way of visually representing a grammar
-in a form that is more readable than using regular expressions or BNF.
-They can easily represent any context-free grammar, and some more powerful grammars.
-There are several railroad-diagram generators out there, but none of them had the visual appeal I wanted, so I wrote my own.
-
 [Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
 (This is the README for the Python port;
-to see the JS README, visit <https://github.com/tabatkins/railroad-diagrams>.)
+see the [main README](https://github.com/tabatkins/railroad-diagrams) for other ports,
+and for more non-Python-specific information.)
 
 Diagrams
 --------
@@ -141,17 +134,3 @@ you'll have to adjust the text metrics here as well.
 * CHAR_WIDTH - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
 * COMMENT_CHAR_WIDTH - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
 * DEBUG - if `True`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `False`.
-
-Caveats
--------
-
-SVG can't actually respond to the sizes of content; in particular, there's no way to make SVG adjust sizing/positioning based on the length of some text.  Instead, I guess at some font metrics, which mostly work as long as you're using a fairly standard monospace font.  This works pretty well, but long text inside of a construct might eventually overflow the construct.
-
-License
--------
-
-This document and all associated files in the github project are licensed under [CC0](http://creativecommons.org/publicdomain/zero/1.0/) ![](http://i.creativecommons.org/p/zero/1.0/80x15.png).
-This means you can reuse, remix, or otherwise appropriate this project for your own use **without restriction**.
-(The actual legal meaning can be found at the above link.)
-Don't ask me for permission to use any part of this project, **just use it**.
-I would appreciate attribution, but that is not required by the license.
