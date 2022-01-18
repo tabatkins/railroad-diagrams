@@ -19,7 +19,7 @@ setup(
     url='https://github.com/tabatkins/railroad-diagrams',
     keywords=['diagrams', 'syntax', 'grammar', 'railroad diagrams'],
     classifiers=[
-        'License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
+        'LICENSE :: OSI APPROVED :: MIT LICENSE',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',

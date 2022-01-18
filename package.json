@@ -15,7 +15,7 @@
     "svg"
   ],
   "author": "Tab Atkins Jr.",
-  "license": "CC0-1.0",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/tabatkins/railroad-diagrams/issues"
   },
