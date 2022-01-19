@@ -1,6 +1,6 @@
 <!doctype html>
 <title>Railroad Diagram Generator</title>
-<link href="railroad-diagrams.css" rel=stylesheet>
+<link href="railroad.css" rel=stylesheet>
 
 <textarea class='input'>Diagram(
   Optional('+', 'skip'),
@@ -13,9 +13,21 @@
       NonTerminal('escape'))))</textarea>
 <div class='output-image'></div>
 <textarea class='output-text' readonly></textarea>
-<div class=info>
-	<p><label><input type=checkbox name=standalone id=standalone> Generate code for standalone SVG?</label>
-</div>
+<ul class=info>
+	<li><label><input type=number min=1 value=8 width=3 id=option-vs> Minimum vertical separation between lines (in px)?</label>
+	<li><label><input type=number min=2 value=10 id=option-ar> Arc radius for corners (in px)?</label>
+	<li><label><input type=number min=1 value=8.5 step=.5 id=option-char-width> Average width of characters in "normal" (Terminal/NonTerminal) text (in px)?</label>
+	<li><label><input type=number min=1 value=7 step=.5 id=option-comment-width> Average width of characters in Comment text (in px)?</label>
+	<li><label>
+		<select id=option-alignment>
+			<option>center</option>
+			<option>left</option>
+			<option>right</option>
+		</select>
+		How should items be aligned when there's more space than they need?</label>
+	<li><label><input type=checkbox id=option-odd-stroke checked> Is the stroke width an odd number of px? (Yes, in the default styles.)
+	<li><label><input type=checkbox name=standalone id=option-standalone> Generate code for standalone SVG document?</label>
+</ul>
 
 <script type=module>
 import rr, * as rrClass from "./railroad.js";
@@ -28,7 +40,7 @@ const find = document.querySelector.bind(document);
 find('.input').addEventListener('input', e=>process(e.target.value), false);
 document.addEventListener('DOMContentLoaded', initialProcess, false);
 window.addEventListener('hashchange', hashProcess, false);
-find('#standalone').addEventListener('input', _=>process(), false);
+find('.info').addEventListener('input', _=>process(), false);
 
 function initialProcess() {
 	if(location.hash && location.hash.length > 1) {
@@ -52,7 +64,13 @@ function hashProcess() {
 
 function process(input) {
 	if(!input) input = find('.input').value;
-	const standalone = find('#standalone').checked;
+	const standalone = find('#option-standalone').checked;
+	rrOptions.VS = parseInt(find("#option-vs").value, 10);
+	rrOptions.AR = parseInt(find("#option-ar").value, 10);
+	rrOptions.STROKE_ODD_PIXEL_LENGTH = find("#option-odd-stroke").checked;
+	rrOptions.CHAR_WIDTH = parseInt(find("#option-char-width").value, 10);
+	rrOptions.COMMENT_CHAR_WIDTH = parseInt(find("#option-comment-width").value, 10);
+	rrOptions.INTERNAL_ALIGNMENT = find("#option-alignment").value;
 	try {
 		var result = eval(input).format();
 		location.hash = "#" + encodeURIComponent(input);
@@ -75,7 +93,8 @@ function process(input) {
 		grid-template:
 			"input  code" 1fr
 			"output info" 1fr
-			/ 1fr   1fr;
+			/ auto   minmax(15em, auto);
+		max-width: 100%;
 	}
 }
 .input {
@@ -86,8 +105,13 @@ function process(input) {
 }
 .output-image {
 	grid-area: output;
+	overflow:  auto;
 }
 .info {
 	grid-area: info;
+}
+.info input[type=number], .info select {
+	width:  60px;
+	box-sizing:  border-box;
 }
 </style>
