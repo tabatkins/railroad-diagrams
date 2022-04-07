@@ -56,73 +56,73 @@ Components
 Components are either leaves or containers.
 
 The leaves:
-* Terminal(text, {href, title, cls}) or a bare string - represents literal text.
+* `Terminal(text[, {href, title, cls}])` or a bare string - represents literal text.
 
-    All the arguments in the options bag are optional:
-    * 'href' makes the text a hyperlink with the given URL
-    * 'title' adds an SVG `<title>` element to the element,
+    All the properties in the options bag are optional:
+    * `href` makes the text a hyperlink with the given URL
+    * `title` adds an SVG `<title>` element to the element,
         giving it "hover text"
         and a description for screen-readers and other assistive tech
-    * 'cls' is additional classes to apply to the element,
+    * `cls` is additional classes to apply to the element,
         beyond the default `'terminal'`
 
-* NonTerminal(text, {href, title, cls}) - represents an instruction or another production.
+* `NonTerminal(text[, {href, title, cls}])` - represents an instruction or another production.
 
     The optional arguments have the same meaning as for Terminal,
     except that the default class is `'non-terminal'`.
 
-* Comment(text, {href, title, cls}) - a comment.
+* `Comment(text[, {href, title, cls}])` - a comment.
 
     The optional arguments have the same meaning as for Terminal,
     except that the default class is `'comment'`.
 
-* Skip() - an empty line
+* `Skip()` - an empty line
 
-* Start(type, label) and End(type) - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a Start() explicitly (as the first child of the Diagram!). The "type" attribute takes either "simple" (the default) or "complex", a la Diagram() and ComplexDiagram(). All arguments are optional.
+* `Start({type, label})` and `End({type})` - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a `Start()` explicitly (as the first child of the Diagram!). The `type` property takes either `"simple"` (the default) or `"complex"`, a la `Diagram()` and `ComplexDiagram()`. All properties are optional.
 
 The containers:
-* Sequence(...children) - like simple concatenation in a regex.
+* `Sequence(...children)` - like simple concatenation in a regex.
 
     ![Sequence('1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-sequence.svg?sanitize=true "Sequence('1', '2', '3')")
 
-* Stack(...children) - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
+* `Stack(...children)` - identical to a Sequence, but the items are stacked vertically rather than horizontally. Best used when a simple Sequence would be too wide; instead, you can break the items up into a Stack of Sequences of an appropriate width.
 
     ![Stack('1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-stack.svg?sanitize=true "Stack('1', '2', '3')")
 
-* OptionalSequence(...children) - a Sequence where every item is *individually* optional, but at least one item must be chosen
+* `OptionalSequence(...children)` - a Sequence where every item is *individually* optional, but at least one item must be chosen
 
     ![OptionalSequence('1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-optionalsequence.svg?sanitize=true "OptionalSequence('1', '2', '3')")
 
-* Choice(index, ...children) - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
+* `Choice(index, ...children)` - like `|` in a regex.  The index argument specifies which child is the "normal" choice and should go in the middle
 
     ![Choice(1, '1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-choice.svg?sanitize=true "Choice(1, '1', '2', '3')")
 
-* MultipleChoice(index, type, ...children) - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either "any" (1+ branches can be taken) or "all" (all branches must be taken).
+* `MultipleChoice(index, type, ...children)` - like `||` or `&&` in a CSS grammar; it's similar to a Choice, but more than one branch can be taken.  The index argument specifies which child is the "normal" choice and should go in the middle, while the type argument must be either `"any"` (1+ branches can be taken) or `"all"` (all branches must be taken).
 
     ![MultipleChoice(1, 'all', '1', '2', '3')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-multiplechoice.svg?sanitize=true "MultipleChoice(1, 'all', '1', '2', '3')")
 
-* HorizontalChoice(...children) - Identical to Choice, but the items are stacked horizontally rather than vertically. There's no "straight-line" choice, so it just takes a list of children. Best used when a simple Choice would be too tall; instead, you can break up the items into a HorizontalChoice of Choices of an appropriate height.
+* `HorizontalChoice(...children)` - Identical to Choice, but the items are stacked horizontally rather than vertically. There's no "straight-line" choice, so it just takes a list of children. Best used when a simple Choice would be too tall; instead, you can break up the items into a HorizontalChoice of Choices of an appropriate height.
 
 	![HorizontalChoice(Choice(2,'0','1','2','3','4'), Choice(2, '5', '6', '7', '8', '9'))](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-horizontalchoice.svg?sanitize=true "HorizontalChoice(Choice(2,'0','1','2','3','4'), Choice(2, '5', '6', '7', '8', '9'))")
 
-* Optional(child, skip) - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the Skip() in the straight-line path, for when the "normal" behavior is to omit the item.
+* `Optional(child[, skip])` - like `?` in a regex.  A shorthand for `Choice(1, Skip(), child)`.  If the optional `skip` parameter has the value `"skip"`, it instead puts the `Skip()` in the straight-line path, for when the "normal" behavior is to omit the item.
 
 
     ![Optional('foo'), Optional('bar', 'skip')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-optional.svg?sanitize=true "Optional('foo'), Optional('bar', 'skip')")
 
-* OneOrMore(child, repeat) - like `+` in a regex.  The 'repeat' argument is optional, and specifies something that must go between the repetitions (usually a `Comment()`, but sometimes things like `","`, etc.)
+* `OneOrMore(child[, repeat])` - like `+` in a regex.  The `repeat` argument is optional, and specifies something that must go between the repetitions (usually a `Comment()`, but sometimes things like `","`, etc.)
 
     ![OneOrMore('foo', Comment('bar'))](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-oneormore.svg?sanitize=true "OneOrMore('foo', Comment('bar'))")
 
-* AlternatingSequence(option1, option2) - similar to a OneOrMore, where you must alternate between the two choices, but allows you to start and end with either element. (OneOrMore requires you to start and end with the "child" node.)
+* `AlternatingSequence(option1, option2)` - similar to a OneOrMore, where you must alternate between the two choices, but allows you to start and end with either element. (OneOrMore requires you to start and end with the "child" node.)
 
     ![AlternatingSequence('foo', 'bar')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-alternatingsequence.svg?sanitize=true "AlternatingSequence('foo', 'bar')")
 
-* ZeroOrMore(child, repeat, skip) - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat), skip)`.  Both `repeat` (same as in `OneOrMore()`) and `skip` (same as in `Optional()`) are optional.
+* `ZeroOrMore(child[, repeat[, skip]])` - like `*` in a regex.  A shorthand for `Optional(OneOrMore(child, repeat), skip)`.  Both `repeat` (same as in `OneOrMore()`) and `skip` (same as in `Optional()`) are optional.
 
     ![ZeroOrMore('foo', Comment('bar')), ZeroOrMore('foo', Comment('bar'), 'skip')](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-zeroormore.svg?sanitize=true "ZeroOrMore('foo', Comment('bar')), ZeroOrMore('foo', Comment('bar'), 'skip')")
 
-* Group(child, label?) - highlights its child with a dashed outline, and optionally labels it. Passing a string as the label constructs a Comment, or you can build one yourself (to give an href or title).
+* `Group(child[, label])` - highlights its child with a dashed outline, and optionally labels it. Passing a string as the label constructs a Comment, or you can build one yourself (to give an href or title).
 
     ![Sequence("foo", Group(Choice(0, NonTerminal('option 1'), NonTerminal('or two')), "label"), "bar",)](https://github.com/tabatkins/railroad-diagrams/raw/gh-pages/images/rr-group.svg?sanitize=true "Sequence('foo', Group(Choice(0, NonTerminal('option 1'), NonTerminal('or two')), 'label'), 'bar',)")
 
