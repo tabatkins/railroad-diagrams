@@ -2,30 +2,29 @@
 from __future__ import annotations
 
 import math as Math
-import re
 import sys
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import (
-        Tuple,
-        Optional as Opt,
-        Union,
-        List,
-        Sequence as Seq,
-        TypeVar,
-        Dict,
-        Callable,
         Any,
+        Callable,
+        Dict,
         Generator,
+        List,
+        Optional as Opt,
+        Sequence as Seq,
+        Tuple,
         Type,
+        TypeVar,
+        Union,
     )
 
     T = TypeVar("T")
-    Node = Union[str, DiagramItem]
+    Node = Union[str, DiagramItem] # pylint: disable=used-before-assignment
     WriterF = Callable[[str], Any]
-    WalkerF = Callable[[DiagramItem], Any]
+    WalkerF = Callable[[DiagramItem], Any] # pylint: disable=used-before-assignment
     AttrsT = Dict[str, Any]
 
 # Display constants
@@ -121,12 +120,6 @@ class DiagramItem:
     def walk(self, cb: WalkerF) -> None:
         cb(self)
 
-    def __eq__(self, other: Any) -> bool:
-        return type(self) == type(other) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other: Any) -> bool:
-        return not (self == other)
-
 
 class DiagramMultiContainer(DiagramItem):
     def __init__(
@@ -138,6 +131,9 @@ class DiagramMultiContainer(DiagramItem):
     ):
         DiagramItem.__init__(self, name, attrs, text)
         self.items: List[DiagramItem] = [wrapString(item) for item in items]
+
+    def format(self, x: float, y: float, width: float) -> DiagramItem:
+        raise NotImplementedError  # Virtual
 
     def walk(self, cb: WalkerF) -> None:
         cb(self)
@@ -152,7 +148,7 @@ class Path:
         self.attrs = {"d": f"M{x} {y}"}
 
     def m(self, x: float, y: float) -> Path:
-        self.attrs["d"] += f"m{x} {x}"
+        self.attrs["d"] += f"m{x} {y}"
         return self
 
     def l(self, x: float, y: float) -> Path:
@@ -233,7 +229,7 @@ class Path:
         if sweep[0] == "s" or sweep[1] == "n":
             y *= -1
         cw = (
-            1 if sweep == "ne" or sweep == "es" or sweep == "sw" or sweep == "wn" else 0
+            1 if sweep in ("ne", "es", "sw", "wn") else 0
         )
         self.attrs["d"] += f"a{AR} {AR} 0 0 {cw} {x} {y}"
         return self
@@ -294,6 +290,7 @@ DEFAULT_STYLE = """\
 
 class Style(DiagramItem):
     def __init__(self, css: str):
+        DiagramItem.__init__(self, "style", [], {})
         self.name = "style"
         self.css = css
         self.height = 0
@@ -406,27 +403,6 @@ class Diagram(DiagramMultiContainer):
         if not self.formatted:
             self.format()
         return DiagramItem.writeSvg(self, write)
-
-    def parseCSSGrammar(self, text: str) -> None:
-        token_patterns = {
-            "keyword": r"[\w-]+\(?",
-            "type": r"<[\w-]+(\(\))?>",
-            "char": r"[/,()]",
-            "literal": r"'(.)'",
-            "openbracket": r"\[",
-            "closebracket": r"\]",
-            "closebracketbang": r"\]!",
-            "bar": r"\|",
-            "doublebar": r"\|\|",
-            "doubleand": r"&&",
-            "multstar": r"\*",
-            "multplus": r"\+",
-            "multhash": r"#",
-            "multnum1": r"{\s*(\d+)\s*}",
-            "multnum2": r"{\s*(\d+)\s*,\s*(\d*)\s*}",
-            "multhashnum1": r"#{\s*(\d+)\s*}",
-            "multhashnum2": r"{\s*(\d+)\s*,\s*(\d*)\s*}",
-        }
 
 
 class Sequence(DiagramMultiContainer):
@@ -1454,10 +1430,9 @@ if __name__ == "__main__":
         diagram.writeSvg(sys.stdout.write)
         sys.stdout.write("\n")
 
-    import sys
-
     sys.stdout.write("<!doctype html><title>Test</title><body>")
-    exec(open("test.py").read())
+    with open("test.py", 'r', encoding="utf-8") as fh:
+        exec(fh.read()) # pylint: disable=exec-used
     sys.stdout.write(
         """
 		<style>
