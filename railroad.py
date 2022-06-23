@@ -22,9 +22,9 @@ if TYPE_CHECKING:
     )
 
     T = TypeVar("T")
-    Node = Union[str, DiagramItem] # pylint: disable=used-before-assignment
+    Node = Union[str, DiagramItem]  # pylint: disable=used-before-assignment
     WriterF = Callable[[str], Any]
-    WalkerF = Callable[[DiagramItem], Any] # pylint: disable=used-before-assignment
+    WalkerF = Callable[[DiagramItem], Any]  # pylint: disable=used-before-assignment
     AttrsT = Dict[str, Any]
 
 # Display constants
@@ -228,9 +228,7 @@ class Path:
             x *= -1
         if sweep[0] == "s" or sweep[1] == "n":
             y *= -1
-        cw = (
-            1 if sweep in ("ne", "es", "sw", "wn") else 0
-        )
+        cw = 1 if sweep in ("ne", "es", "sw", "wn") else 0
         self.attrs["d"] += f"a{AR} {AR} 0 0 {cw} {x} {y}"
         return self
 
@@ -1426,8 +1424,8 @@ if __name__ == "__main__":
         sys.stdout.write("\n")
 
     sys.stdout.write("<!doctype html><title>Test</title><body>")
-    with open("test.py", 'r', encoding="utf-8") as fh:
-        exec(fh.read()) # pylint: disable=exec-used
+    with open("test.py", "r", encoding="utf-8") as fh:
+        exec(fh.read())  # pylint: disable=exec-used
     sys.stdout.write(
         """
 		<style>
