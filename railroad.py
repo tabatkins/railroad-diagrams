@@ -43,10 +43,14 @@ CHAR_WIDTH = 8.5  # width of each monospace character. play until you find the r
 COMMENT_CHAR_WIDTH = 7  # comments are in smaller text by default
 
 
-def e(text: Union[str, float]) -> str:
-    return re.sub(
-        r"[*_\`\[\]<&]", lambda c: "&#{0};".format(ord(c.group(0))), str(text)
-    )
+def escapeAttr(val: Union[str, float]) -> str:
+    if isinstance(val, str):
+        return val.replace("&", "&amp;").replace("'", "&apos;").replace('"', "&quot;")
+    return f"{val:g}"
+
+
+def escapeHtml(val: str) -> str:
+    return escapeAttr(val).replace("<", "&lt;")
 
 
 def determineGaps(outer: float, inner: float) -> Tuple[float, float]:
@@ -103,7 +107,7 @@ class DiagramItem:
     def writeSvg(self, write: WriterF) -> None:
         write("<{0}".format(self.name))
         for name, value in sorted(self.attrs.items()):
-            write(' {0}="{1}"'.format(name, e(value)))
+            write(' {0}="{1}"'.format(name, escapeAttr(value)))
         write(">")
         if self.name in ["g", "svg"]:
             write("\n")
@@ -111,7 +115,7 @@ class DiagramItem:
             if isinstance(child, (DiagramItem, Path)):
                 child.writeSvg(write)
             else:
-                write(e(child))
+                write(escapeHtml(child))
         write("</{0}>".format(self.name))
 
     def walk(self, cb: WalkerF) -> None:
@@ -241,7 +245,7 @@ class Path:
     def writeSvg(self, write: WriterF) -> None:
         write("<path")
         for name, value in sorted(self.attrs.items()):
-            write(f' {name}="{e(value)}"')
+            write(f' {name}="{escapeAttr(value)}"')
         write(" />")
 
     def format(self) -> Path:
@@ -1446,7 +1450,7 @@ class Skip(DiagramItem):
 if __name__ == "__main__":
 
     def add(name: str, diagram: DiagramItem) -> None:
-        sys.stdout.write(f"<h1>{e(name)}</h1>\n")
+        sys.stdout.write(f"<h1>{escapeHtml(name)}</h1>\n")
         diagram.writeSvg(sys.stdout.write)
         sys.stdout.write("\n")
 
