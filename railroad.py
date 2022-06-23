@@ -324,7 +324,7 @@ class Diagram(DiagramMultiContainer):
             self.items.insert(0, Start(self.type))
         if items and not isinstance(items[-1], End):
             self.items.append(End(self.type))
-        self.css = kwargs.get("css", DEFAULT_STYLE)
+        self.css: Opt[str] = kwargs.get("css", DEFAULT_STYLE)
         self.up = 0
         self.down = 0
         self.height = 0
@@ -358,7 +358,8 @@ class Diagram(DiagramMultiContainer):
         paddingBottom: Opt[float] = None,
         paddingLeft: Opt[float] = None,
     ) -> Diagram:
-        Style(self.css).addTo(self)
+        if self.css:
+            Style(self.css).addTo(self)
         if paddingRight is None:
             paddingRight = paddingTop
         if paddingBottom is None:
