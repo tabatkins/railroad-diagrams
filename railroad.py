@@ -290,7 +290,7 @@ DEFAULT_STYLE = """\
 
 class Style(DiagramItem):
     def __init__(self, css: str):
-        DiagramItem.__init__(self, "style", [], {})
+        DiagramItem.__init__(self, "style")
         self.name = "style"
         self.css = css
         self.height = 0
