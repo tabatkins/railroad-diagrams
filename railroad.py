@@ -94,7 +94,7 @@ class DiagramItem:
         self.attrs: AttrsT = attrs or {}
         # Subclasses store their meaningful children as .item or .items;
         # .children instead stores their formatted SVG nodes.
-        self.children: List[Union[Node, Path]] = [text] if text else []
+        self.children: List[Union[Node, Path, Style]] = [text] if text else []
 
     def format(self, x: float, y: float, width: float) -> DiagramItem:
         raise NotImplementedError  # Virtual
@@ -111,7 +111,7 @@ class DiagramItem:
         if self.name in ["g", "svg"]:
             write("\n")
         for child in self.children:
-            if isinstance(child, (DiagramItem, Path)):
+            if isinstance(child, (DiagramItem, Path, Style)):
                 child.writeSvg(write)
             else:
                 write(escapeHtml(child))
@@ -288,19 +288,18 @@ DEFAULT_STYLE = """\
 """
 
 
-class Style(DiagramItem):
+class Style:
     def __init__(self, css: str):
-        DiagramItem.__init__(self, "style")
-        self.name = "style"
         self.css = css
-        self.height = 0
-        self.width = 0
-        self.needsSpace = False
 
     def __repr__(self) -> str:
         return f"Style({repr(self.css)})"
 
-    def format(self, x: float, y: float, width: float) -> Style:
+    def addTo(self, parent: DiagramItem) -> Style:
+        parent.children.append(self)
+        return self
+
+    def format(self) -> Style:
         return self
 
     def writeSvg(self, write: WriterF) -> None:
@@ -328,8 +327,6 @@ class Diagram(DiagramMultiContainer):
         if items and not isinstance(items[-1], End):
             self.items.append(End(self.type))
         self.css = kwargs.get("css", DEFAULT_STYLE)
-        if self.css:
-            self.items.insert(0, Style(self.css))
         self.up = 0
         self.down = 0
         self.height = 0
@@ -348,10 +345,7 @@ class Diagram(DiagramMultiContainer):
         self.formatted = False
 
     def __repr__(self) -> str:
-        if self.css:
-            items = ", ".join(map(repr, self.items[2:-1]))
-        else:
-            items = ", ".join(map(repr, self.items[1:-1]))
+        items = ", ".join(map(repr, self.items[1:-1]))
         pieces = [] if not items else [items]
         if self.css != DEFAULT_STYLE:
             pieces.append(f"css={repr(self.css)}")
@@ -366,6 +360,7 @@ class Diagram(DiagramMultiContainer):
         paddingBottom: Opt[float] = None,
         paddingLeft: Opt[float] = None,
     ) -> Diagram:
+        Style(self.css).addTo(self)
         if paddingRight is None:
             paddingRight = paddingTop
         if paddingBottom is None:
