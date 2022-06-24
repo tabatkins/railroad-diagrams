@@ -18,6 +18,7 @@ setup(
     author_email='jackalmage@gmail.com',
     url='https://github.com/tabatkins/railroad-diagrams',
     keywords=['diagrams', 'syntax', 'grammar', 'railroad diagrams'],
+    python_requires=">= 3.7",
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
