@@ -399,11 +399,10 @@ class Diagram(DiagramMultiContainer):
         Style(css).addTo(self)
         self.attrs["xmlns"] = "http://www.w3.org/2000/svg"
         self.attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink"
-        result = DiagramItem.writeSVG(self, write)
+        DiagramItem.writeSvg(self, write)
         self.children.pop()
         del self.attrs["xmlns"]
         del self.attrs["xmlns:xlink"]
-        return result
 
 
 class Sequence(DiagramMultiContainer):
