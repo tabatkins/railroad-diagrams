@@ -39,6 +39,15 @@ The `Diagram()` constructor also optionally takes some keyword arguments:
 After constructing a Diagram, you can call `.format(...padding)` on it, specifying 0-4 padding values (just like CSS) for some additional "breathing space" around the diagram (the paddings default to 20px).
 
 To output the diagram, call `.writeSvg(cb)` on it, passing a function that'll get called repeatedly to produce the SVG markup. `sys.stdout.write` (or the `.write` property of any file object) is a great value to pass if you're directly outputting it; if you need it as a plain string, a `StringIO` can be used.
+This method produces an SVG fragment appropriate to include directly in HTML.
+
+Alternately, you can call `.writeStandalone(cb, css?)`,
+which'll format the SVG as a standalone document
+rather than as an HTML fragment.
+If you don't pass any `css`,
+it'll automatically include the `DEFAULT_STYLE`;
+you can include your own CSS instead by passing it as a string
+(or an empty string to include no CSS at all).
 
 If you need to walk the component tree of a diagram for some reason, `Diagram` has a `.walk(cb)` method as well, which will call your callback on every node in the diagram, in a "pre-order depth-first traversal" (the node first, then each child).
 
