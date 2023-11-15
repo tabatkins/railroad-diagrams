@@ -1219,6 +1219,9 @@ class Group(DiagramItem):
         if self.label:
             self.label.walk(cb)
 
+    def __repr__(self) -> str:
+        return f"Group({self.item}, label={self.label})"
+
 
 class Start(DiagramItem):
     def __init__(self, type: str = "simple", label: Opt[str] = None):
