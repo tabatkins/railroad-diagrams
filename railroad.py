@@ -1224,7 +1224,7 @@ class Group(DiagramItem):
             self.label.walk(cb)
 
     def __repr__(self) -> str:
-        return f"Group({self.item}, label={self.label})"
+        return f"Group({repr(self.item)}, label={repr(self.label)})"
 
 
 class Start(DiagramItem):
