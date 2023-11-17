@@ -1099,6 +1099,10 @@ class HorizontalChoice(DiagramMultiContainer):
                 )
         return self
 
+    def __repr__(self) -> str:
+        items = ", ".join(repr(item) for item in self.items)
+        return f"HorizontalChoice({items})"
+
 
 def Optional(item: Node, skip: bool = False) -> Choice:
     return Choice(0 if skip else 1, Skip(), item)
@@ -1218,6 +1222,9 @@ class Group(DiagramItem):
         self.item.walk(cb)
         if self.label:
             self.label.walk(cb)
+
+    def __repr__(self) -> str:
+        return f"Group({repr(self.item)}, label={repr(self.label)})"
 
 
 class Start(DiagramItem):
