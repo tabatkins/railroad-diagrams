@@ -40,6 +40,7 @@ INTERNAL_ALIGNMENT = (
 )
 CHAR_WIDTH = 8.5  # width of each monospace character. play until you find the right value for your font
 COMMENT_CHAR_WIDTH = 7  # comments are in smaller text by default
+ESCAPE_HTML = True  # Should Diagram.writeText() produce HTML-escaped text, or raw?
 
 
 def escapeAttr(val: Union[str, float]) -> str:
@@ -99,6 +100,9 @@ class DiagramItem:
     def format(self, x: float, y: float, width: float) -> DiagramItem:
         raise NotImplementedError  # Virtual
 
+    def textDiagram() -> TextDiagram:
+        raise NotImplementedError("Virtual")
+
     def addTo(self, parent: DiagramItem) -> DiagramItem:
         parent.children.append(self)
         return self
@@ -120,6 +124,9 @@ class DiagramItem:
     def walk(self, cb: WalkerF) -> None:
         cb(self)
 
+    def __repr__(self) -> str:
+        return f"DiagramItem({self.name}, {self.attrs}, {self.children})"
+
 
 class DiagramMultiContainer(DiagramItem):
     def __init__(
@@ -139,6 +146,9 @@ class DiagramMultiContainer(DiagramItem):
         cb(self)
         for item in self.items:
             item.walk(cb)
+
+    def __repr__(self) -> str:
+        return f"DiagramMultiContainer({self.name}, {self.items}. {self.attrs}, {self.children})"
 
 
 class Path:
@@ -246,6 +256,9 @@ class Path:
         self.attrs["d"] += "h.5"
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        return TextDiagram(0, 0, [])
+
     def __repr__(self) -> str:
         return f"Path({repr(self.x)}, {repr(self.y)})"
 
@@ -299,6 +312,9 @@ class Style:
 
     def format(self) -> Style:
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        return TextDiagram(0, 0, [])
 
     def writeSvg(self, write: WriterF) -> None:
         # Write included stylesheet as CDATA. See https:#developer.mozilla.org/en-US/docs/Web/SVG/Element/style
@@ -386,12 +402,29 @@ class Diagram(DiagramMultiContainer):
         self.formatted = True
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        (separator, ) = TextDiagram._getParts(["separator"])
+        diagramTD = self.items[0].textDiagram()
+        for item in self.items[1:]:
+            itemTD = item.textDiagram()
+            if item.needsSpace:
+                itemTD = itemTD.expand(1, 1, 0, 0)
+            diagramTD = diagramTD.appendRight(itemTD, separator)
+        return diagramTD
+
     def writeSvg(self, write: WriterF) -> None:
         if not self.formatted:
             self.format()
         return DiagramItem.writeSvg(self, write)
 
-    def writeStandalone(self, write: WriterF, css: str|None = None) -> None:
+    def writeText(self, write: WriterF) -> None:
+        output = self.textDiagram()
+        output = "\n".join(output.lines) + "\n"
+        if ESCAPE_HTML:
+            output = output.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+        write(output)
+
+    def writeStandalone(self, write: WriterF, css: str | None = None) -> None:
         if not self.formatted:
             self.format()
         if css is None:
@@ -444,6 +477,16 @@ class Sequence(DiagramMultiContainer):
                 Path(x, y).h(10).addTo(self)
                 x += 10
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        (separator, ) = TextDiagram._getParts(["separator"])
+        diagramTD = TextDiagram(0, 0, [""])
+        for item in self.items:
+            itemTD = item.textDiagram()
+            if item.needsSpace:
+                itemTD = itemTD.expand(1, 1, 0, 0)
+            diagramTD = diagramTD.appendRight(itemTD, separator)
+        return diagramTD
 
 
 class Stack(DiagramMultiContainer):
@@ -508,6 +551,56 @@ class Stack(DiagramMultiContainer):
             x += AR
         Path(x, y).h(rightGap).addTo(self)
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        corner_bot_left, corner_bot_right, corner_top_left, corner_top_right, line, line_vertical = TextDiagram._getParts(["corner_bot_left", "corner_bot_right", "corner_top_left", "corner_top_right", "line", "line_vertical"])
+
+        # Format all the child items, so we can know the maximum width.
+        itemTDs = []
+        for item in self.items:
+            itemTDs.append(item.textDiagram())
+        maxWidth = max([itemTD.width for itemTD in itemTDs])
+
+        leftLines = []
+        rightLines = []
+        separatorTD = TextDiagram(0, 0, [line * maxWidth])
+        diagramTD = None  # Top item will replace it.
+
+        for itemNum, itemTD in enumerate(itemTDs):
+            if itemNum == 0:
+                # The top item enters directly from its left.
+                leftLines += [line * 2]
+                leftLines += [" " * 2] * (itemTD.height - itemTD.entry - 1)
+            else:
+                # All items below the top enter from a snake-line from the previous item's exit.
+                # Here, we resume that line, already having descended from above on the right.
+                diagramTD = diagramTD.appendBelow(separatorTD, [])
+                leftLines += [corner_top_left + line]
+                leftLines += [line_vertical + " "] * (itemTD.entry)
+                leftLines += [corner_bot_left + line]
+                leftLines += [" " * 2] * (itemTD.height - itemTD.entry - 1)
+                rightLines += [" " * 2] * (itemTD.exit)
+            if itemNum < len(itemTDs) - 1:
+                # All items above the bottom exit via a snake-line to the next item's entry.
+                # Here, we start that line on the right.
+                rightLines += [line + corner_top_right]
+                rightLines += [" " + line_vertical] * (itemTD.height - itemTD.exit - 1)
+                rightLines += [line + corner_bot_right]
+            else:
+                # The bottom item exits directly to its right.
+                rightLines += [line * 2]
+            leftPad, rightPad = TextDiagram._gaps(maxWidth, itemTD.width)
+            itemTD = itemTD.expand(leftPad, rightPad, 0, 0)
+            if itemNum == 0:
+                diagramTD = itemTD
+            else:
+                diagramTD = diagramTD.appendBelow(itemTD, [])
+
+        leftTD = TextDiagram(0, 0, leftLines)
+        diagramTD = leftTD.appendRight(diagramTD, "")
+        rightTD = TextDiagram(0, len(rightLines) - 1, rightLines)
+        diagramTD = diagramTD.appendRight(rightTD, "")
+        return diagramTD
 
 
 class OptionalSequence(DiagramMultiContainer):
@@ -630,6 +723,82 @@ class OptionalSequence(DiagramMultiContainer):
                 )
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        line, line_vertical, roundcorner_bot_left, roundcorner_bot_right, roundcorner_top_left, roundcorner_top_right = TextDiagram._getParts(["line", "line_vertical", "roundcorner_bot_left", "roundcorner_bot_right", "roundcorner_top_left", "roundcorner_top_right"])
+
+        # Format all the child items, so we can know the maximum entry.
+        itemTDs = []
+        for item in self.items:
+            itemTDs.append(item.textDiagram())
+        # diagramEntry: distance from top to lowest entry, aka distance from top to diagram entry, aka final diagram entry and exit.
+        diagramEntry = max([itemTD.entry for itemTD in itemTDs])
+        # SOILHeight: distance from top to lowest entry before rightmost item, aka distance from skip-over-items line to rightmost entry, aka SOIL height.
+        SOILHeight = max([itemTD.entry for itemTD in itemTDs[:-1]])
+        # topToSOIL: distance from top to skip-over-items line.
+        topToSOIL = diagramEntry - SOILHeight
+
+        # The diagram starts with a line from its entry up to the skip-over-items line:
+        lines = [" " * 2] * topToSOIL
+        lines += [roundcorner_top_left + line]
+        lines += [line_vertical + " "] * SOILHeight
+        lines += [roundcorner_bot_right + line]
+        diagramTD = TextDiagram(len(lines) - 1, len(lines) - 1, lines)
+        for itemNum, itemTD in enumerate(itemTDs):
+            if itemNum > 0:
+                # All items except the leftmost start with a line from their entry down to their skip-under-item line,
+                # with a joining-line across at the skip-over-items line:
+                lines = []
+                lines += [" " * 2] * topToSOIL
+                lines += [line * 2]
+                lines += [" " * 2] * (diagramTD.exit - topToSOIL - 1)
+                lines += [line + roundcorner_top_right]
+                lines += [" " + line_vertical] * (itemTD.height - itemTD.entry - 1)
+                lines += [" " + roundcorner_bot_left]
+                skipDownTD = TextDiagram(diagramTD.exit, diagramTD.exit, lines)
+                diagramTD = diagramTD.appendRight(skipDownTD, "")
+                # All items except the leftmost next have a line from skip-over-items line down to their entry,
+                # with joining-lines at their entry and at their skip-under-item line:
+                lines = []
+                lines += [" " * 2] * topToSOIL
+                # All such items except the rightmost also have a continuation of the skip-over-items line:
+                lineToNextItem = line if itemNum < len(itemTDs) - 1 else " "
+                lines += [line + roundcorner_top_right + lineToNextItem]
+                lines += [" " + line_vertical + " "] * (diagramTD.exit - topToSOIL - 1)
+                lines += [line + roundcorner_bot_left + line]
+                lines += [" " * 3] * (itemTD.height - itemTD.entry - 1)
+                lines += [line * 3]
+                entryTD = TextDiagram(diagramTD.exit, diagramTD.exit, lines)
+                diagramTD = diagramTD.appendRight(entryTD, "")
+            partTD = TextDiagram(0, 0, [])
+            if itemNum < len(itemTDs) - 1:
+                # All items except the rightmost have a segment of the skip-over-items line at the top,
+                # followed by enough blank lines to push their entry down to the previous item's exit:
+                lines = []
+                lines += [line * itemTD.width]
+                lines += [" " * itemTD.width] * (SOILHeight - itemTD.entry)
+                SOILSegment = TextDiagram(0, 0, lines)
+                partTD = partTD.appendBelow(SOILSegment, [])
+            partTD = partTD.appendBelow(itemTD, [], moveEntry=True, moveExit=True)
+            if itemNum > 0:
+                # All items except the leftmost have their skip-under-item line at the bottom.
+                SUILSegment = TextDiagram(0, 0, [line * itemTD.width])
+                partTD = partTD.appendBelow(SUILSegment, [])
+            diagramTD = diagramTD.appendRight(partTD, "")
+            if 0 < itemNum:
+                # All items except the leftmost have a line from their skip-under-item line to their exit:
+                lines = []
+                lines += [" " * 2] * topToSOIL
+                # All such items except the rightmost also have a joining-line across at the skip-over-items line:
+                skipOverChar = line if itemNum < len(itemTDs) - 1 else " "
+                lines += [skipOverChar * 2]
+                lines += [" " * 2] * (diagramTD.exit - topToSOIL - 1)
+                lines += [line + roundcorner_top_left]
+                lines += [" " + line_vertical] * (partTD.height - partTD.exit - 2)
+                lines += [line + roundcorner_bot_right]
+                skipUpTD = TextDiagram(diagramTD.exit, diagramTD.exit, lines)
+                diagramTD = diagramTD.appendRight(skipUpTD, "")
+        return diagramTD
+
 
 class AlternatingSequence(DiagramMultiContainer):
     def __new__(cls, *items: Node) -> AlternatingSequence:
@@ -735,6 +904,50 @@ class AlternatingSequence(DiagramMultiContainer):
 
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        cross_diag, corner_bot_left, corner_bot_right, corner_top_left, corner_top_right, line, line_vertical, tee_left, tee_right = TextDiagram._getParts(["cross_diag", "roundcorner_bot_left", "roundcorner_bot_right", "roundcorner_top_left", "roundcorner_top_right", "line", "line_vertical", "tee_left", "tee_right"])
+
+        firstTD = self.items[0].textDiagram()
+        secondTD = self.items[1].textDiagram()
+        maxWidth = TextDiagram._maxWidth(firstTD, secondTD)
+        leftWidth, rightWidth = TextDiagram._gaps(maxWidth, 0)
+        leftLines = []
+        rightLines = []
+        separator = []
+        leftSize, rightSize = TextDiagram._gaps(firstTD.width, 0)
+        diagramTD = firstTD.expand(leftWidth - leftSize, rightWidth - rightSize, 0, 0)
+        leftLines += [" " * 2] * (diagramTD.entry)
+        leftLines += [corner_top_left + line]
+        leftLines += [line_vertical + " "] * (diagramTD.height - diagramTD.entry - 1)
+        leftLines += [corner_bot_left + line]
+        rightLines += [" " * 2] * (diagramTD.entry)
+        rightLines += [line + corner_top_right]
+        rightLines += [" " + line_vertical] * (diagramTD.height - diagramTD.entry - 1)
+        rightLines += [line + corner_bot_right]
+
+        separator += [(line * (leftWidth - 1)) + corner_top_right + " " + corner_top_left + (line * (rightWidth - 2))]
+        separator += [(" " * (leftWidth - 1)) + " " + cross_diag + " " + (" " * (rightWidth - 2))]
+        separator += [(line * (leftWidth - 1)) + corner_bot_right + " " + corner_bot_left + (line * (rightWidth - 2))]
+        leftLines += [" " * 2]
+        rightLines += [" " * 2]
+
+        leftSize, rightSize = TextDiagram._gaps(secondTD.width, 0)
+        secondTD = secondTD.expand(leftWidth - leftSize, rightWidth - rightSize, 0, 0)
+        diagramTD = diagramTD.appendBelow(secondTD, separator, moveEntry=True, moveExit=True)
+        leftLines += [corner_top_left + line]
+        leftLines += [line_vertical + " "] * secondTD.entry
+        leftLines += [corner_bot_left + line]
+        rightLines += [line + corner_top_right]
+        rightLines += [" " + line_vertical] * secondTD.entry
+        rightLines += [line + corner_bot_right]
+
+        diagramTD = diagramTD.alter(entry=firstTD.height + (len(separator) // 2), exit=firstTD.height + (len(separator) // 2))
+        leftTD = TextDiagram(firstTD.height + (len(separator) // 2), firstTD.height + (len(separator) // 2), leftLines)
+        rightTD = TextDiagram(firstTD.height + (len(separator) // 2), firstTD.height + (len(separator) // 2), rightLines)
+        diagramTD = leftTD.appendRight(diagramTD, "").appendRight(rightTD, "")
+        diagramTD = TextDiagram(1, 1, [corner_top_left, tee_left, corner_bot_left]).appendRight(diagramTD, "").appendRight(TextDiagram(1, 1, [corner_top_right, tee_right, corner_bot_right]), "")
+        return diagramTD
+
 
 class Choice(DiagramMultiContainer):
     def __init__(self, default: int, *items: Node):
@@ -766,7 +979,7 @@ class Choice(DiagramMultiContainer):
 
     def __repr__(self) -> str:
         items = ", ".join(repr(item) for item in self.items)
-        return "Choice(%r, %s)" % (self.default, items)
+        return f"Choice({self.default}, {items})"
 
     def format(self, x: float, y: float, width: float) -> Choice:
         leftGap, rightGap = determineGaps(width, self.width)
@@ -825,6 +1038,72 @@ class Choice(DiagramMultiContainer):
                 + (below[i + 1].up if i + 1 < len(below) else 0),
             )
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        cross, line, line_vertical, roundcorner_bot_left, roundcorner_bot_right, roundcorner_top_left, roundcorner_top_right = TextDiagram._getParts(["cross", "line", "line_vertical", "roundcorner_bot_left", "roundcorner_bot_right", "roundcorner_top_left", "roundcorner_top_right"])
+        # Format all the child items, so we can know the maximum width.
+        itemTDs = []
+        for item in self.items:
+            itemTDs.append(item.textDiagram().expand(1, 1, 0, 0))
+        max_item_width = max([i.width for i in itemTDs])
+        diagramTD = TextDiagram(0, 0, [])
+        # Format the choice collection.
+        for itemNum, itemTD in enumerate(itemTDs):
+            leftPad, rightPad = TextDiagram._gaps(max_item_width, itemTD.width)
+            itemTD = itemTD.expand(leftPad, rightPad, 0, 0)
+            hasSeparator = True
+            leftLines = [line_vertical] * itemTD.height
+            rightLines = [line_vertical] * itemTD.height
+            moveEntry = False
+            moveExit = False
+            if itemNum <= self.default:
+                # Item above the line: round off the entry/exit lines upwards.
+                leftLines[itemTD.entry] = roundcorner_top_left
+                rightLines[itemTD.exit] = roundcorner_top_right
+                if itemNum == 0:
+                    # First item and above the line: also remove ascenders above the item's entry and exit, suppress the separator above it.
+                    hasSeparator = False
+                    for i in range(0, itemTD.entry):
+                        leftLines[i] = " "
+                    for i in range(0, itemTD.exit):
+                        rightLines[i] = " "
+            if itemNum >= self.default:
+                # Item below the line: round off the entry/exit lines downwards.
+                leftLines[itemTD.entry] = roundcorner_bot_left
+                rightLines[itemTD.exit] = roundcorner_bot_right
+                if itemNum == 0:
+                    # First item and below the line: also suppress the separator above it.
+                    hasSeparator = False
+                if itemNum == (len(self.items) - 1):
+                    # Last item and below the line: also remove descenders below the item's entry and exit
+                    for i in range(itemTD.entry + 1, itemTD.height):
+                        leftLines[i] = " "
+                    for i in range(itemTD.exit + 1, itemTD.height):
+                        rightLines[i] = " "
+            if itemNum == self.default:
+                # Item on the line: entry/exit are horizontal, and sets the outer entry/exit.
+                leftLines[itemTD.entry] = cross
+                rightLines[itemTD.exit] = cross
+                moveEntry = True
+                moveExit = True
+                if itemNum == 0 and itemNum == (len(self.items) - 1):
+                    # Only item and on the line: set entry/exit for straight through.
+                    leftLines[itemTD.entry] = line
+                    rightLines[itemTD.exit] = line
+                elif itemNum == 0:
+                    # First item and on the line: set entry/exit for no ascenders.
+                    leftLines[itemTD.entry] = roundcorner_top_right
+                    rightLines[itemTD.exit] = roundcorner_top_left
+                elif itemNum == (len(self.items) - 1):
+                    # Last item and on the line: set entry/exit for no descenders.
+                    leftLines[itemTD.entry] = roundcorner_bot_right
+                    rightLines[itemTD.exit] = roundcorner_bot_left
+            leftJointTD = TextDiagram(itemTD.entry, itemTD.entry, leftLines)
+            rightJointTD = TextDiagram(itemTD.exit, itemTD.exit, rightLines)
+            itemTD = leftJointTD.appendRight(itemTD, "").appendRight(rightJointTD, "")
+            separator = [line_vertical + (" " * (TextDiagram._maxWidth(diagramTD, itemTD) - 2)) + line_vertical] if hasSeparator else []
+            diagramTD = diagramTD.appendBelow(itemTD, separator, moveEntry=moveEntry, moveExit=moveExit)
+        return diagramTD
 
 
 class MultipleChoice(DiagramMultiContainer):
@@ -956,6 +1235,15 @@ class MultipleChoice(DiagramMultiContainer):
             attrs={"x": x + self.width - 10, "y": y + 4, "class": "diagram-arrow"},
         ).addTo(text)
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        (multi_repeat,) = TextDiagram._getParts(["multi_repeat"])
+        anyAll = TextDiagram.rect("1+" if self.type == "any" else "all")
+        diagramTD = Choice.textDiagram(self)
+        repeatTD = TextDiagram.rect(multi_repeat)
+        diagramTD = anyAll.appendRight(diagramTD, "")
+        diagramTD = diagramTD.appendRight(repeatTD, "")
+        return diagramTD
 
 
 class HorizontalChoice(DiagramMultiContainer):
@@ -1103,6 +1391,91 @@ class HorizontalChoice(DiagramMultiContainer):
         items = ", ".join(repr(item) for item in self.items)
         return f"HorizontalChoice({items})"
 
+    def textDiagram(self) -> TextDiagram:
+        line, line_vertical, roundcorner_bot_left, roundcorner_bot_right, roundcorner_top_left, roundcorner_top_right = TextDiagram._getParts(["line", "line_vertical", "roundcorner_bot_left", "roundcorner_bot_right", "roundcorner_top_left", "roundcorner_top_right"])
+
+        # Format all the child items, so we can know the maximum entry, exit, and height.
+        itemTDs = []
+        for item in self.items:
+            itemTDs.append(item.textDiagram())
+        # diagramEntry: distance from top to lowest entry, aka distance from top to diagram entry, aka final diagram entry and exit.
+        diagramEntry = max([itemTD.entry for itemTD in itemTDs])
+        # SOILToBaseline: distance from top to lowest entry before rightmost item, aka distance from skip-over-items line to rightmost entry, aka SOIL height.
+        SOILToBaseline = max([itemTD.entry for itemTD in itemTDs[:-1]])
+        # topToSOIL: distance from top to skip-over-items line.
+        topToSOIL = diagramEntry - SOILToBaseline
+        # baselineToSUIL: distance from lowest entry or exit after leftmost item to bottom, aka distance from entry to skip-under-items line, aka SUIL height.
+        baselineToSUIL = max([itemTD.height - min(itemTD.entry, itemTD.exit) for itemTD in itemTDs[1:]]) - 1
+
+        # The diagram starts with a line from its entry up to skip-over-items line:
+        lines = [" " * 2] * topToSOIL
+        lines += [roundcorner_top_left + line]
+        lines += [line_vertical + " "] * SOILToBaseline
+        lines += [roundcorner_bot_right + line]
+        diagramTD = TextDiagram(len(lines) - 1, len(lines) - 1, lines)
+        for itemNum, itemTD in enumerate(itemTDs):
+            if itemNum > 0:
+                # All items except the leftmost start with a line from the skip-over-items line down to their entry,
+                # with a joining-line across at the skip-under-items line:
+                lines = []
+                lines += [" " * 2] * topToSOIL
+                # All such items except the rightmost also have a continuation of the skip-over-items line:
+                lineToNextItem = " " if itemNum == len(itemTDs) - 1 else line
+                lines += [roundcorner_top_right + lineToNextItem]
+                lines += [line_vertical + " "] * SOILToBaseline
+                lines += [roundcorner_bot_left + line]
+                lines += [" " * 2] * baselineToSUIL
+                lines += [line * 2]
+                entryTD = TextDiagram(diagramTD.exit, diagramTD.exit, lines)
+                diagramTD = diagramTD.appendRight(entryTD, "")
+            partTD = TextDiagram(0, 0, [])
+            if itemNum < len(itemTDs) - 1:
+                # All items except the rightmost start with a segment of the skip-over-items line at the top.
+                # followed by enough blank lines to push their entry down to the previous item's exit:
+                lines = []
+                lines += [line * itemTD.width]
+                lines += [" " * itemTD.width] * (SOILToBaseline - itemTD.entry)
+                SOILSegment = TextDiagram(0, 0, lines)
+                partTD = partTD.appendBelow(SOILSegment, [])
+            partTD = partTD.appendBelow(itemTD, [], moveEntry=True, moveExit=True)
+            if itemNum > 0:
+                # All items except the leftmost end with enough blank lines to pad down to the skip-under-items
+                # line, followed by a segment of the skip-under-items line:
+                lines = []
+                lines += [" " * itemTD.width] * (baselineToSUIL - (itemTD.height - itemTD.entry) + 1)
+                lines += [line * itemTD.width]
+                SUILSegment = TextDiagram(0, 0, lines)
+                partTD = partTD.appendBelow(SUILSegment, [])
+            diagramTD = diagramTD.appendRight(partTD, "")
+            if itemNum < len(itemTDs) - 1:
+                # All items except the rightmost have a line from their exit down to the skip-under-items line,
+                # with a joining-line across at the skip-over-items line:
+                lines = []
+                lines += [" " * 2] * topToSOIL
+                lines += [line * 2]
+                lines += [" " * 2] * (diagramTD.exit - topToSOIL - 1)
+                lines += [line + roundcorner_top_right]
+                lines += [" " + line_vertical] * (baselineToSUIL - (diagramTD.exit - diagramTD.entry))
+                # All such items except the leftmost also have are continuing of the skip-under-items line from the previous item:
+                lineFromPrevItem = line if itemNum > 0 else " "
+                lines += [lineFromPrevItem + roundcorner_bot_left]
+                entry = diagramEntry + 1 + (diagramTD.exit - diagramTD.entry)
+                exitTD = TextDiagram(entry, diagramEntry + 1, lines)
+                diagramTD = diagramTD.appendRight(exitTD, "")
+            else:
+                # The rightmost item has a line from the skip-under-items line and from its exit up to the diagram exit:
+                lines = []
+                lineFromExit = " " if diagramTD.exit != diagramTD.entry else line
+                lines += [lineFromExit + roundcorner_top_left]
+                lines += [" " + line_vertical] * (diagramTD.exit - diagramTD.entry - 1)
+                if diagramTD.exit != diagramTD.entry:
+                    lines += [line + roundcorner_bot_right]
+                lines += [" " + line_vertical] * (baselineToSUIL - (diagramTD.exit - diagramTD.entry))
+                lines += [line + roundcorner_bot_right]
+                exitTD = TextDiagram(diagramTD.exit - diagramTD.entry, 0, lines)
+                diagramTD = diagramTD.appendRight(exitTD, "")
+        return diagramTD
+
 
 def Optional(item: Node, skip: bool = False) -> Choice:
     return Choice(0 if skip else 1, Skip(), item)
@@ -1147,6 +1520,31 @@ class OneOrMore(DiagramItem):
         ).arc("en").addTo(self)
 
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        line, repeat_top_left, repeat_left, repeat_bot_left, repeat_top_right, repeat_right, repeat_bot_right = TextDiagram._getParts(["line", "repeat_top_left", "repeat_left", "repeat_bot_left", "repeat_top_right", "repeat_right", "repeat_bot_right"])
+        # Format the item and then format the repeat append it to tbe bottom, after a spacer.
+        itemTD = self.item.textDiagram()
+        repeatTD = self.rep.textDiagram()
+        fIRWidth = TextDiagram._maxWidth(itemTD, repeatTD)
+        repeatTD = repeatTD.expand(0, fIRWidth - repeatTD.width, 0, 0)
+        itemTD = itemTD.expand(0, fIRWidth - itemTD.width, 0, 0)
+        itemAndRepeatTD = itemTD.appendBelow(repeatTD, [])
+        # Build the left side of the repeat line and append the combined item and repeat to its right.
+        leftLines = []
+        leftLines += [repeat_top_left + line]
+        leftLines += [repeat_left + " "] * ((itemTD.height - itemTD.entry) + repeatTD.entry - 1)
+        leftLines += [repeat_bot_left + line]
+        leftTD = TextDiagram(0, 0, leftLines)
+        leftTD = leftTD.appendRight(itemAndRepeatTD, "")
+        # Build the right side of the repeat line and append it to the combined left side, item, and repeat's right.
+        rightLines = []
+        rightLines += [line + repeat_top_right]
+        rightLines += [" " + repeat_right] * ((itemTD.height - itemTD.exit) + repeatTD.exit - 1)
+        rightLines += [line + repeat_bot_right]
+        rightTD = TextDiagram(0, 0, rightLines)
+        diagramTD = leftTD.appendRight(rightTD, "")
+        return diagramTD
 
     def walk(self, cb: WalkerF) -> None:
         cb(self)
@@ -1217,6 +1615,13 @@ class Group(DiagramItem):
 
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        diagramTD = TextDiagram.roundrect(self.item.textDiagram(), dashed=True)
+        if self.label:
+            labelTD = self.label.textDiagram()
+            diagramTD = labelTD.appendBelow(diagramTD, [], moveEntry=True, moveExit=True).expand(0, 0, 1, 0)
+        return diagramTD
+
     def walk(self, cb: WalkerF) -> None:
         cb(self)
         self.item.walk(cb)
@@ -1254,6 +1659,19 @@ class Start(DiagramItem):
             ).addTo(self)
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        cross, line, tee_right = TextDiagram._getParts(["cross", "line", "tee_right"])
+        if self.type == "simple":
+            start = tee_right + cross + line
+        else:
+            start = tee_right + line
+        labelTD = TextDiagram(0, 0, [])
+        if self.label:
+            labelTD = TextDiagram(0, 0, [self.label])
+            start = TextDiagram._padR(start, labelTD.width, line)
+        startTD = TextDiagram(0, 0, [start])
+        return labelTD.appendBelow(startTD, [], moveEntry=True, moveExit=True)
+
     def __repr__(self) -> str:
         return f"Start(type={repr(self.type)}, label={repr(self.label)})"
 
@@ -1273,6 +1691,14 @@ class End(DiagramItem):
         elif self.type == "complex":
             self.attrs["d"] = "M {0} {1} h 20 m 0 -10 v 20".format(x, y)
         return self
+
+    def textDiagram(self) -> TextDiagram:
+        cross, line, tee_left = TextDiagram._getParts(["cross", "line", "tee_left"])
+        if self.type == "simple":
+            end = line + cross + tee_left
+        else:
+            end = line + tee_left
+        return TextDiagram(0, 0, [end])
 
     def __repr__(self) -> str:
         return f"End(type={repr(self.type)})"
@@ -1326,6 +1752,10 @@ class Terminal(DiagramItem):
             DiagramItem("title", {}, self.title).addTo(self)
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        # Note: href, title, and cls are ignored for text diagrams.
+        return TextDiagram.roundrect(self.text)
+
 
 class NonTerminal(DiagramItem):
     def __init__(
@@ -1373,6 +1803,10 @@ class NonTerminal(DiagramItem):
             DiagramItem("title", {}, self.title).addTo(self)
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        # Note: href, title, and cls are ignored for text diagrams.
+        return TextDiagram.rect(self.text)
+
 
 class Comment(DiagramItem):
     def __init__(
@@ -1413,6 +1847,10 @@ class Comment(DiagramItem):
             DiagramItem("title", {}, self.title).addTo(self)
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        # Note: href, title, and cls are ignored for text diagrams.
+        return TextDiagram(0, 0, [self.text])
+
 
 class Skip(DiagramItem):
     def __init__(self) -> None:
@@ -1426,18 +1864,433 @@ class Skip(DiagramItem):
         Path(x, y).right(width).addTo(self)
         return self
 
+    def textDiagram(self) -> TextDiagram:
+        (line,) = TextDiagram._getParts(["line"])
+        return TextDiagram(0, 0, [line])
+
     def __repr__(self) -> str:
         return "Skip()"
 
 
+class TextDiagram:
+    # Characters to use in drawing diagrams.  See setFormatting(), PARTS_ASCII, and PARTS_UNICODE.
+    parts: Dict[str, str]
+
+    def __init__(self, entry: int, exit: int, lines: List[str]) -> TextDiagram:
+        # entry: The entry line for this diagram-part.
+        self.entry: int = entry
+        # exit: The exit line for this diagram-part.
+        self.exit: int = exit
+        # height: The height of this diagram-part, in lines.
+        self.height: int = len(lines)
+        # lines[]: The visual data of this diagram-part.  Each line must be the same length.
+        self.lines: List[str] = lines.copy()
+        # width: The width of this diagram-part, in character cells.
+        self.width: int = len(lines[0]) if len(lines) > 0 else 0
+        nl = "\n"  # f-strings can't contain \n until Python 3.12
+        assert entry <= len(lines), f"Entry is not within diagram vertically:{nl}{self._dump(False)}"
+        assert exit <= len(lines), f"Exit is not within diagram vertically:{nl}{self._dump(False)}"
+        for i in range(0, len(lines)):
+            assert len(lines[0]) == len(lines[i]), f"Diagram data is not rectangular:{nl}{self._dump(False)}"
+
+    def alter(self, entry: int = None, exit: int = None, lines: List[str] = None) -> TextDiagram:
+        """
+        Create and return a new TextDiagram based on this instance, with the specified changes.
+
+        Note: This is used sparingly, and may be a bad idea.
+        """
+        newEntry = entry or self.entry
+        newExit = exit or self.exit
+        newLines = lines or self.lines
+        return self.__class__(newEntry, newExit, newLines.copy())
+
+    def appendBelow(self, item: TextDiagram, linesBetween: List[str], moveEntry=False, moveExit=False) -> TextDiagram:
+        """
+        Create and return a new TextDiagram by appending the specified lines below this instance's data,
+        and then appending the specified TextDiagram below those lines, possibly setting the resulting
+        TextDiagram's entry and or exit indices to those of the appended item.
+        """
+        newWidth = max(self.width, item.width)
+        newLines = []
+        newLines += self.center(newWidth, " ").lines
+        for line in linesBetween:
+            newLines += [TextDiagram._padR(line, newWidth, " ")]
+        newLines += item.center(newWidth, " ").lines
+        newEntry = self.height + len(linesBetween) + item.entry if moveEntry else self.entry
+        newExit = self.height + len(linesBetween) + item.exit if moveExit else self.exit
+        newSelf = self.__class__(newEntry, newExit, newLines)
+        return newSelf
+
+    def appendRight(self, item: TextDiagram, charsBetween: str) -> TextDiagram:
+        """
+        Create and return a new TextDiagram by appending the specified TextDiagram to the right of this instance's data,
+        aligning the left-hand exit and the right-hand entry points.  The charsBetween are inserted between the left-exit
+        and right-entry, and equivalent spaces on all other lines.
+        """
+        joinLine = max(self.exit, item.entry)
+        newHeight = max(self.height - self.exit, item.height - item.entry) + joinLine
+        leftTopAdd = joinLine - self.exit
+        leftBotAdd = newHeight - self.height - leftTopAdd
+        rightTopAdd = joinLine - item.entry
+        rightBotAdd = newHeight - item.height - rightTopAdd
+        left = self.expand(0, 0, leftTopAdd, leftBotAdd)
+        right = item.expand(0, 0, rightTopAdd, rightBotAdd)
+        newLines = []
+        for i in range(0, newHeight):
+            sep = " " * len(charsBetween) if i != joinLine else charsBetween
+            newLines += [(left.lines[i] + sep + right.lines[i])]
+        newEntry = self.entry + leftTopAdd
+        newExit = item.exit + rightTopAdd
+        return self.__class__(newEntry, newExit, newLines)
+
+    def center(self, width: int, pad: str) -> TextDiagram:
+        """
+        Create and return a new TextDiagram by centering the data of this instance within a new, equal or larger widtth.
+        """
+        assert width >= self.width, "Cannot center into smaller width"
+        if width == self.width:
+            return self.copy()
+        else:
+            total_padding = width - self.width
+            leftWidth = total_padding // 2
+            left = [(pad * leftWidth)] * self.height
+            right = [(pad * (total_padding - leftWidth))] * self.height
+            return self.__class__(self.entry, self.exit, TextDiagram._encloseLines(self.lines, left, right))
+
+    def copy(self) -> TextDiagram:
+        """
+        Create and return a new TextDiagram by copying this instance's data.
+        """
+        return self.__class__(self.entry, self.exit, self.lines.copy())
+
+    def expand(self, left: int, right: int, top: int, bottom: int) -> TextDiagram:
+        """
+        Create and return a new TextDiagram by expanding this instance's data by the specified amount in the specified directions.
+        """
+        assert left >= 0
+        assert right >= 0
+        assert top >= 0
+        assert bottom >= 0
+        if left + right + top + bottom == 0:
+            return self.copy()
+        else:
+            line = self.parts["line"]
+            newLines = []
+            newLines += [(" " * (self.width + left + right))] * top
+            for i in range(0, self.height):
+                leftExpansion = line if i == self.entry else " "
+                rightExpansion = line if i == self.exit else " "
+                newLines += [(leftExpansion * left) + self.lines[i] + (rightExpansion * right)]
+            newLines += [(" " * (self.width + left + right))] * bottom
+            return self.__class__(self.entry + top, self.exit + top, newLines)
+
+    @classmethod
+    def rect(cls, item: Union[str, TextDiagram], dashed=False) -> TextDiagram:
+        """
+        Create and return a new TextDiagram for a rectangular box.
+        """
+        return cls._rectish("rect", item, dashed=dashed)
+
+    @classmethod
+    def roundrect(cls, item: Union[str, TextDiagram], dashed=False) -> TextDiagram:
+        """
+        Create and return a new TextDiagram for a rectangular box with rounded corners.
+        """
+        return cls._rectish("roundrect", item, dashed=dashed)
+
+    @classmethod
+    def setFormatting(cls, characters: Dict[str, str] = None, defaults: Dict[str, str] = None) -> None:
+        """
+        Set the characters to use for drawing text diagrams.
+        """
+        if characters is not None:
+            cls.parts = {}
+            if defaults is not None:
+                cls.parts.update(defaults)
+            cls.parts.update(characters)
+        for name in cls.parts:
+            assert len(cls.parts[name]) == 1, f"Text part {name} is more than 1 character: {cls.parts[name]}"
+
+    def _dump(self, show=True) -> None:
+        """
+        Dump out the data of this instance for debugging, either displaying or returning it.
+        DO NOT use this for actual work, only for debugging or in assertion output.
+        """
+        nl = "\n"  # f-strings can't contain \n until Python 3.12
+        result = f"height={self.height}; len(lines)={len(self.lines)}"
+        if self.entry > len(self.lines):
+            result += f"; entry outside diagram: entry={self.entry}"
+        if self.exit > len(self.lines):
+            result += f"; exit outside diagram: exit={self.exit}"
+        for y in range(0, max(len(self.lines), self.entry + 1, self.exit + 1)):
+            result = result + f"{nl}[{y:03}]"
+            if y < len(self.lines):
+                result = result + f" '{self.lines[y]}' len={len(self.lines[y])}"
+            if y == self.entry and y == self.exit:
+                result += " <- entry, exit"
+            elif y == self.entry:
+                result += " <- entry"
+            elif y == self.exit:
+                result += " <- exit"
+        if show:
+            print(result)
+        else:
+            return result
+
+    @classmethod
+    def _encloseLines(cls, lines: List[str], lefts: List[str], rights: List[str]) -> List[str]:
+        """
+        Join the lefts, lines, and rights arrays together, line-by-line, and return the result.
+        """
+        assert len(lines) == len(lefts), "All arguments must be the same length"
+        assert len(lines) == len(rights), "All arguments must be the same length"
+        newLines = []
+        for i in range(0, len(lines)):
+            newLines.append(lefts[i] + lines[i] + rights[i])
+        return newLines
+
+    @staticmethod
+    def _gaps(outerWidth: int, innerWidth: int) -> Tuple[int, int]:
+        """
+        Return the left and right pad spacing based on the alignment configuration setting.
+        """
+        diff = outerWidth - innerWidth
+        if INTERNAL_ALIGNMENT == "left":
+            return 0, diff
+        elif INTERNAL_ALIGNMENT == "right":
+            return diff, 0
+        else:
+            left = diff // 2
+            right = diff - left
+            return left, right
+
+    @classmethod
+    def _getParts(cls, partNames: List[str]) -> List[str]:
+        """
+        Return a list of text diagram drawing characters for the specified character names.
+        """
+        return [cls.parts[name] for name in partNames]
+
+    @staticmethod
+    def _maxWidth(*args: List[Union[int, str, List[str], TextDiagram]]) -> int:
+        """
+        Return the maximum width of all of the arguments.
+        """
+        maxWidth = 0
+        for arg in args:
+            if isinstance(arg, TextDiagram):
+                width = arg.width
+            elif isinstance(arg, list):
+                width = max([len(e) for e in arg])
+            elif isinstance(arg, int):
+                width = len(str(arg))
+            else:
+                width = len(arg)
+            maxWidth = width if width > maxWidth else maxWidth
+        return maxWidth
+
+    @staticmethod
+    def _padL(string: str, width: int, pad: str) -> str:
+        """
+        Pad the specified string on the left to the specified width with the specified pad string and return the result.
+        """
+        assert (width - len(string)) % len(pad) == 0, f"Gap {width - len(string)} must be a multiple of pad string '{pad}'"
+        return (pad * ((width - len(string) // len(pad)))) + string
+
+    @staticmethod
+    def _padR(string: str, width: int, pad: str) -> str:
+        """
+        Pad the specified string on the right to the specified width with the specified pad string and return the result.
+        """
+        assert (width - len(string)) % len(pad) == 0, f"Gap {width - len(string)} must be a multiple of pad string '{pad}'"
+        return string + (pad * ((width - len(string) // len(pad))))
+
+    @classmethod
+    def _rectish(cls, rect_type: str, data: TextDiagram, dashed=False) -> TextDiagram:
+        """
+        Create and return a new TextDiagram for a rectangular box surrounding the specified TextDiagram, using the
+        specified set of drawing characters (i.e., "rect" or "roundrect"), and possibly using dashed lines.
+        """
+        lineType = "_dashed" if dashed else ""
+        topLeft, ctrLeft, botLeft, topRight, ctrRight, botRight, topHoriz, botHoriz, line, cross = cls._getParts([f"{rect_type}_top_left", f"{rect_type}_left{lineType}", f"{rect_type}_bot_left", f"{rect_type}_top_right", f"{rect_type}_right{lineType}", f"{rect_type}_bot_right", f"{rect_type}_top{lineType}", f"{rect_type}_bot{lineType}", "line", "cross"])
+        itemWasFormatted = isinstance(data, TextDiagram)
+        if itemWasFormatted:
+            itemTD = data
+        else:
+            itemTD = TextDiagram(0, 0, [data])
+        # Create the rectangle and enclose the item in it.
+        lines = []
+        lines += [(topHoriz * (itemTD.width + 2))]
+        if itemWasFormatted:
+            lines += itemTD.expand(1, 1, 0, 0).lines
+        else:
+            for i in range(0, len(itemTD.lines)):
+                lines += [(" " + itemTD.lines[i] + " ")]
+        lines += [(botHoriz * (itemTD.width + 2))]
+        entry = itemTD.entry + 1
+        exit = itemTD.exit + 1
+        leftMaxWidth = cls._maxWidth(topLeft, ctrLeft, botLeft)
+        lefts = [cls._padR(ctrLeft, leftMaxWidth, " ")] * len(lines)
+        lefts[0] = cls._padR(topLeft, leftMaxWidth, topHoriz)
+        lefts[-1] = cls._padR(botLeft, leftMaxWidth, botHoriz)
+        if itemWasFormatted:
+            lefts[entry] = cross
+        rightMaxWidth = cls._maxWidth(topRight, ctrRight, botRight)
+        rights = [cls._padL(ctrRight, rightMaxWidth, " ")] * len(lines)
+        rights[0] = cls._padL(topRight, rightMaxWidth, topHoriz)
+        rights[-1] = cls._padL(botRight, rightMaxWidth, botHoriz)
+        if itemWasFormatted:
+            rights[exit] = cross
+        # Build the entry and exit perimeter.
+        lines = TextDiagram._encloseLines(lines, lefts, rights)
+        lefts = [" "] * len(lines)
+        lefts[entry] = line
+        rights = [" "] * len(lines)
+        rights[exit] = line
+        lines = TextDiagram._encloseLines(lines, lefts, rights)
+        return cls(entry, exit, lines)
+
+    def __repr__(self) -> str:
+        return f"TextDiagram({self.entry}, {self.exit}, {self.lines})"
+
+    # Note:  All the drawing sequences below MUST be single characters.  setFormatting() checks this.
+
+    # Unicode 25xx box drawing characters, plus a few others.
+    PARTS_UNICODE = {
+        "cross_diag"             : "\u2573",
+        "corner_bot_left"        : "\u2514",
+        "corner_bot_right"       : "\u2518",
+        "corner_top_left"        : "\u250c",
+        "corner_top_right"       : "\u2510",
+        "cross"                  : "\u253c",
+        "left"                   : "\u2502",
+        "line"                   : "\u2500",
+        "line_vertical"          : "\u2502",
+        "multi_repeat"           : "\u21ba",
+        "rect_bot"               : "\u2500",
+        "rect_bot_dashed"        : "\u2504",
+        "rect_bot_left"          : "\u2514",
+        "rect_bot_right"         : "\u2518",
+        "rect_left"              : "\u2502",
+        "rect_left_dashed"       : "\u2506",
+        "rect_right"             : "\u2502",
+        "rect_right_dashed"      : "\u2506",
+        "rect_top"               : "\u2500",
+        "rect_top_dashed"        : "\u2504",
+        "rect_top_left"          : "\u250c",
+        "rect_top_right"         : "\u2510",
+        "repeat_bot_left"        : "\u2570",
+        "repeat_bot_right"       : "\u256f",
+        "repeat_left"            : "\u2502",
+        "repeat_right"           : "\u2502",
+        "repeat_top_left"        : "\u256d",
+        "repeat_top_right"       : "\u256e",
+        "right"                  : "\u2502",
+        "roundcorner_bot_left"   : "\u2570",
+        "roundcorner_bot_right"  : "\u256f",
+        "roundcorner_top_left"   : "\u256d",
+        "roundcorner_top_right"  : "\u256e",
+        "roundrect_bot"          : "\u2500",
+        "roundrect_bot_dashed"   : "\u2504",
+        "roundrect_bot_left"     : "\u2570",
+        "roundrect_bot_right"    : "\u256f",
+        "roundrect_left"         : "\u2502",
+        "roundrect_left_dashed"  : "\u2506",
+        "roundrect_right"        : "\u2502",
+        "roundrect_right_dashed" : "\u2506",
+        "roundrect_top"          : "\u2500",
+        "roundrect_top_dashed"   : "\u2504",
+        "roundrect_top_left"     : "\u256d",
+        "roundrect_top_right"    : "\u256e",
+        "separator"              : "\u2500",
+        "tee_left"               : "\u2524",
+        "tee_right"              : "\u251c",
+    }
+
+    # Plain old ASCII characters.
+    PARTS_ASCII = {
+        "cross_diag"             : "X",
+        "corner_bot_left"        : "\\",
+        "corner_bot_right"       : "/",
+        "corner_top_left"        : "/",
+        "corner_top_right"       : "\\",
+        "cross"                  : "+",
+        "left"                   : "|",
+        "line"                   : "-",
+        "line_vertical"          : "|",
+        "multi_repeat"           : "&",
+        "rect_bot"               : "-",
+        "rect_bot_dashed"        : "-",
+        "rect_bot_left"          : "+",
+        "rect_bot_right"         : "+",
+        "rect_left"              : "|",
+        "rect_left_dashed"       : "|",
+        "rect_right"             : "|",
+        "rect_right_dashed"      : "|",
+        "rect_top_dashed"        : "-",
+        "rect_top"               : "-",
+        "rect_top_left"          : "+",
+        "rect_top_right"         : "+",
+        "repeat_bot_left"        : "\\",
+        "repeat_bot_right"       : "/",
+        "repeat_left"            : "|",
+        "repeat_right"           : "|",
+        "repeat_top_left"        : "/",
+        "repeat_top_right"       : "\\",
+        "right"                  : "|",
+        "roundcorner_bot_left"   : "\\",
+        "roundcorner_bot_right"  : "/",
+        "roundcorner_top_left"   : "/",
+        "roundcorner_top_right"  : "\\",
+        "roundrect_bot"          : "-",
+        "roundrect_bot_dashed"   : "-",
+        "roundrect_bot_left"     : "\\",
+        "roundrect_bot_right"    : "/",
+        "roundrect_left"         : "|",
+        "roundrect_left_dashed"  : "|",
+        "roundrect_right"        : "|",
+        "roundrect_right_dashed" : "|",
+        "roundrect_top"          : "-",
+        "roundrect_top_dashed"   : "-",
+        "roundrect_top_left"     : "/",
+        "roundrect_top_right"    : "\\",
+        "separator"              : "-",
+        "tee_left"               : "|",
+        "tee_right"              : "|",
+    }
+
+
+# Default to Unicode box characters, they're much prettier than raw ASCII.
+TextDiagram.setFormatting(TextDiagram.PARTS_UNICODE)
+
 if __name__ == "__main__":
 
+    if len(sys.argv) < 2 or sys.argv[1] == "":
+        mode = "svg"
+    elif sys.argv[1].lower() in ["svg", "ascii", "unicode", "standalone"]:
+        mode = sys.argv[1].lower()
+    else:
+        raise ValueError(f"Unknown option: {sys.argv[1]}")
+    testList = sys.argv[2:]
+
     def add(name: str, diagram: DiagramItem) -> None:
-        sys.stdout.write(f"<h1>{escapeHtml(name)}</h1>\n")
-        diagram.writeSvg(sys.stdout.write)
-        sys.stdout.write("\n")
+        if name in testList or len(testList) == 0:
+            sys.stdout.write(f"\n<h1>{escapeHtml(name)}</h1>\n")
+            if mode == "svg":
+                diagram.writeSvg(sys.stdout.write)
+            elif mode == "standalone":
+                diagram.writeStandalone(sys.stdout.write)
+            elif mode in ["ascii", "unicode"]:
+                sys.stdout.write("\n<pre>\n")
+                diagram.writeText(sys.stdout.write)
+                sys.stdout.write("\n</pre>\n")
+            sys.stdout.write("\n")
 
     sys.stdout.write("<!doctype html><title>Test</title><body>")
+    if mode == "ascii":
+        TextDiagram.setFormatting(TextDiagram.PARTS_ASCII)
+    elif mode == "unicode":
+        TextDiagram.setFormatting(TextDiagram.PARTS_UNICODE)
     with open("test.py", "r", encoding="utf-8") as fh:
         exec(fh.read())  # pylint: disable=exec-used
     sys.stdout.write(

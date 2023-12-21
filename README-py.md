@@ -13,12 +13,21 @@ and for more non-Python-specific information.)
 Diagrams
 --------
 
-Constructing a diagram is a set of nested calls:
+Constructing a diagram is a set of nested calls.
+To create an SVG diagram:
 
 ```python
 from railroad import Diagram, Choice
 d = Diagram("foo", Choice(0, "bar", "baz"))
 d.writeSvg(sys.stdout.write)
+```
+
+To create a text-format diagram:
+
+```python
+from railroad import Diagram, Choice
+d = Diagram("foo", Choice(0, "bar", "baz"))
+d.writeText(sys.stdout.write)
 ```
 
 A railroad diagram must be started as a `Diagram` object,
@@ -48,6 +57,8 @@ If you don't pass any `css`,
 it'll automatically include the `DEFAULT_STYLE`;
 you can include your own CSS instead by passing it as a string
 (or an empty string to include no CSS at all).
+
+To output the diagram as pre-formatted text, instead of as SVG, call `.writeText(cb)` on it, passing a function that'll get called to write the text.
 
 If you need to walk the component tree of a diagram for some reason, `Diagram` has a `.walk(cb)` method as well, which will call your callback on every node in the diagram, in a "pre-order depth-first traversal" (the node first, then each child).
 
@@ -135,11 +146,12 @@ There are a few options you can tweak, living as UPPERCASE_CONSTANTS at the top 
 Note that if you change the text sizes in the CSS,
 you'll have to adjust the text metrics here as well.
 
-* VS - sets the minimum amount of vertical separation between two items, in CSS px.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width. Defaults to `8`.
-* AR - the radius of the arcs, in CSS px, used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for. Defaults to `10`.
-* DIAGRAM_CLASS - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet. Defaults to `"railroad-diagram"`.
-* STROKE_ODD_PIXEL_LENGTH - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `False`.
+* VS - sets the minimum amount of vertical separation between two items, in CSS px.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width. Defaults to `8`.  Ignored for text diagrams.
+* AR - the radius of the arcs, in CSS px, used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for. Defaults to `10`.  Ignored for text diagrams.
+* DIAGRAM_CLASS - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet. Defaults to `"railroad-diagram"`.  Ignored for text diagrams.
+* STROKE_ODD_PIXEL_LENGTH - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `False`.  Ignored for text diagrams.
 * INTERNAL_ALIGNMENT - when some branches of a container are narrower than others, this determines how they're aligned in the extra space.  Defaults to `"center"`, but can be set to `"left"` or `"right"`.
-* CHAR_WIDTH - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
-* COMMENT_CHAR_WIDTH - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
-* DEBUG - if `True`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `False`.
+* CHAR_WIDTH - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.  Ignored for text diagrams.
+* COMMENT_CHAR_WIDTH - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.  Ignored for text diagrams.
+* DEBUG - if `True`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `False`.  Ignored for text diagrams.
+* ESCAPE_HTML - if `True`, causes `Diagram.writeText()` to replace "<". ">", '"', and "&" with their HTML-entity equivalents, so text diagram output can be placed in HTML files unchanged.  Defaults to `True`.
