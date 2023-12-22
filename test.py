@@ -223,3 +223,198 @@ add('Class example',
 		Comment("blue", cls="blue")
 		)
 	)
+
+add('rr-alternatingsequence',
+	Diagram(
+		AlternatingSequence(
+			"foo",
+			"bar"
+			)
+		)
+	)
+
+add('rr-choice',
+	Diagram(
+		Choice(
+			1, "1", "2", "3"
+			)
+		)
+	)
+
+add('rr-group',
+	Diagram(
+		Terminal("foo"),
+		Group(
+			Choice(
+				0, NonTerminal("option 1"), NonTerminal("or two"),
+				)
+			),
+		Terminal("bar")
+		)
+	)
+
+add('rr-horizontalchoice',
+	Diagram(
+		HorizontalChoice(
+			Choice(2, "0", "1", "2", "3", "4"),
+			Choice(2, "5", "6", "7", "8", "9"),
+			Choice(2, "a", "b", "c", "d", "e"),
+			)
+		)
+	)
+
+add('rr-multchoice',
+	Diagram(
+		MultipleChoice(1, "all", "1", "2", "3")
+		)
+	)
+
+add('rr-oneormore',
+	Diagram(
+			OneOrMore("foo", "bar")
+		)
+	)
+
+
+add('rr-optional',
+	Diagram(
+			Optional("foo"),
+			Optional("bar", True),
+		)
+	)
+
+
+add('rr-optionalsequence',
+	Diagram(
+			OptionalSequence("1", "2", "3")
+		)
+	)
+
+
+add('rr-sequence',
+	Diagram(
+			Sequence("1", "2", "3")
+		)
+	)
+
+
+add('rr-stack',
+	Diagram(
+		Stack(
+			"1",
+			"2",
+			"3"
+			)
+		)
+	)
+
+add('rr-title',
+	Diagram(
+			Stack(
+				Terminal("Generate"),
+				Terminal("some"),
+			),
+			OneOrMore(NonTerminal("railroad diagrams"), Comment("and more"))
+		)
+	)
+
+
+add('rr-zeroormore-1',
+	Diagram(
+		ZeroOrMore("foo", Comment("bar"))
+		)
+	)
+
+
+add('rr-zeroormore-2',
+	Diagram(
+		ZeroOrMore("foo", Comment("bar")),
+		ZeroOrMore("foo", Comment("bar"), True)
+		)
+	)
+
+add('complicated-horizontalchoice-1',
+	Diagram(
+		HorizontalChoice(
+			Choice(0, "1", "2", "3", "4", "5"),
+			Choice(4, "1", "2", "3", "4", "5"),
+			Choice(2, "1", "2", "3", "4", "5"),
+			Choice(3, "1", "2", "3", "4", "5"),
+			Choice(1, "1", "2", "3", "4", "5")
+			),
+		HorizontalChoice("1", "2", "3", "4", "5")
+		)
+	)
+
+add('complicated-horizontalchoice-2',
+	Diagram(
+		HorizontalChoice(
+			Choice(0, "1", "2", "3", "4"),
+			"4",
+			Choice(3, "1", "2", "3", "4"),
+			)
+		)
+	)
+
+add('complicated-horizontalchoice-3',
+	Diagram(
+		HorizontalChoice(
+			Choice(0, "1", "2", "3", "4"),
+			Stack("1", "2", "3"),
+			Choice(3, "1", "2", "3", "4"),
+			)
+		)
+	)
+
+add('complicated-horizontalchoice-4',
+	Diagram(
+		HorizontalChoice(
+			Choice(0, "1", "2", "3", "4"),
+			Choice(3, "1", "2", "3", "4"),
+			Stack("1", "2", "3"),
+			)
+		)
+	)
+
+add('complicated-horizontalchoice-5',
+	Diagram(
+		HorizontalChoice(
+			Stack("1", "2", "3"),
+			Choice(0, "1", "2", "3", "4"),
+			Choice(3, "1", "2", "3", "4"),
+			)
+		)
+	)
+
+add('single-stack',
+	Diagram(
+		Stack("1"),
+		)
+	)
+
+add('complicated-optionalsequence-1',
+	Diagram(
+			OptionalSequence("1", Choice(2, "2", "3", "4", "5"), Stack("6", "7", "8", "9", "10"), "11")
+		)
+	)
+
+add('labeled-start',
+	Diagram(
+			Start(label="Labeled Start"),
+			Sequence("1", "2", "3")
+		)
+	)
+
+add('complex',
+	Diagram(
+			Sequence("1", "2", "3"),
+			type="complex"
+		)
+	)
+
+add('simple',
+	Diagram(
+			Sequence("1", "2", "3"),
+			type="simple"
+		)
+	)
