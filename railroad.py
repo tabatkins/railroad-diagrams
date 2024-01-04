@@ -955,26 +955,56 @@ class Choice(DiagramMultiContainer):
         assert default < len(items)
         self.default = default
         self.width = AR * 4 + max(item.width for item in self.items)
-        self.up = self.items[0].up
-        self.down = self.items[-1].down
-        self.height = self.items[default].height
-        for i, item in enumerate(self.items):
-            if i in [default - 1, default + 1]:
+
+        # The size of the vertical separation between an item
+        # and the following item.
+        # The calcs are non-trivial and need to be done both here
+        # and in .format(), so no reason to do it twice.
+        self.separators: list[int] = [VS] * (len(items) - 1)
+
+        # If the entry or exit lines would be too close together
+        # to accommodate the arcs,
+        # bump up the vertical separation to compensate.
+        self.up = 0
+        for i in range(default - 1, -1, -1):
+            if i == default-1:
                 arcs = AR * 2
             else:
                 arcs = AR
-            if i < default:
-                self.up += max(
-                    arcs, item.height + item.down + VS + self.items[i + 1].up
-                )
-            elif i == default:
-                continue
+
+            item = self.items[i]
+            lowerItem = self.items[i+1]
+
+            entryDelta = lowerItem.up + VS + item.down + item.height
+            exitDelta = lowerItem.height + lowerItem.up + VS + item.down
+
+            separator = VS
+            if exitDelta < arcs or entryDelta < arcs:
+                separator += max(arcs - entryDelta, arcs - exitDelta)
+            self.separators[i] = separator
+            self.up += lowerItem.up + separator + item.down + item.height
+        self.up += self.items[0].up
+
+        self.height = self.items[default].height
+
+        for i in range(default+1, len(self.items)):
+            if i == default+1:
+                arcs = AR * 2
             else:
-                self.down += max(
-                    arcs,
-                    item.up + VS + self.items[i - 1].down + self.items[i - 1].height,
-                )
-        self.down -= self.items[default].height  # already counted in self.height
+                arcs = AR
+
+            item = self.items[i]
+            upperItem = self.items[i-1]
+
+            entryDelta = upperItem.height + upperItem.down + VS + item.up
+            exitDelta = upperItem.down + VS + item.up + item.height
+
+            separator = VS
+            if entryDelta < arcs or exitDelta < arcs:
+                separator += max(arcs - entryDelta, arcs - exitDelta)
+            self.separators[i-1] = separator
+            self.down += upperItem.down + separator + item.up + item.height
+        self.down += self.items[-1].down
         addDebug(self)
 
     def __repr__(self) -> str:
@@ -993,12 +1023,11 @@ class Choice(DiagramMultiContainer):
         default = self.items[self.default]
 
         # Do the elements that curve above
-        above = self.items[: self.default][::-1]
-        if above:
-            distanceFromY = max(
-                AR * 2, default.up + VS + above[0].down + above[0].height
-            )
-        for i, ni, item in doubleenumerate(above):
+        distanceFromY = 0
+        for i in range(self.default - 1, -1, -1):
+            item = self.items[i]
+            lowerItem = self.items[i+1]
+            distanceFromY += lowerItem.up + self.separators[i] + item.down + item.height
             Path(x, y).arc("se").up(distanceFromY - AR * 2).arc("wn").addTo(self)
             item.format(x + AR * 2, y - distanceFromY, innerWidth).addTo(self)
             Path(x + AR * 2 + innerWidth, y - distanceFromY + item.height).arc(
@@ -1008,10 +1037,6 @@ class Choice(DiagramMultiContainer):
             ).addTo(
                 self
             )
-            if ni < -1:
-                distanceFromY += max(
-                    AR, item.up + VS + above[i + 1].down + above[i + 1].height
-                )
 
         # Do the straight-line path.
         Path(x, y).right(AR * 2).addTo(self)
@@ -1019,24 +1044,17 @@ class Choice(DiagramMultiContainer):
         Path(x + AR * 2 + innerWidth, y + self.height).right(AR * 2).addTo(self)
 
         # Do the elements that curve below
-        below = self.items[self.default + 1 :]
-        if below:
-            distanceFromY = max(
-                AR * 2, default.height + default.down + VS + below[0].up
-            )
-        for i, item in enumerate(below):
+        distanceFromY = 0
+        for i in range(self.default+1, len(self.items)):
+            item = self.items[i]
+            upperItem = self.items[i-1]
+            distanceFromY += upperItem.height + upperItem.down + self.separators[i-1] + item.up
             Path(x, y).arc("ne").down(distanceFromY - AR * 2).arc("ws").addTo(self)
             item.format(x + AR * 2, y + distanceFromY, innerWidth).addTo(self)
             Path(x + AR * 2 + innerWidth, y + distanceFromY + item.height).arc("se").up(
                 distanceFromY - AR * 2 + item.height - default.height
             ).arc("wn").addTo(self)
-            distanceFromY += max(
-                AR,
-                item.height
-                + item.down
-                + VS
-                + (below[i + 1].up if i + 1 < len(below) else 0),
-            )
+
         return self
 
     def textDiagram(self) -> TextDiagram:

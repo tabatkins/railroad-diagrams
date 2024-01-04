@@ -661,24 +661,63 @@ export class Choice extends DiagramMultiContainer {
 		} else {
 			this.normal = normal;
 		}
-		var first = 0;
-		var last = items.length - 1;
-		this.width = Math.max.apply(null, this.items.map(function(el){return el.width})) + Options.AR*4;
-		this.height = this.items[normal].height;
-		this.up = this.items[first].up;
-		var arcs;
-		for(var i = first; i < normal; i++) {
-			if(i == normal-1) arcs = Options.AR*2;
-			else arcs = Options.AR;
-			this.up += Math.max(arcs, this.items[i].height + this.items[i].down + Options.VS + this.items[i+1].up);
-		}
-		this.down = this.items[last].down;
-		for(i = normal+1; i <= last; i++) {
-			if(i == normal+1) arcs = Options.AR*2;
-			else arcs = Options.AR;
-			this.down += Math.max(arcs, this.items[i-1].height + this.items[i-1].down + Options.VS + this.items[i].up);
-		}
-		this.down -= this.items[normal].height; // already counted in Choice.height
+		this.width = max(this.items, el=>el.width) + Options.AR*4;
+		var firstItem = this.items[0];
+		var lastItem = this.items[items.length - 1];
+		var normalItem = this.items[normal];
+
+        // The size of the vertical separation between an item
+        // and the following item.
+        // The calcs are non-trivial and need to be done both here
+        // and in .format(), so no reason to do it twice.
+        this.separators = Array.from({length:items.length-1}, x=>0);
+
+        // If the entry or exit lines would be too close together
+        // to accommodate the arcs,
+        // bump up the vertical separation to compensate.
+        this.up = 0
+        var arcs;
+        for(var i = normal - 1; i >= 0; i--) {
+            if(i == normal-1) arcs = Options.AR * 2;
+            else arcs = Options.AR;
+
+            let item = this.items[i];
+            let lowerItem = this.items[i+1];
+
+            let entryDelta = lowerItem.up + Options.VS + item.down + item.height;
+            let exitDelta = lowerItem.height + lowerItem.up + Options.VS + item.down;
+
+            let separator = Options.VS;
+            if(exitDelta < arcs || entryDelta < arcs) {
+                separator += Math.max(arcs - entryDelta, arcs - exitDelta)
+            }
+            this.separators[i] = separator
+            this.up += lowerItem.up + separator + item.down + item.height
+        }
+        this.up += firstItem.up;
+
+        this.height = normalItem.height;
+
+        this.down = 0;
+        for(var i = normal+1; i < this.items.length; i++) {
+            if(i == normal+1) arcs = Options.AR * 2;
+            else arcs = Options.AR;
+
+            let item = this.items[i];
+            let upperItem = this.items[i-1];
+
+            let entryDelta = upperItem.height + upperItem.down + Options.VS + item.up;
+            let exitDelta = upperItem.down + Options.VS + item.up + item.height;
+
+            let separator = Options.VS;
+            if(entryDelta < arcs || exitDelta < arcs) {
+                separator += Math.max(arcs - entryDelta, arcs - exitDelta)
+            }
+            this.separators[i-1] = separator;
+            this.down += upperItem.down + separator + item.up + item.height;
+        }
+        this.down += lastItem.down;
+
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "choice";
@@ -695,12 +734,11 @@ export class Choice extends DiagramMultiContainer {
 		var innerWidth = this.width - Options.AR*4;
 
 		// Do the elements that curve above
-		var distanceFromY;
+		var distanceFromY = 0;
 		for(var i = this.normal - 1; i >= 0; i--) {
-			let item = this.items[i];
-			if( i == this.normal - 1 ) {
-				distanceFromY = Math.max(Options.AR*2, this.items[this.normal].up + Options.VS + item.down + item.height);
-			}
+            let item = this.items[i];
+            let lowerItem = this.items[i+1];
+            distanceFromY += lowerItem.up + this.separators[i] + item.down + item.height;
 			new Path(x,y)
 				.arc('se')
 				.up(distanceFromY - Options.AR*2)
@@ -710,7 +748,6 @@ export class Choice extends DiagramMultiContainer {
 				.arc('ne')
 				.down(distanceFromY - item.height + this.height - Options.AR*2)
 				.arc('ws').addTo(this);
-			distanceFromY += Math.max(Options.AR, item.up + Options.VS + (i === 0 ? 0 : this.items[i-1].down+this.items[i-1].height));
 		}
 
 		// Do the straight-line path.
@@ -719,21 +756,21 @@ export class Choice extends DiagramMultiContainer {
 		new Path(x+Options.AR*2+innerWidth, y+this.height).right(Options.AR*2).addTo(this);
 
 		// Do the elements that curve below
-		for(i = this.normal+1; i <= last; i++) {
-			let item = this.items[i];
-			if( i == this.normal + 1 ) {
-				distanceFromY = Math.max(Options.AR*2, this.height + this.items[this.normal].down + Options.VS + item.up);
-			}
+		var distanceFromY = 0;
+		for(var i = this.normal+1; i <= last; i++) {
+            let item = this.items[i];
+            let upperItem = this.items[i-1];
+            distanceFromY += upperItem.height + upperItem.down + this.separators[i-1] + item.up;
 			new Path(x,y)
 				.arc('ne')
 				.down(distanceFromY - Options.AR*2)
 				.arc('ws').addTo(this);
+			if(!item.format) console.log(item);
 			item.format(x+Options.AR*2, y+distanceFromY, innerWidth).addTo(this);
 			new Path(x+Options.AR*2+innerWidth, y+distanceFromY+item.height)
 				.arc('se')
 				.up(distanceFromY - Options.AR*2 + item.height - this.height)
 				.arc('wn').addTo(this);
-			distanceFromY += Math.max(Options.AR, item.height + item.down + Options.VS + (i == last ? 0 : this.items[i+1].up));
 		}
 
 		return this;
@@ -1385,8 +1422,7 @@ function sum(iter, func) {
 	return iter.map(func).reduce(function(a,b){return a+b}, 0);
 }
 
-function max(iter, func) {
-	if(!func) func = function(x) { return x; };
+function max(iter, func=x=>x) {
 	return Math.max.apply(null, iter.map(func));
 }
 
