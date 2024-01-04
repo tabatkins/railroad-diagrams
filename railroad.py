@@ -972,9 +972,8 @@ class Choice(DiagramMultiContainer):
             else:
                 self.down += max(
                     arcs,
-                    item.up + VS + self.items[i - 1].down + self.items[i - 1].height,
+                    self.items[i - 1].down + VS + item.up + item.height,
                 )
-        self.down -= self.items[default].height  # already counted in self.height
         addDebug(self)
 
     def __repr__(self) -> str:
