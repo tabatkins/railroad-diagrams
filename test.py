@@ -1,156 +1,192 @@
+add('test choice up', Diagram(
+    Choice(
+        2,
+        Group(
+            Choice(1,
+                Skip(),
+                Group(
+                    Stack(Skip(), Skip()),
+                    "inner")
+                ),
+            "top"),
+        Group(
+            Choice(1,
+                Skip(),
+                Group(
+                    Stack(Skip(), Skip()),
+                    "inner")
+                ),
+            "top"),
+        Skip(),
+    ),
+))
+add('test choice down', Diagram(
+    Choice(
+        0,
+        Group(
+            Choice(0,
+                Skip(),
+                Group(
+                    Stack(Terminal("abc"), Skip()),
+                    "inner")
+                ),
+            "top"),
+        Terminal("xyz"),
+    )
+))
 add('comment', Diagram(
-	'/*',
-	ZeroOrMore(
-		NonTerminal('anything but * followed by /')),
-	'*/'));
+    '/*',
+    ZeroOrMore(
+        NonTerminal('anything but * followed by /')),
+    '*/'));
 
 add('newline', Diagram(Choice(0, '\\n', '\\r\\n', '\\r', '\\f')));
 
 add('whitespace', Diagram(Choice(
-	0, 'space', '\\t', NonTerminal('newline'))));
+    0, 'space', '\\t', NonTerminal('newline'))));
 
 add('hex digit', Diagram(NonTerminal('0-9 a-f or A-F')));
 
 add('escape', Diagram(
-	'\\', Choice(0,
-		NonTerminal('not newline or hex digit'),
-		Sequence(
-			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
-			Optional(NonTerminal('whitespace'), 'skip')))));
+    '\\', Choice(0,
+        NonTerminal('not newline or hex digit'),
+        Sequence(
+            OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
+            Optional(NonTerminal('whitespace'), 'skip')))));
 
 add('<whitespace-token>', Diagram(OneOrMore(NonTerminal('whitespace'))));
 
 add('ws*', Diagram(ZeroOrMore(NonTerminal('<whitespace-token>'))));
 
 add('<ident-token>', Diagram(
-	Choice(0, Skip(), '-'),
-	Choice(0, NonTerminal('a-z A-Z _ or non-ASCII'), NonTerminal('escape')),
-	ZeroOrMore(Choice(0,
-		NonTerminal('a-z A-Z 0-9 _ - or non-ASCII'), NonTerminal('escape')))));
+    Choice(0, Skip(), '-'),
+    Choice(0, NonTerminal('a-z A-Z _ or non-ASCII'), NonTerminal('escape')),
+    ZeroOrMore(Choice(0,
+        NonTerminal('a-z A-Z 0-9 _ - or non-ASCII'), NonTerminal('escape')))));
 
 add('<function-token>', Diagram(
-	NonTerminal('<ident-token>'), '('));
+    NonTerminal('<ident-token>'), '('));
 
 add('<at-keyword-token>', Diagram(
-	'@', NonTerminal('<ident-token>')));
+    '@', NonTerminal('<ident-token>')));
 
 add('<hash-token>', Diagram(
-	'#', OneOrMore(Choice(0,
-		NonTerminal('a-z A-Z 0-9 _ - or non-ASCII'),
-		NonTerminal('escape')))));
+    '#', OneOrMore(Choice(0,
+        NonTerminal('a-z A-Z 0-9 _ - or non-ASCII'),
+        NonTerminal('escape')))));
 
 add('<string-token>', Diagram(
-	Choice(0,
-		Sequence(
-			'"',
-			ZeroOrMore(
-				Choice(0,
-					NonTerminal('not " \\ or newline'),
-					NonTerminal('escape'),
-					Sequence('\\', NonTerminal('newline')))),
-			'"'),
-		Sequence(
-			'\'',
-			ZeroOrMore(
-				Choice(0,
-					NonTerminal("not ' \\ or newline"),
-					NonTerminal('escape'),
-					Sequence('\\', NonTerminal('newline')))),
-			'\''))));
+    Choice(0,
+        Sequence(
+            '"',
+            ZeroOrMore(
+                Choice(0,
+                    NonTerminal('not " \\ or newline'),
+                    NonTerminal('escape'),
+                    Sequence('\\', NonTerminal('newline')))),
+            '"'),
+        Sequence(
+            '\'',
+            ZeroOrMore(
+                Choice(0,
+                    NonTerminal("not ' \\ or newline"),
+                    NonTerminal('escape'),
+                    Sequence('\\', NonTerminal('newline')))),
+            '\''))));
 
 add('<url-token>', Diagram(
-	NonTerminal('<ident-token "url">'),
-	'(',
-	NonTerminal('ws*'),
-	Optional(Sequence(
-		Choice(0, NonTerminal('url-unquoted'), NonTerminal('STRING')),
-		NonTerminal('ws*'))),
-	')'));
+    NonTerminal('<ident-token "url">'),
+    '(',
+    NonTerminal('ws*'),
+    Optional(Sequence(
+        Choice(0, NonTerminal('url-unquoted'), NonTerminal('STRING')),
+        NonTerminal('ws*'))),
+    ')'));
 
 add('url-unquoted', Diagram(OneOrMore(
-	Choice(0,
-		NonTerminal('not " \' ( ) \\ whitespace or non-printable'),
-		NonTerminal('escape')))));
+    Choice(0,
+        NonTerminal('not " \' ( ) \\ whitespace or non-printable'),
+        NonTerminal('escape')))));
 
 add('<number-token>', Diagram(
-	Choice(1, '+', Skip(), '-'),
-	Choice(0,
-		Sequence(
-			OneOrMore(NonTerminal('digit')),
-			'.',
-			OneOrMore(NonTerminal('digit'))),
-		OneOrMore(NonTerminal('digit')),
-		Sequence(
-			'.',
-			OneOrMore(NonTerminal('digit')))),
-	Choice(0,
-		Skip(),
-		Sequence(
-			Choice(0, 'e', 'E'),
-			Choice(1, '+', Skip(), '-'),
-			OneOrMore(NonTerminal('digit'))))));
+    Choice(1, '+', Skip(), '-'),
+    Choice(0,
+        Sequence(
+            OneOrMore(NonTerminal('digit')),
+            '.',
+            OneOrMore(NonTerminal('digit'))),
+        OneOrMore(NonTerminal('digit')),
+        Sequence(
+            '.',
+            OneOrMore(NonTerminal('digit')))),
+    Choice(0,
+        Skip(),
+        Sequence(
+            Choice(0, 'e', 'E'),
+            Choice(1, '+', Skip(), '-'),
+            OneOrMore(NonTerminal('digit'))))));
 
 add('<dimension-token>', Diagram(
-	NonTerminal('<number-token>'), NonTerminal('<ident-token>')));
+    NonTerminal('<number-token>'), NonTerminal('<ident-token>')));
 
 add('<percentage-token>', Diagram(
-	NonTerminal('<number-token>'), '%'));
+    NonTerminal('<number-token>'), '%'));
 
 add('<unicode-range-token>', Diagram(
-	Choice(0,
-		'U',
-		'u'),
-	'+',
-	Choice(0,
-		Sequence(OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))),
-		Sequence(
-			ZeroOrMore(NonTerminal('hex digit'), Comment('1-5 times')),
-			OneOrMore('?', Comment('1 to (6 - digits) times'))),
-		Sequence(
-			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
-			'-',
-			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))));
+    Choice(0,
+        'U',
+        'u'),
+    '+',
+    Choice(0,
+        Sequence(OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))),
+        Sequence(
+            ZeroOrMore(NonTerminal('hex digit'), Comment('1-5 times')),
+            OneOrMore('?', Comment('1 to (6 - digits) times'))),
+        Sequence(
+            OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
+            '-',
+            OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))));
 
 NonTerminal = NonTerminal;
 
 add('Stylesheet', Diagram(ZeroOrMore(Choice(3,
-	NonTerminal('<CDO-token>'), NonTerminal('<CDC-token>'), NonTerminal('<whitespace-token>'),
-	NonTerminal('Qualified rule'), NonTerminal('At-rule')))));
+    NonTerminal('<CDO-token>'), NonTerminal('<CDC-token>'), NonTerminal('<whitespace-token>'),
+    NonTerminal('Qualified rule'), NonTerminal('At-rule')))));
 
 add('Rule list', Diagram(ZeroOrMore(Choice(1,
-	NonTerminal('<whitespace-token>'), NonTerminal('Qualified rule'), NonTerminal('At-rule')))));
+    NonTerminal('<whitespace-token>'), NonTerminal('Qualified rule'), NonTerminal('At-rule')))));
 
 add('At-rule', Diagram(
-	NonTerminal('<at-keyword-token>'), ZeroOrMore(NonTerminal('Component value')),
-	Choice(0, NonTerminal('{} block'), ';')));
+    NonTerminal('<at-keyword-token>'), ZeroOrMore(NonTerminal('Component value')),
+    Choice(0, NonTerminal('{} block'), ';')));
 
 add('Qualified rule', Diagram(
-	ZeroOrMore(NonTerminal('Component value')),
-	NonTerminal('{} block')));
+    ZeroOrMore(NonTerminal('Component value')),
+    NonTerminal('{} block')));
 
 add('Declaration list', Diagram(
-	NonTerminal('ws*'),
-	Choice(0,
-		Sequence(
-			Optional(NonTerminal('Declaration')),
-			Optional(Sequence(';', NonTerminal('Declaration list')))),
-		Sequence(
-			NonTerminal('At-rule'),
-			NonTerminal('Declaration list')))));
+    NonTerminal('ws*'),
+    Choice(0,
+        Sequence(
+            Optional(NonTerminal('Declaration')),
+            Optional(Sequence(';', NonTerminal('Declaration list')))),
+        Sequence(
+            NonTerminal('At-rule'),
+            NonTerminal('Declaration list')))));
 
 add('Declaration', Diagram(
-	NonTerminal('<ident-token>'), NonTerminal('ws*'), ':',
-	ZeroOrMore(NonTerminal('Component value')), Optional(NonTerminal('!important'))));
+    NonTerminal('<ident-token>'), NonTerminal('ws*'), ':',
+    ZeroOrMore(NonTerminal('Component value')), Optional(NonTerminal('!important'))));
 
 add('!important', Diagram(
-	'!', NonTerminal('ws*'), NonTerminal('<ident-token "important">'), NonTerminal('ws*')));
+    '!', NonTerminal('ws*'), NonTerminal('<ident-token "important">'), NonTerminal('ws*')));
 
 add('Component value', Diagram(Choice(0,
-	NonTerminal('Preserved token'),
-	NonTerminal('{} block'),
-	NonTerminal('() block'),
-	NonTerminal('[] block'),
-	NonTerminal('Function block'))));
+    NonTerminal('Preserved token'),
+    NonTerminal('{} block'),
+    NonTerminal('() block'),
+    NonTerminal('[] block'),
+    NonTerminal('Function block'))));
 
 
 add('{} block', Diagram('{', ZeroOrMore(NonTerminal('Component value')), '}'));
@@ -158,62 +194,62 @@ add('() block', Diagram('(', ZeroOrMore(NonTerminal('Component value')), ')'));
 add('[] block', Diagram('[', ZeroOrMore(NonTerminal('Component value')), ']'));
 
 add('Function block', Diagram(
-	NonTerminal('<function-token>'),
-	ZeroOrMore(NonTerminal('Component value')),
-	')'));
+    NonTerminal('<function-token>'),
+    ZeroOrMore(NonTerminal('Component value')),
+    ')'));
 
 add('glob pattern', Diagram(
-	AlternatingSequence(
-		NonTerminal("ident"),
-		"*")))
+    AlternatingSequence(
+        NonTerminal("ident"),
+        "*")))
 
 add('SQL', Diagram(
-	Stack(
-		Sequence(
-			'SELECT',
-			Optional('DISTINCT', 'skip'),
-			Choice(0,
-				'*',
-				OneOrMore(
-					Sequence(NonTerminal('expression'), Optional(Sequence('AS', NonTerminal('output_name')))),
-					','
-				)
-			),
-			'FROM',
-			OneOrMore(NonTerminal('from_item'), ','),
-			Optional(Sequence('WHERE', NonTerminal('condition')))
-		),
-		Sequence(
-			Optional(Sequence('GROUP BY', NonTerminal('expression'))),
-			Optional(Sequence('HAVING', NonTerminal('condition'))),
-			Optional(Sequence(
-				Choice(0, 'UNION', 'INTERSECT', 'EXCEPT'),
-				Optional('ALL'),
-				NonTerminal('select')
-			))
-		),
-		Sequence(
-			Optional(Sequence(
-				'ORDER BY',
-				OneOrMore(Sequence(NonTerminal('expression'), Choice(0, Skip(), 'ASC', 'DESC')), ','))
-			),
-			Optional(Sequence(
-				'LIMIT',
-				Choice(0, NonTerminal('count'), 'ALL')
-			)),
-			Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
-		))))
+    Stack(
+        Sequence(
+            'SELECT',
+            Optional('DISTINCT', 'skip'),
+            Choice(0,
+                '*',
+                OneOrMore(
+                    Sequence(NonTerminal('expression'), Optional(Sequence('AS', NonTerminal('output_name')))),
+                    ','
+                )
+            ),
+            'FROM',
+            OneOrMore(NonTerminal('from_item'), ','),
+            Optional(Sequence('WHERE', NonTerminal('condition')))
+        ),
+        Sequence(
+            Optional(Sequence('GROUP BY', NonTerminal('expression'))),
+            Optional(Sequence('HAVING', NonTerminal('condition'))),
+            Optional(Sequence(
+                Choice(0, 'UNION', 'INTERSECT', 'EXCEPT'),
+                Optional('ALL'),
+                NonTerminal('select')
+            ))
+        ),
+        Sequence(
+            Optional(Sequence(
+                'ORDER BY',
+                OneOrMore(Sequence(NonTerminal('expression'), Choice(0, Skip(), 'ASC', 'DESC')), ','))
+            ),
+            Optional(Sequence(
+                'LIMIT',
+                Choice(0, NonTerminal('count'), 'ALL')
+            )),
+            Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
+        ))))
 
 add('Group example',
-	Diagram(
-		"foo",
-		ZeroOrMore(
-			Group(
-				Stack('foo', 'bar'),
-				'label')
-			),
-		"bar"),
-	)
+    Diagram(
+        "foo",
+        ZeroOrMore(
+            Group(
+                Stack('foo', 'bar'),
+                'label')
+            ),
+        "bar"),
+    )
 
 add('Class example',
 	Diagram(

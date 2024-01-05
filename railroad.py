@@ -2291,13 +2291,15 @@ if __name__ == "__main__":
         TextDiagram.setFormatting(TextDiagram.PARTS_ASCII)
     elif mode == "unicode":
         TextDiagram.setFormatting(TextDiagram.PARTS_UNICODE)
+    elif mode in ("svg", "standalone"):
+        sys.stdout.write(
+            f"""
+    		<style>
+            {DEFAULT_STYLE}
+    		.blue text {{ fill: blue; }}
+    		</style>
+    		"""
+        )
     with open("test.py", "r", encoding="utf-8") as fh:
         exec(fh.read())  # pylint: disable=exec-used
-    sys.stdout.write(
-        """
-		<style>
-		.blue text { fill: blue; }
-		</style>
-		"""
-    )
     sys.stdout.write("</body></html>")
