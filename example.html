@@ -13,40 +13,67 @@ script {
 	margin-top: -1em;
 }
 </style>
-<link rel='stylesheet' href='railroad-diagrams.css'>
-<script src='railroad-diagrams.js'></script>
+<link rel='stylesheet' href='railroad.css'>
+<script type=module style="display:none">
+import rr, * as rrClass from "./railroad.js";
+Object.assign(window, rr);
+window.rrOptions = rrClass.Options;
+window.rrOptions._scriptIndex = 1; // Count of SCRIPT tags addTo() has seen
+// Monkey-patch Diagram.addTo() to use our counter to find the SCRIPT tag it's running for.
+// Do not use this in your own code!
+rrClass.Diagram.prototype.addTo = function (parent) {
+	if(!parent) {
+		var scriptTag = document.getElementsByTagName('script');
+		scriptTag = scriptTag[window.rrOptions._scriptIndex];
+		parent = scriptTag.parentNode;
+	}
+	window.rrOptions._scriptIndex++;
+	return rrClass.DiagramMultiContainer.prototype.addTo.call(this, parent);
+}
+</script>
 <body>
 
 <!--
 <h1 id=test>TEST</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Choice(1, "above", AlternatingSequence(Stack("foo", "foo"), Stack("bar", "bar")), "below")).addTo();
 </script>
+</div>
 -->
 
 <h1 id='ident'>IDENT</h1>
-<script>
+<div>
+<script type=module>
 ComplexDiagram(
 	Choice(0, Skip(), '-'),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
 		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
 </script>
+</div>
 <h1 id='function'>FUNCTION</h1>
-<script>
+<div>
+<script type=module>
 Diagram(NonTerminal('IDENT'), '(').addTo();
 </script>
+</div>
 <h1 id='at-keyword'>AT-KEYWORD</h1>
-<script>
+<div>
+<script type=module>
 Diagram('@', NonTerminal('IDENT')).addTo();
 </script>
+</div>
 <h1 id='hash'>HASH</h1>
-<script>
+<div>
+<script type=module>
 Diagram('#', NonTerminal('IDENT')).addTo();
 </script>
+</div>
 <h1 id='string'>STRING</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Choice(0,
 		Sequence(
@@ -64,8 +91,10 @@ Diagram(
 					NonTerminal('escape'))),
 			"'"))).addTo();
 </script>
+</div>
 <h1 id='url'>URL</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Choice(0, 'u', 'U'),
 	Choice(0, 'r', 'R'),
@@ -86,8 +115,10 @@ Diagram(
 			Optional(NonTerminal('WS')))),
 	')').addTo();
 </script>
+</div>
 <h1 id="number">NUMBER</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Choice(1, '+', Skip(), '-'),
 	Choice(0,
@@ -106,16 +137,22 @@ Diagram(
 			Choice(1, '+', Skip(), '-'),
 			OneOrMore(NonTerminal('digit'))))).addTo();
 </script>
+</div>
 <h1>DIMENSION</h1>
-<script>
+<div>
+<script type=module>
 Diagram(NonTerminal('NUMBER', '#number'), NonTerminal('IDENT')).addTo();
 </script>
+</div>
 <h1>PERCENTAGE</h1>
-<script>
+<div>
+<script type=module>
 Diagram(NonTerminal('NUMBER', '#number'), '%').addTo();
 </script>
+</div>
 <h1>UNICODE-RANGE</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Choice(0,
 		'U',
@@ -131,24 +168,32 @@ Diagram(
 			'-',
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo();
 </script>
+</div>
 <h1>COMMENT</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	'/*',
 	ZeroOrMore(
 		NonTerminal("anything but * followed by /")),
 	'*/').addTo();
 </script>
+</div>
 <h1>CDO</h1>
-<script>
+<div>
+<script type=module>
 Diagram("<" + "!--").addTo();
 </script>
+</div>
 <h1>CDC</h1>
-<script>
+<div>
+<script type=module>
 Diagram("-->").addTo();
 </script>
+</div>
 <h1 id='SQL'>SQL</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Stack(
 		Sequence(
@@ -188,13 +233,15 @@ Diagram(
 	)
 ).addTo();
 </script>
+</div>
 
 <h1 id='image-func'>image() function</h1>
 <xmp>
 image() = image( <image-tags>? [ <image-src>? , <color>? ]! )
 <image-tags> = [ ltr | rtl ]
 <image-src> = [ <url> | <string> ]</xmp>
-<script>
+<div>
+<script type=module>
 Diagram(
 	Optional(
 		Sequence(
@@ -207,10 +254,12 @@ Diagram(
 	)
 ).addTo();
 </script>
+</div>
 
 <h1 id='glob'>glob pattern</h1>
 Alternating alphanums and <code>*</code> chars
-<script>
+<div>
+<script type=module>
 Diagram(
 	AlternatingSequence(
 		OneOrMore(NonTerminal("alphanumeric")),
@@ -218,9 +267,11 @@ Diagram(
 	)
 ).addTo();
 </script>
+</div>
 
 <h1 id='grid-auto-flow'>CSS grid-auto-flow property</h1>
-<script>
+<div>
+<script type=module>
 Diagram(
 	MultipleChoice(0, "any",
 		Choice(1, "row", "column"),
@@ -228,3 +279,4 @@ Diagram(
 	)
 ).addTo();
 </script>
+</div>
