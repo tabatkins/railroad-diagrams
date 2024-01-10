@@ -47,6 +47,7 @@ The Diagram class also has a few methods:
 * `.toString()` outputs the SVG of the diagram as a string, ready to be put into your HTML. This is *not* a standalone SVG file; it's intended to be embedded into HTML.
 * `.toStandalone()` outputs the SVG of the diagram as a string, but this *is* a standalone SVG file.
 * `.toSVG()` outputs the diagram as an actual `<svg>` DOM element, ready for appending into a document.
+* `.toText()` outputs a text-mode diagram as a string, ready to be put into a file like your source code. This is *not* an SVG diagram; it's intended to be readable in a text environment.
 * `.addTo(parent?)` directly appends the diagram, as an `<svg>` element, to the specified parent element. If you omit the parent element, it instead appends to the script element it's being called from, so you can easily insert a diagram into your document by just dropping a tiny inline `<script>` that just calls `new Diagram(...).addTo()` where you want the diagram to show up.
 
 
@@ -140,11 +141,12 @@ You can also change the CSS file - feel free to tweak to your heart's content.
 Note, though, that if you change the text sizes in the CSS,
 you'll have to go adjust the options specifying the text metrics as well.
 
-* `Options.VS` - sets the minimum amount of vertical separation between two items, in CSS px.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width. Defaults to `8`.
-* `Options.AR` - the radius of the arcs, in CSS px, used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for. Defaults to `10`.
-* `Options.DIAGRAM_CLASS` - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet. Defaults to `"railroad-diagram"`.
-* `Options.STROKE_ODD_PIXEL_LENGTH` - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `False`.
+* `Options.VS` - sets the minimum amount of vertical separation between two items, in CSS px.  Note that the stroke width isn't counted when computing the separation; this shouldn't be relevant unless you have a very small separation or very large stroke width. Defaults to `8`.  Ignored for text diagrams.
+* `Options.AR` - the radius of the arcs, in CSS px, used in the branching containers like Choice.  This has a relatively large effect on the size of non-trivial diagrams.  Both tight and loose values look good, depending on what you're going for. Defaults to `10`.  Ignored for text diagrams.
+* `Options.DIAGRAM_CLASS` - the class set on the root `<svg>` element of each diagram, for use in the CSS stylesheet. Defaults to `"railroad-diagram"`.  Ignored for text diagrams.
+* `Options.STROKE_ODD_PIXEL_LENGTH` - the default stylesheet uses odd pixel lengths for 'stroke'. Due to rasterization artifacts, they look best when the item has been translated half a pixel in both directions. If you change the styling to use a stroke with even pixel lengths, you'll want to set this variable to `False`.  Ignored for text diagrams.
 * `Options.INTERNAL_ALIGNMENT` - when some branches of a container are narrower than others, this determines how they're aligned in the extra space.  Defaults to `"center"`, but can be set to `"left"` or `"right"`.
-* `Options.CHAR_WIDTH` - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.
-* `Options.COMMENT_CHAR_WIDTH` - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.
-* `Options.DEBUG` - if `true`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `false`.
+* `Options.CHAR_WIDTH` - the approximate width, in CSS px, of characters in normal text (`Terminal` and `NonTerminal`). Defaults to `8.5`.  Ignored for text diagrams.
+* `Options.COMMENT_CHAR_WIDTH` - the approximate width, in CSS px, of character in `Comment` text, which by default is smaller than the other textual items. Defaults to `7`.  Ignored for text diagrams.
+* `Options.DEBUG` - if `true`, writes some additional "debug information" into the attributes of elements in the output, to help debug sizing issues. Defaults to `false`.  Ignored for text diagrams.
+* ESCAPE_HTML - if `true`, causes `.toText()` to replace "<". ">", '"', and "&" with their HTML-entity equivalents, so text diagram output can be placed in HTML files unchanged.  Defaults to `true`.
