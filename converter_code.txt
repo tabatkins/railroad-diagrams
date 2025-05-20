@@ -1,0 +1,51 @@
+Diagram(
+    "EGFR("
+    Choice(0, Skip(),
+           'ecd',
+           ),
+    Choice(0, Skip(),
+           'tmd',
+           ),
+    Choice(0, Skip(),
+           Sequence('Y1',
+                    Choice(0, Skip(), '~U', '~P'),)
+           ),
+    Choice(0, Skip(),
+           Sequence('Y2',
+                    Choice(0, Skip(), '~U', '~P'),)
+           ),
+    ")"
+)
+
+ Diagram(
+    "Syk("
+    Choice(0, Skip(),
+           'tSH2',
+           ),
+    Choice(0, Skip(),
+           Sequence('l',
+                    Choice(0, Skip(), '~Y'),)
+           ),
+    Choice(0, Skip(),
+           Sequence('a',
+                    Choice(0, Skip(), '~Y'),)
+           ),
+    ")"
+)
+
+ Diagram(
+    "Syk("
+    Choice(0, Skip(),
+           '',
+           ),
+    ")"
+)
+
+ Diagram(
+    "Rec("
+    Choice(0, Skip(),
+           Sequence('b',
+                    Choice(0, Skip(), '~pY'),)
+           ),
+    ")"
+)
