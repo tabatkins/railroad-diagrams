@@ -89,7 +89,7 @@ The leaves:
     The optional arguments have the same meaning as for Terminal,
     except that the default class is `'non-terminal'`.
 
-* Skip() - an empty line
+* Skip([takeUpSpace]) - an empty line (that can optionally take up space)
 
 * Start(type, label) and End(type) - the start/end shapes. These are supplied by default, but if you want to supply a label to the diagram, you can create a Start() explicitly (as the first child of the Diagram!). The "type" attribute takes either "simple" (the default) or "complex", a la Diagram() and ComplexDiagram(). All arguments are optional.
 
