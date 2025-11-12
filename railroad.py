@@ -925,9 +925,10 @@ class AlternatingSequence(DiagramMultiContainer):
         rightLines += [" " + line_vertical] * (diagramTD.height - diagramTD.entry - 1)
         rightLines += [line + corner_bot_right]
 
-        separator += [(line * (leftWidth - 1)) + corner_top_right + " " + corner_top_left + (line * (rightWidth - 2))]
-        separator += [(" " * (leftWidth - 1)) + " " + cross_diag + " " + (" " * (rightWidth - 2))]
-        separator += [(line * (leftWidth - 1)) + corner_bot_right + " " + corner_bot_left + (line * (rightWidth - 2))]
+        leftSepWidth, rightSepWidth = TextDiagram._gaps(firstTD.width - 3, 0)
+        separator += [(line * leftSepWidth) + corner_top_right + " " + corner_top_left + (line * rightSepWidth)]
+        separator += [(" " * leftSepWidth) + " " + cross_diag + " " + (" " * (rightSepWidth))]
+        separator += [(line * leftSepWidth) + corner_bot_right + " " + corner_bot_left + (line * rightSepWidth)]
         leftLines += [" " * 2]
         rightLines += [" " * 2]
 
