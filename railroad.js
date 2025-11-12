@@ -887,9 +887,10 @@ export class AlternatingSequence extends DiagramMultiContainer {
 		}
 		rightLines.push(line + corner_bot_right);
 
-		separator.push((line.repeat(leftWidth - 1)) + corner_top_right + " " + corner_top_left + (line.repeat(rightWidth - 2)));
-		separator.push((" ".repeat(leftWidth - 1)) + " " + cross_diag + " " + (" ".repeat(rightWidth - 2)));
-		separator.push((line.repeat(leftWidth - 1)) + corner_bot_right + " " + corner_bot_left + (line.repeat(rightWidth - 2)));
+		var [leftSepWidth, rightSepWidth] = TextDiagram._gaps(firstTD.width - 3, 0)
+		separator.push((line.repeat(leftSepWidth)) + corner_top_right + " " + corner_top_left + (line.repeat(rightSepWidth)));
+		separator.push((" ".repeat(leftSepWidth)) + " " + cross_diag + " " + (" ".repeat(rightSepWidth)));
+		separator.push((line.repeat(leftSepWidth)) + corner_bot_right + " " + corner_bot_left + (line.repeat(rightSepWidth)));
 		leftLines.push("  ");
 		rightLines.push("  ");
 
