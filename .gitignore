@@ -6,3 +6,4 @@ secrets.json
 /dist
 /build
 test.html
+node_modules/
