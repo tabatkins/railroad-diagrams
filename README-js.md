@@ -3,7 +3,7 @@ Railroad-Diagram Generator, JS Version
 
 This is a small library for generating railroad diagrams
 (like what [JSON.org](http://json.org) uses)
-using SVG, with both JS and Python ports.
+using SVG or Unicode text, with both JS and Python ports.
 [Here's an online dingus for you to play with and get SVG code from!](https://tabatkins.github.io/railroad-diagrams/generator.html)
 
 (This is the README for the JS port;
@@ -32,9 +32,18 @@ const d = new Diagram("foo", new Choice(0, "bar", "baz"));
 // Or use the functions that call the constructors for you
 import rr from "./railroad.js";
 const d = rr.Diagram("foo", rr.Choice(0, "bar", "baz"));
+
+// Then output as inline SVG...
+container.appendChild(d.toSVG());
+// Or output SVG source code...
+container.textContent = ""+d;
+// Or write out a standalone SVG as source...
+console.log(""+d.toStandalone())
+// Or instead render it as ASCII art...
+container.textContent = d.toText();
 ```
 
-Alternately, you can call ComplexDiagram();
+Alternately, you can construct a ComplexDiagram();
 it's identical to Diagram(),
 but has slightly different start/end shapes,
 same as what JSON.org does to distinguish between "leaf" types like number (ordinary Diagram())
