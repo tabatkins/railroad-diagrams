@@ -454,3 +454,15 @@ add('simple',
 			type="simple"
 		)
 	)
+
+add('issue-123',
+	Diagram(
+			Choice(
+				0,
+				HorizontalChoice("A", "a"),
+				HorizontalChoice("B", "b"),
+				HorizontalChoice("C", "c"),
+				HorizontalChoice("D", "d")
+			)
+		)
+	)
