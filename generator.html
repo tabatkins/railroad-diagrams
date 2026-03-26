@@ -26,7 +26,12 @@
 		</select>
 		How should items be aligned when there's more space than they need?</label>
 	<li><label><input type=checkbox id=option-odd-stroke checked> Is the stroke width an odd number of px? (Yes, in the default styles.)
-	<li><label><input type=checkbox name=standalone id=option-standalone> Generate code for standalone SVG document?</label>
+	<li><label>Output type?
+		<select id=option-type>
+			<option value=svg>SVG
+			<option value=standalone>Standalone SVG
+			<option value=text>Text
+		</select></label>
 </ul>
 
 <script type=module>
@@ -64,7 +69,7 @@ function hashProcess() {
 
 function process(input) {
 	if(!input) input = find('.input').value;
-	const standalone = find('#option-standalone').checked;
+	const outputType = find('#option-type').value;
 	rrOptions.VS = parseInt(find("#option-vs").value, 10);
 	rrOptions.AR = parseInt(find("#option-ar").value, 10);
 	rrOptions.STROKE_ODD_PIXEL_LENGTH = find("#option-odd-stroke").checked;
@@ -78,9 +83,16 @@ function process(input) {
 		find('.output-text').textContent = "Invalid input.\n" + e
 		throw e;
 	}
-	find('.output-image').innerHTML = '';
-	result.addTo(find('.output-image'));
-	find('.output-text').textContent = standalone ? result.toStandalone() : result.toString();
+	if(outputType == "svg" || outputType == "standalone") {
+		find('.output-image').innerHTML = '';
+		result.addTo(find('.output-image'));
+		find('.output-text').textContent = outputType == "standalone" ? result.toStandalone() : result.toString();
+	} else if(outputType == "text") {
+		find('.output-text').textContent = ''+result.toTextDiagram();
+		find('.output-image').innerHTML = '';
+	} else {
+		console.error(`Unknown output type '${outputType}'.`);
+	}
 	console.log(result);
 }
 </script>
