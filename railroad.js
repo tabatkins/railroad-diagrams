@@ -134,9 +134,9 @@ export class FakeSVG {
 	}
 	toText() {
 		var outputTD = this.toTextDiagram();
-		var output = outputTD.lines.join("\n") + "\n";
+		var output = outputTD+"";
 		if(Options.ESCAPE_HTML) {
-			output = output.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;");
+			output = output.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&apos;");
 		}
 		return output;
 	}
@@ -1980,6 +1980,9 @@ export class TextDiagram {
 				throw new Error("Diagram data is not rectangular:\n" + this._dump(false));
 			}
 		}
+	}
+	toString() {
+		return this.lines.join("\n")+"\n";
 	}
 	alter(entry=null, exit=null, lines=null) {
 		/*
