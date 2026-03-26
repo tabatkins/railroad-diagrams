@@ -88,7 +88,7 @@ function process(input) {
 		result.addTo(find('.output-image'));
 		find('.output-text').textContent = outputType == "standalone" ? result.toStandalone() : result.toString();
 	} else if(outputType == "text") {
-		find('.output-text').textContent = ''+result.toTextDiagram();
+		find('.output-text').textContent = result.toText();
 		find('.output-image').innerHTML = '';
 	} else {
 		console.error(`Unknown output type '${outputType}'.`);

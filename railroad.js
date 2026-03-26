@@ -1981,9 +1981,6 @@ export class TextDiagram {
 			}
 		}
 	}
-	toString() {
-		return this.lines.join("\n");
-	}
 	alter(entry=null, exit=null, lines=null) {
 		/*
 		Create and return a new TextDiagram based on this instance, with the specified changes.
