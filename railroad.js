@@ -864,12 +864,11 @@ export class AlternatingSequence extends DiagramMultiContainer {
 		var firstTD = this.items[0].toTextDiagram();
 		var secondTD = this.items[1].toTextDiagram();
 		var maxWidth = TextDiagram._maxWidth(firstTD, secondTD);
-		var [leftWidth, rightWidth] = TextDiagram._gaps(maxWidth, 0);
 		var leftLines = [];
 		var rightLines = [];
 		var separator = [];
-		var [leftSize, rightSize] = TextDiagram._gaps(firstTD.width, 0);
-		var diagramTD = firstTD.expand(leftWidth - leftSize, rightWidth - rightSize, 0, 0);
+		var [leftGap, rightGap] = TextDiagram._gaps(maxWidth, firstTD.width);
+		var diagramTD = firstTD.expand(leftGap, rightGap, 0, 0);
 		for(var i = 0; i < diagramTD.entry; i++) {
 			leftLines.push("  ");
 		}
@@ -887,14 +886,15 @@ export class AlternatingSequence extends DiagramMultiContainer {
 		}
 		rightLines.push(line + corner_bot_right);
 
-		separator.push((line.repeat(leftWidth - 1)) + corner_top_right + " " + corner_top_left + (line.repeat(rightWidth - 2)));
-		separator.push((" ".repeat(leftWidth - 1)) + " " + cross_diag + " " + (" ".repeat(rightWidth - 2)));
-		separator.push((line.repeat(leftWidth - 1)) + corner_bot_right + " " + corner_bot_left + (line.repeat(rightWidth - 2)));
+		var [leftSepWidth, rightSepWidth] = TextDiagram._gaps(maxWidth, 3, "center")
+		separator.push((line.repeat(leftSepWidth)) + corner_top_right + " " + corner_top_left + (line.repeat(rightSepWidth)));
+		separator.push((" ".repeat(leftSepWidth)) + " " + cross_diag + " " + (" ".repeat(rightSepWidth)));
+		separator.push((line.repeat(leftSepWidth)) + corner_bot_right + " " + corner_bot_left + (line.repeat(rightSepWidth)));
 		leftLines.push("  ");
 		rightLines.push("  ");
 
-		[leftSize, rightSize] = TextDiagram._gaps(secondTD.width, 0);
-		secondTD = secondTD.expand(leftWidth - leftSize, rightWidth - rightSize, 0, 0);
+		[leftGap, rightGap] = TextDiagram._gaps(maxWidth, secondTD.width);
+		secondTD = secondTD.expand(leftGap, rightGap, 0, 0);
 		diagramTD = diagramTD.appendBelow(secondTD, separator, true, true);
 		leftLines.push(corner_top_left + line);
 		for(i = 0; i < secondTD.entry; i++) {
@@ -1981,6 +1981,9 @@ export class TextDiagram {
 			}
 		}
 	}
+	toString() {
+		return this.lines.join("\n");
+	}
 	alter(entry=null, exit=null, lines=null) {
 		/*
 		Create and return a new TextDiagram based on this instance, with the specified changes.
@@ -2169,14 +2172,15 @@ export class TextDiagram {
 		}
 		return newLines;
 	}
-	static _gaps(outerWidth, innerWidth) {
+	static _gaps(outerWidth, innerWidth, alignment) {
 		/*
 		Return the left and right pad spacing based on the alignment configuration setting.
 		*/
 		var diff = outerWidth - innerWidth;
-		if(Options.INTERNAL_ALIGNMENT === "left") {
+		alignment = unnull(alignment, Options.INTERNAL_ALIGNMENT);
+		if(alignment === "left") {
 			return [0, diff];
-		} else if(Options.INTERNAL_ALIGNMENT === "right") {
+		} else if(alignment === "right") {
 			return [diff, 0];
 		} else {
 			var left = Math.trunc(diff / 2);
