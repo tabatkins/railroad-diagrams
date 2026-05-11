@@ -12,6 +12,12 @@ Railroad-diagram Generator
      └────│ some │────────╭──│ railroad diagrams │──╮───┼┤
           ╰──────╯        │  └───────────────────┘  │
                           ╰─and more────────────────╯
+(If this one looks messed up, you're probably on ChromeOS or Android,
+ whose default monospace fonts don't include box-drawing characters,
+ meaning it's falling back to a variable-width font for those chars.
+ I can't adjust font on GitHub READMEs, but you can make sure *your*
+ text editor or website uses a monospace font with proper support,
+ so it'll look great when you generate text-based diagrams yourself.
 ```
 
 This is a small library for generating railroad diagrams
