@@ -13,40 +13,43 @@ script {
 	margin-top: -1em;
 }
 </style>
-<link rel='stylesheet' href='railroad-diagrams.css'>
-<script src='railroad-diagrams.js'></script>
+<link rel="stylesheet" href="railroad.css">
+<script type="module">
+	import functions, { Options } from  "./railroad.js";
+	Object.assign(window, functions);
+	// options usage example
+	Options.VS = 15;
+	// Options.INTERNAL_ALIGNMENT = 'left';
+	// Options.DEBUG = true;
+</script>
 <body>
 
-<!--
-<h1 id=test>TEST</h1>
-<script>
-Diagram(
-	Choice(1, "above", AlternatingSequence(Stack("foo", "foo"), Stack("bar", "bar")), "below")).addTo();
-</script>
--->
-
-<h1 id='ident'>IDENT</h1>
-<script>
+<h1>IDENT</h1>
+<script type="module" id="domIdent">
 ComplexDiagram(
 	Choice(0, Skip(), '-'),
 	Choice(0, NonTerminal('name-start char'), NonTerminal('escape')),
 	ZeroOrMore(
-		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo();
+		Choice(0, NonTerminal('name char'), NonTerminal('escape')))).addTo(domIdent);
 </script>
-<h1 id='function'>FUNCTION</h1>
-<script>
-Diagram(NonTerminal('IDENT'), '(').addTo();
+
+<h1>FUNCTION</h1>
+<script type="module" id="domFunction">
+Diagram(NonTerminal('IDENT'), '(').addTo(domFunction);
 </script>
-<h1 id='at-keyword'>AT-KEYWORD</h1>
-<script>
-Diagram('@', NonTerminal('IDENT')).addTo();
+
+<h1>AT-KEYWORD</h1>
+<script type="module" id="domAtKeyword">
+Diagram('@', NonTerminal('IDENT')).addTo(domAtKeyword);
 </script>
-<h1 id='hash'>HASH</h1>
-<script>
-Diagram('#', NonTerminal('IDENT')).addTo();
+
+<h1>HASH</h1>
+<script type="module" id="domHash">
+Diagram('#', NonTerminal('IDENT')).addTo(domHash);
 </script>
-<h1 id='string'>STRING</h1>
-<script>
+
+<h1>STRING</h1>
+<script type="module" id="domString">
 Diagram(
 	Choice(0,
 		Sequence(
@@ -62,10 +65,11 @@ Diagram(
 				Choice(0,
 					NonTerminal("not ' or \\"),
 					NonTerminal('escape'))),
-			"'"))).addTo();
+			"'"))).addTo(domString);
 </script>
-<h1 id='url'>URL</h1>
-<script>
+
+<h1>URL</h1>
+<script type="module" id="domUrl">
 Diagram(
 	Choice(0, 'u', 'U'),
 	Choice(0, 'r', 'R'),
@@ -84,10 +88,11 @@ Diagram(
 					NonTerminal('not " \' ( ) WS or NPC'),
 					NonTerminal('escape'))),
 			Optional(NonTerminal('WS')))),
-	')').addTo();
+	')').addTo(domUrl);
 </script>
-<h1 id="number">NUMBER</h1>
-<script>
+
+<h1 >NUMBER</h1>
+<script type="module" id="domNumber">
 Diagram(
 	Choice(1, '+', Skip(), '-'),
 	Choice(0,
@@ -104,18 +109,21 @@ Diagram(
 		Sequence(
 			Choice(0, 'e', 'E'),
 			Choice(1, '+', Skip(), '-'),
-			OneOrMore(NonTerminal('digit'))))).addTo();
+			OneOrMore(NonTerminal('digit'))))).addTo(domNumber);
 </script>
+
 <h1>DIMENSION</h1>
-<script>
-Diagram(NonTerminal('NUMBER', '#number'), NonTerminal('IDENT')).addTo();
+<script type="module" id="domDimension">
+Diagram(NonTerminal('NUMBER', '#number'), NonTerminal('IDENT')).addTo(domDimension);
 </script>
+
 <h1>PERCENTAGE</h1>
-<script>
-Diagram(NonTerminal('NUMBER', '#number'), '%').addTo();
+<script type="module" id="domPercentage">
+Diagram(NonTerminal('NUMBER', '#number'), '%').addTo(domPercentage);
 </script>
+
 <h1>UNICODE-RANGE</h1>
-<script>
+<script type="module" id="domUnicodeRange">
 Diagram(
 	Choice(0,
 		'U',
@@ -129,26 +137,30 @@ Diagram(
 		Sequence(
 			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times')),
 			'-',
-			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo();
+			OneOrMore(NonTerminal('hex digit'), Comment('1-6 times'))))).addTo(domUnicodeRange);
 </script>
+
 <h1>COMMENT</h1>
-<script>
+<script type="module" id="domComment">
 Diagram(
 	'/*',
 	ZeroOrMore(
 		NonTerminal("anything but * followed by /")),
-	'*/').addTo();
+	'*/').addTo(domComment);
 </script>
+
 <h1>CDO</h1>
-<script>
-Diagram("<" + "!--").addTo();
+<script type="module" id="domCdo">
+Diagram("<" + "!--").addTo(domCdo);
 </script>
+
 <h1>CDC</h1>
-<script>
-Diagram("-->").addTo();
+<script type="module"  id="domCdc">
+Diagram("-->").addTo(domCdc);
 </script>
-<h1 id='SQL'>SQL</h1>
-<script>
+
+<h1>SQL</h1>
+<script type="module" id='domSql'>
 Diagram(
 	Stack(
 		Sequence(
@@ -186,15 +198,15 @@ Diagram(
 			Optional(Sequence('OFFSET', NonTerminal('start'), Optional('ROWS')))
 		)
 	)
-).addTo();
+).addTo(domSql);
 </script>
 
-<h1 id='image-func'>image() function</h1>
+<h1>image() function</h1>
 <xmp>
 image() = image( <image-tags>? [ <image-src>? , <color>? ]! )
 <image-tags> = [ ltr | rtl ]
 <image-src> = [ <url> | <string> ]</xmp>
-<script>
+<script type="module" id="domImageFunction">
 Diagram(
 	Optional(
 		Sequence(
@@ -205,26 +217,26 @@ Diagram(
 		Choice(0, NonTerminal("<url>"), NonTerminal("<string>")),
 		NonTerminal("<color>")
 	)
-).addTo();
+).addTo(domImageFunction);
 </script>
 
 <h1 id='glob'>glob pattern</h1>
 Alternating alphanums and <code>*</code> chars
-<script>
+<script type="module" id="domGlob">
 Diagram(
 	AlternatingSequence(
 		OneOrMore(NonTerminal("alphanumeric")),
 		"*"
 	)
-).addTo();
+).addTo(domGlob);
 </script>
 
-<h1 id='grid-auto-flow'>CSS grid-auto-flow property</h1>
-<script>
+<h1>CSS grid-auto-flow property</h1>
+<script type="module" id="domGridAutoFlow">
 Diagram(
 	MultipleChoice(0, "any",
 		Choice(1, "row", "column"),
 		"dense"
 	)
-).addTo();
+).addTo(domGridAutoFlow);
 </script>
