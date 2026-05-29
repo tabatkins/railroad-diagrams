@@ -1901,13 +1901,13 @@ funcs.Comment = (...args)=>new Comment(...args);
 
 
 export class Skip extends FakeSVG {
-	constructor() {
+	constructor(takeUpSpace = false) {
 		super('g');
 		this.width = 0;
 		this.height = 0;
 		this.up = 0;
 		this.down = 0;
-		this.needsSpace = false;
+		this.needsSpace = takeUpSpace;
 		if(Options.DEBUG) {
 			this.attrs['data-updown'] = this.up + " " + this.height + " " + this.down;
 			this.attrs['data-type'] = "skip";

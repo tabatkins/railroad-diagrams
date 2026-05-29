@@ -1872,11 +1872,12 @@ class Comment(DiagramItem):
 
 
 class Skip(DiagramItem):
-    def __init__(self) -> None:
+    def __init__(self, takeUpSpace: bool = false) -> None:
         DiagramItem.__init__(self, "g")
         self.width = 0
         self.up = 0
         self.down = 0
+        self.needsSpace = takeUpSpace
         addDebug(self)
 
     def format(self, x: float, y: float, width: float) -> Skip:
