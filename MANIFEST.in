@@ -1,5 +1,5 @@
-railroad.py
-test.py
-railroad-diagrams.css
+include railroad.py
+include test.py
+include railroad.css
 include *.md
 include *.txt
